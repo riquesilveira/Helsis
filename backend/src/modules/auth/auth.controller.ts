@@ -8,6 +8,8 @@ const loginSchema = z.object({
 });
 
 export async function loginController(req: Request, res: Response) {
+  console.log("[login] JWT_SECRET defined:", !!process.env.JWT_SECRET);
+  console.log("[login] DATABASE_URL defined:", !!process.env.DATABASE_URL);
   const dados = loginSchema.parse(req.body);
   const resultado = await login(dados);
   res.json(resultado);
