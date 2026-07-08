@@ -1,0 +1,294 @@
+// ============================================================================
+// SCHEMA DO BANCO DE DADOS
+// Sistema de Gestão de Assistência Técnica
+// ============================================================================
+// Pensado para empresas que fazem manutenção de equipamentos de diagnóstico
+// por imagem — ressonância magnética, tomografia computadorizada, raio-X,
+// mamografia, ultrassom e equipamentos similares.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ----------------------------------------------------------------------------
+// USUÁRIOS E PERFIS
+// ----------------------------------------------------------------------------
+
+enum PapelUsuario {
+  DONO
+  GESTOR
+  TECNICO
+  CLIENTE
+}
+
+model Usuario {
+  id           String       @id @default(uuid())
+  nome         String
+  email        String       @unique
+  senhaHash    String
+  papel        PapelUsuario
+  ativo        Boolean      @default(true)
+  criadoEm     DateTime     @default(now())
+  atualizadoEm DateTime     @updatedAt
+
+  funcionario Funcionario?
+  cliente     Cliente?
+
+  @@map("usuarios")
+}
+
+// ----------------------------------------------------------------------------
+// FUNCIONÁRIO (TÉCNICO)
+// ----------------------------------------------------------------------------
+
+enum TipoComissao {
+  PERCENTUAL // % em cima do valor da mão de obra
+  FIXO       // valor fixo em R$ por atendimento concluído
+}
+
+model Funcionario {
+  id             String        @id @default(uuid())
+  usuarioId      String        @unique
+  usuario        Usuario       @relation(fields: [usuarioId], references: [id])
+  cargo          String // ex: "Técnico Jr", "Técnico Sênior"
+  salarioAtual   Decimal       @db.Decimal(10, 2)
+  dataAdmissao   DateTime
+  especialidades String[] // ex: ["Ressonância Magnética", "Tomografia Computadorizada"]
+  ativo          Boolean       @default(true)
+  criadoEm       DateTime      @default(now())
+
+  // Comissão é opcional — nem todo técnico trabalha com comissão. Quando
+  // tipoComissao é nulo, o técnico é só salário fixo. Comissão incide
+  // apenas sobre o valor da mão de obra de cada OS, nunca sobre peças.
+  tipoComissao TipoComissao?
+  valorComissao Decimal?      @db.Decimal(10, 2) // % se PERCENTUAL, R$ se FIXO
+
+  ordensServico    OrdemServico[]
+  statusHistoricos StatusHistorico[]
+  pecasTrocadas    PecaTrocada[]
+  deslocamentos    Deslocamento[]
+
+  @@map("funcionarios")
+}
+
+// ----------------------------------------------------------------------------
+// CLIENTE
+// ----------------------------------------------------------------------------
+
+model Cliente {
+  id           String   @id @default(uuid())
+  usuarioId    String?  @unique // opcional: nem todo cliente precisa de login
+  usuario      Usuario? @relation(fields: [usuarioId], references: [id])
+  nome         String
+  documento    String? // CPF ou CNPJ
+  telefone     String
+  email        String?
+  endereco     String?
+  cidade       String?
+  estado       String?
+  criadoEm     DateTime @default(now())
+
+  equipamentos  Equipamento[]
+  ordensServico OrdemServico[]
+
+  @@map("clientes")
+}
+
+// ----------------------------------------------------------------------------
+// EQUIPAMENTO DO CLIENTE
+// ----------------------------------------------------------------------------
+
+model Equipamento {
+  id           String   @id @default(uuid())
+  clienteId    String
+  cliente      Cliente  @relation(fields: [clienteId], references: [id])
+  tipo         String // ex: "Ressonância Magnética 1.5T", "Tomógrafo 64 canais"
+  marca        String?
+  modelo       String?
+  numeroSerie  String?
+  localInstalacao String? // endereço/setor onde o equipamento está instalado
+  criadoEm     DateTime @default(now())
+
+  // Plano de manutenção preventiva. Se frequenciaManutencaoMeses for nulo,
+  // esse equipamento não tem manutenção preventiva agendada (só corretiva).
+  frequenciaManutencaoMeses    Int?
+  ultimaManutencaoPreventiva   DateTime?
+  proximaManutencaoPreventiva  DateTime?
+
+  ordensServico OrdemServico[]
+
+  @@map("equipamentos")
+}
+
+// ----------------------------------------------------------------------------
+// ORDEM DE SERVIÇO (o núcleo do sistema)
+// ----------------------------------------------------------------------------
+
+enum StatusOS {
+  RECEBIDO           // chamado aberto / equipamento recebido na oficina
+  DIAGNOSTICO        // em avaliação
+  AGUARDANDO_PECA    // peça pedida, esperando chegar
+  EM_REPARO          // conserto em andamento (inclui o teste final antes de fechar)
+  CONCLUIDO          // reparo finalizado — como o atendimento é no local do
+                     // cliente, não existe uma etapa separada de "entrega"
+  CANCELADO
+}
+
+enum ModalidadeAtendimento {
+  VISITA_TECNICA   // técnico vai até o cliente
+  OFICINA          // cliente leva o equipamento até a empresa
+  REMOTO           // suporte remoto (quando aplicável)
+}
+
+enum TipoOS {
+  CORRETIVA   // aberta por causa de um problema relatado
+  PREVENTIVA  // manutenção agendada, sem problema relatado
+}
+
+model OrdemServico {
+  id                  String                 @id @default(uuid())
+  numero              Int                    @unique @default(autoincrement())
+  clienteId           String
+  cliente             Cliente                @relation(fields: [clienteId], references: [id])
+  equipamentoId       String
+  equipamento         Equipamento            @relation(fields: [equipamentoId], references: [id])
+  funcionarioId       String?
+  funcionario         Funcionario?           @relation(fields: [funcionarioId], references: [id])
+  tipo                TipoOS                 @default(CORRETIVA)
+  modalidade          ModalidadeAtendimento
+  statusAtual         StatusOS               @default(RECEBIDO)
+  descricaoProblema   String
+  numeroTentativas    Int                    @default(0) // quantas vezes tentou resolver sem sucesso antes de concluir
+  resolvidoNaPrimeira Boolean?               // preenchido quando a OS é concluída
+  dataAgendada        DateTime?              // dia previsto da visita — alimenta a "rota do dia" do técnico
+  dataAbertura        DateTime               @default(now())
+  dataConclusao       DateTime?
+  criadoEm            DateTime               @default(now())
+  atualizadoEm        DateTime               @updatedAt
+
+  // Fechamento financeiro do atendimento. valorPecas não é armazenado aqui
+  // — é sempre calculado a partir de pecasTrocadas, pra nunca ficar
+  // dessincronizado se uma peça for adicionada depois. valorComissao é
+  // calculado automaticamente a partir da configuração do técnico quando
+  // valorMaoDeObra é definido, mas pode ser sobrescrito manualmente caso
+  // um atendimento específico precise de um ajuste.
+  valorMaoDeObra Decimal? @db.Decimal(10, 2)
+  valorComissao  Decimal? @db.Decimal(10, 2)
+
+  statusHistoricos StatusHistorico[]
+  pecasTrocadas    PecaTrocada[]
+  deslocamentos    Deslocamento[]
+  notificacoes     Notificacao[]
+
+  @@map("ordens_servico")
+}
+
+// Timeline de status — é o que alimenta a tela de "acompanhar meu atendimento"
+// do cliente (como um rastreio de entrega).
+model StatusHistorico {
+  id             String       @id @default(uuid())
+  ordemServicoId String
+  ordemServico   OrdemServico @relation(fields: [ordemServicoId], references: [id])
+  status         StatusOS
+  observacao     String? // ex: "Peça X trocada, mas problema persistiu"
+  tentativaNumero Int         @default(1) // 1ª, 2ª, 3ª tentativa de resolver...
+  funcionarioId  String?
+  funcionario    Funcionario? @relation(fields: [funcionarioId], references: [id])
+  criadoEm       DateTime     @default(now())
+
+  @@map("status_historico")
+}
+
+// ----------------------------------------------------------------------------
+// PEÇAS
+// ----------------------------------------------------------------------------
+
+model PecaCatalogo {
+  id                  String   @id @default(uuid())
+  nome                String
+  categoria           String? // ex: "Compressor", "Bobina de gradiente"
+  garantiaPadraoMeses Int      @default(3)
+  precoUnitario       Decimal? @db.Decimal(10, 2) // preço padrão — pode ser sobrescrito em cada troca
+  criadoEm            DateTime @default(now())
+
+  pecasTrocadas PecaTrocada[]
+
+  @@map("pecas_catalogo")
+}
+
+// Registro de cada peça trocada em cada OS — é o que dá ao dono visibilidade
+// de garantia e de quantas tentativas/peças erradas foram usadas até acertar.
+model PecaTrocada {
+  id              String       @id @default(uuid())
+  ordemServicoId  String
+  ordemServico    OrdemServico @relation(fields: [ordemServicoId], references: [id])
+  pecaCatalogoId  String
+  pecaCatalogo    PecaCatalogo @relation(fields: [pecaCatalogoId], references: [id])
+  funcionarioId   String
+  funcionario     Funcionario  @relation(fields: [funcionarioId], references: [id])
+  tipoServico     String // ex: "Substituição", "Reparo", "Limpeza"
+  quantidade      Int          @default(1)
+  tentativaNumero Int          @default(1) // em qual tentativa essa peça foi usada
+  resolveuProblema Boolean?    // essa troca resolveu o problema do cliente?
+  garantiaAte     DateTime?
+  // Preço no momento da troca (snapshot do catálogo, editável) — assim o
+  // valor cobrado não muda retroativamente se o preço da peça mudar depois.
+  precoUnitario   Decimal?     @db.Decimal(10, 2)
+  dataTroca       DateTime     @default(now())
+
+  @@map("pecas_trocadas")
+}
+
+// ----------------------------------------------------------------------------
+// DESLOCAMENTO (passagem, hospedagem — casos como o exemplo da ressonância)
+// ----------------------------------------------------------------------------
+
+model Deslocamento {
+  id               String        @id @default(uuid())
+  funcionarioId    String
+  funcionario      Funcionario   @relation(fields: [funcionarioId], references: [id])
+  ordemServicoId   String
+  ordemServico     OrdemServico  @relation(fields: [ordemServicoId], references: [id])
+  origemCidade     String?
+  destinoCidade    String?
+  custoPassagem    Decimal?      @db.Decimal(10, 2)
+  custoHospedagem  Decimal?      @db.Decimal(10, 2)
+  custoAlimentacao Decimal?      @db.Decimal(10, 2)
+  diasViagem       Int?
+  criadoEm         DateTime      @default(now())
+
+  @@map("deslocamentos")
+}
+
+// ----------------------------------------------------------------------------
+// NOTIFICAÇÕES AO CLIENTE
+// ----------------------------------------------------------------------------
+
+enum CanalNotificacao {
+  SMS
+  WHATSAPP
+}
+
+enum StatusNotificacao {
+  ENVIADA
+  FALHOU
+}
+
+model Notificacao {
+  id             String            @id @default(uuid())
+  ordemServicoId String
+  ordemServico   OrdemServico      @relation(fields: [ordemServicoId], references: [id])
+  canal          CanalNotificacao
+  destinatario   String // telefone no formato enviado ao provedor
+  mensagem       String
+  status         StatusNotificacao
+  erro           String?
+  enviadaEm      DateTime          @default(now())
+
+  @@map("notificacoes")
+}

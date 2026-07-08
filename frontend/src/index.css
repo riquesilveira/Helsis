@@ -1,0 +1,14 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  @apply bg-grafite-50 text-grafite-900 font-sans antialiased;
+}
+
+/* Rótulos de código/identificadores (nº da OS, datas) — mantém a classe
+   "codigo" nos componentes por consistência, mas agora usa a mesma fonte
+   (Inter) do resto da interface, só com tracking mais apertado. */
+.codigo {
+  @apply font-mono tracking-tight;
+}
