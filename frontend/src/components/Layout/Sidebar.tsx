@@ -19,7 +19,7 @@ export function Sidebar() {
   return (
     <aside className="w-60 flex-shrink-0 bg-grafite-950 text-grafite-100 min-h-screen flex flex-col print:hidden">
       <div className="px-5 py-5 border-b border-grafite-800">
-        <p className="font-semibold tracking-tight text-center">Helsis OS</p>
+        <p className="font-semibold tracking-tight text-center">Sistema Inteligente de Gestão de Serviços</p>
         <p className="text-xs text-grafite-400 mt-0.5">
           {usuario ? usuario.nome : "Painel de gestão"}
         </p>

@@ -31,7 +31,7 @@ export function Login() {
         onSubmit={handleSubmit}
         className="w-full max-w-sm bg-white rounded-lg p-8 border border-grafite-800"
       >
-        <h1 className="font-semibold text-lg text-grafite-900 text-center">Helsis OS</h1>
+        <h1 className="font-semibold text-lg text-grafite-900 text-center">Sistema Inteligente de Gestão de Serviços</h1>
         <p className="text-sm text-grafite-600 mt-1 mb-6">Entre com sua conta.</p>
 
         <label className="block text-sm text-grafite-700 mb-1">E-mail</label>

@@ -1,7 +1,7 @@
 import axios from "axios";
 
 export const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || "http://localhost:3333/api",
+  baseURL: import.meta.env.VITE_API_URL || (import.meta.env.PROD ? "https://helsis-backend.onrender.com/api" : "http://localhost:3333/api"),
 });
 
 // Anexa o token JWT salvo no login em toda requisição autenticada.
