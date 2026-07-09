@@ -8,15 +8,15 @@ import {
   Users,
   UsersRound,
   LogOut,
+  type LucideIcon,
 } from "lucide-react";
-import { ComponentType } from "react";
 
 interface LinkConfig {
   to: string;
   rotulo: string;
   fim: boolean;
   restritoA: string[] | null;
-  icone: ComponentType<{ size?: number; className?: string }>;
+  icone: LucideIcon;
 }
 
 const LINKS: LinkConfig[] = [
