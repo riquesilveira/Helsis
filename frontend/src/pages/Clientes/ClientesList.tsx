@@ -62,11 +62,6 @@ export function ClientesList() {
     setSugestoesCidade([]);
   }
 
-  // Emails únicos dos clientes existentes (para sugestão)
-  const emailsExistentes = clientes
-    .map((c) => c.email)
-    .filter((e): e is string => !!e && e.trim() !== "");
-
   function carregar() {
     api.get("/clientes").then((r) => setClientes(r.data));
   }
@@ -143,18 +138,12 @@ export function ClientesList() {
           <Campo rotulo="E-mail (opcional)">
             <input
               type="email"
-              list="emails-existentes"
+              name="email"
+              autoComplete="email"
               className={classeInput}
               value={form.email}
               onChange={(e) => setForm({ ...form, email: e.target.value })}
             />
-            {emailsExistentes.length > 0 && (
-              <datalist id="emails-existentes">
-                {emailsExistentes.map((email) => (
-                  <option key={email} value={email} />
-                ))}
-              </datalist>
-            )}
           </Campo>
           <div className="grid grid-cols-2 gap-3">
             <Campo rotulo="Cidade">
