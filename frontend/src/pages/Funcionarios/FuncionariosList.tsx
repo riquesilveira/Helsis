@@ -92,7 +92,7 @@ export function FuncionariosList() {
   }
 
   function removerEspecialidade(index: number) {
-    setEspecialidades(especialidades.filter((_, i) => i !== index));
+    setEspecialidades((prev) => prev.filter((_, i) => i !== index));
   }
 
   function carregar() {
@@ -338,7 +338,7 @@ export function FuncionariosList() {
                     {esp}
                     <button
                       type="button"
-                      onClick={() => setEditEspecialidades(editEspecialidades.filter((_, j) => j !== i))}
+                      onClick={() => setEditEspecialidades((prev) => prev.filter((_, j) => j !== i))}
                       className="text-teal-400 hover:text-teal-700"
                     >
                       ✕
