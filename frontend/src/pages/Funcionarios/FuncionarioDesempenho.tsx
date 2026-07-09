@@ -109,16 +109,18 @@ export function FuncionarioDesempenho() {
     <div className="space-y-6 max-w-3xl">
       <div className="flex items-start justify-between">
         <div>
-          <h1 className="text-xl font-semibold text-grafite-900">{desempenho.nome}</h1>
+          <div className="flex items-center gap-2">
+            <h1 className="text-xl font-semibold text-grafite-900">{desempenho.nome}</h1>
+            <button
+              onClick={abrirModalEditar}
+              className="text-xs font-medium text-teal-700 hover:text-teal-800"
+            >
+              Editar
+            </button>
+          </div>
           <p className="text-sm text-grafite-600 mt-1">{desempenho.cargo}</p>
         </div>
         <div className="flex items-center gap-4">
-          <button
-            onClick={abrirModalEditar}
-            className="text-xs font-medium text-teal-700 hover:text-teal-800"
-          >
-            Editar cadastro
-          </button>
           <Link to={`/funcionarios/${id}/resumo`} className="text-xs font-medium text-teal-700 hover:text-teal-800">
             Resumo mensal (contracheque) →
           </Link>
