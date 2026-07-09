@@ -58,11 +58,13 @@ export function FuncionariosList() {
         nome: editForm.nome,
         email: editForm.email,
         cargo: editForm.cargo,
-        salarioAtual: Number(editForm.salarioAtual.replace(",", ".")),
+        salarioAtual: Number(editForm.salarioAtual.replace(/\./g, "").replace(",", ".")),
         especialidades: editEspecialidades,
       });
       setModalEditar(false);
       carregar();
+    } catch (err: any) {
+      alert(err?.response?.data?.erro ?? "Não foi possível salvar. Tente novamente.");
     } finally {
       setSalvandoEdit(false);
     }
@@ -95,7 +97,7 @@ export function FuncionariosList() {
         email: form.email,
         senha: form.senha,
         cargo: form.cargo,
-        salarioAtual: Number(form.salarioAtual.replace(",", ".")),
+        salarioAtual: Number(form.salarioAtual.replace(/\./g, "").replace(",", ".")),
         dataAdmissao: form.dataAdmissao,
         especialidades,
       });
@@ -103,6 +105,8 @@ export function FuncionariosList() {
       setForm(FORM_VAZIO);
       setEspecialidades([]);
       carregar();
+    } catch (err: any) {
+      alert(err?.response?.data?.erro ?? "Não foi possível cadastrar. Tente novamente.");
     } finally {
       setSalvando(false);
     }
@@ -203,7 +207,7 @@ export function FuncionariosList() {
                   className={`${classeInput} pl-9`}
                   value={form.salarioAtual}
                   onChange={(e) => {
-                    const raw = e.target.value.replace(/[^0-9,]/g, "");
+                    const raw = e.target.value.replace(/[^0-9.,]/g, "");
                     setForm({ ...form, salarioAtual: raw });
                   }}
                 />
@@ -309,7 +313,7 @@ export function FuncionariosList() {
                   className={`${classeInput} pl-9`}
                   value={editForm.salarioAtual}
                   onChange={(e) => {
-                    const raw = e.target.value.replace(/[^0-9,]/g, "");
+                    const raw = e.target.value.replace(/[^0-9.,]/g, "");
                     setEditForm({ ...editForm, salarioAtual: raw });
                   }}
                 />

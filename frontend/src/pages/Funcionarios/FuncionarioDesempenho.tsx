@@ -73,7 +73,7 @@ export function FuncionarioDesempenho() {
         nome: editForm.nome,
         email: editForm.email,
         cargo: editForm.cargo,
-        salarioAtual: Number(editForm.salarioAtual.replace(",", ".")),
+        salarioAtual: Number(editForm.salarioAtual.replace(/\./g, "").replace(",", ".")),
         especialidades: editEspecialidades,
       });
       setModalEditar(false);
@@ -260,7 +260,7 @@ export function FuncionarioDesempenho() {
                   className={`${classeInput} pl-9`}
                   value={editForm.salarioAtual}
                   onChange={(e) => {
-                    const raw = e.target.value.replace(/[^0-9,]/g, "");
+                    const raw = e.target.value.replace(/[^0-9.,]/g, "");
                     setEditForm({ ...editForm, salarioAtual: raw });
                   }}
                 />
