@@ -48,7 +48,7 @@ export function FuncionariosList() {
         email: form.email,
         senha: form.senha,
         cargo: form.cargo,
-        salarioAtual: Number(form.salarioAtual),
+        salarioAtual: Number(form.salarioAtual.replace(",", ".")),
         dataAdmissao: form.dataAdmissao,
         especialidades,
       });
@@ -138,16 +138,22 @@ export function FuncionariosList() {
                 onChange={(e) => setForm({ ...form, cargo: e.target.value })}
               />
             </Campo>
-            <Campo rotulo="Salário (R$)">
-              <input
-                required
-                type="number"
-                min={1}
-                step="0.01"
-                className={classeInput}
-                value={form.salarioAtual}
-                onChange={(e) => setForm({ ...form, salarioAtual: e.target.value })}
-              />
+            <Campo rotulo="Salário">
+              <div className="relative">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-grafite-500">R$</span>
+                <input
+                  required
+                  type="text"
+                  inputMode="decimal"
+                  placeholder="0,00"
+                  className={`${classeInput} pl-9`}
+                  value={form.salarioAtual}
+                  onChange={(e) => {
+                    const raw = e.target.value.replace(/[^0-9,]/g, "");
+                    setForm({ ...form, salarioAtual: raw });
+                  }}
+                />
+              </div>
             </Campo>
           </div>
           <Campo rotulo="Data de admissão">
