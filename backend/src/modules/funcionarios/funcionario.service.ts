@@ -70,6 +70,37 @@ export async function criarFuncionario(dados: CriarFuncionarioInput) {
   });
 }
 
+export interface AtualizarFuncionarioInput {
+  nome?: string;
+  email?: string;
+  cargo?: string;
+  salarioAtual?: number;
+  especialidades?: string[];
+}
+
+export async function atualizarFuncionario(id: string, dados: AtualizarFuncionarioInput) {
+  const funcionario = await buscarFuncionarioPorId(id);
+
+  const updateFuncionario: Record<string, unknown> = {};
+  if (dados.cargo !== undefined) updateFuncionario.cargo = dados.cargo;
+  if (dados.salarioAtual !== undefined) updateFuncionario.salarioAtual = dados.salarioAtual;
+  if (dados.especialidades !== undefined) updateFuncionario.especialidades = dados.especialidades;
+
+  const updateUsuario: Record<string, unknown> = {};
+  if (dados.nome !== undefined) updateUsuario.nome = dados.nome;
+  if (dados.email !== undefined) updateUsuario.email = dados.email;
+
+  if (Object.keys(updateUsuario).length > 0) {
+    await prisma.usuario.update({ where: { id: funcionario.usuarioId }, data: updateUsuario });
+  }
+
+  return prisma.funcionario.update({
+    where: { id },
+    data: updateFuncionario,
+    include: { usuario: { select: { nome: true, email: true } } },
+  });
+}
+
 export async function atualizarSalario(id: string, novoSalario: number) {
   await buscarFuncionarioPorId(id);
   return prisma.funcionario.update({

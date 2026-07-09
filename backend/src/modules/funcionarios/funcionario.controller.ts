@@ -13,6 +13,14 @@ const criarFuncionarioSchema = z.object({
   especialidades: z.array(z.string()).optional(),
 });
 
+const atualizarFuncionarioSchema = z.object({
+  nome: z.string().min(2).optional(),
+  email: z.string().email().optional(),
+  cargo: z.string().min(2).optional(),
+  salarioAtual: z.number().positive().optional(),
+  especialidades: z.array(z.string()).optional(),
+});
+
 const atualizarSalarioSchema = z.object({
   salarioAtual: z.number().positive(),
 });
@@ -34,6 +42,11 @@ export async function criar(req: Request, res: Response) {
   const dados = criarFuncionarioSchema.parse(req.body);
   const funcionario = await funcionarioService.criarFuncionario(dados);
   res.status(201).json(funcionario);
+}
+
+export async function atualizar(req: Request, res: Response) {
+  const dados = atualizarFuncionarioSchema.parse(req.body);
+  res.json(await funcionarioService.atualizarFuncionario(req.params.id, dados));
 }
 
 export async function atualizarSalario(req: Request, res: Response) {

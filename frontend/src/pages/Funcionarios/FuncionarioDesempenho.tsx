@@ -2,7 +2,7 @@ import { FormEvent, useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { api } from "../../services/api";
 import { DesempenhoFuncionario, Funcionario, TipoComissao } from "../../types";
-import { Campo, classeInput } from "../../components/Modal";
+import { Campo, classeInput, Modal } from "../../components/Modal";
 
 function CartaoMetrica({ rotulo, valor, destaque }: { rotulo: string; valor: string; destaque?: boolean }) {
   return (
@@ -24,6 +24,13 @@ export function FuncionarioDesempenho() {
   const [desempenho, setDesempenho] = useState<DesempenhoFuncionario | null>(null);
   const [funcionario, setFuncionario] = useState<Funcionario | null>(null);
 
+  // modal de edição
+  const [modalEditar, setModalEditar] = useState(false);
+  const [editForm, setEditForm] = useState({ nome: "", email: "", cargo: "", salarioAtual: "" });
+  const [editEspecialidades, setEditEspecialidades] = useState<string[]>([]);
+  const [novaEsp, setNovaEsp] = useState("");
+  const [salvandoEdit, setSalvandoEdit] = useState(false);
+
   // formulário de comissão
   const [tipoComissao, setTipoComissao] = useState<"" | TipoComissao>("");
   const [valorComissao, setValorComissao] = useState("");
@@ -35,6 +42,46 @@ export function FuncionarioDesempenho() {
       setTipoComissao(r.data.tipoComissao ?? "");
       setValorComissao(r.data.valorComissao != null ? String(r.data.valorComissao) : "");
     });
+  }
+
+  function abrirModalEditar() {
+    if (!funcionario) return;
+    setEditForm({
+      nome: funcionario.usuario.nome,
+      email: funcionario.usuario.email,
+      cargo: funcionario.cargo,
+      salarioAtual: String(Number(funcionario.salarioAtual)).replace(".", ","),
+    });
+    setEditEspecialidades(funcionario.especialidades ?? []);
+    setNovaEsp("");
+    setModalEditar(true);
+  }
+
+  function adicionarEsp() {
+    const valor = novaEsp.trim();
+    if (valor && !editEspecialidades.includes(valor)) {
+      setEditEspecialidades([...editEspecialidades, valor]);
+    }
+    setNovaEsp("");
+  }
+
+  async function salvarEdicao(e: FormEvent) {
+    e.preventDefault();
+    setSalvandoEdit(true);
+    try {
+      await api.patch(`/funcionarios/${id}`, {
+        nome: editForm.nome,
+        email: editForm.email,
+        cargo: editForm.cargo,
+        salarioAtual: Number(editForm.salarioAtual.replace(",", ".")),
+        especialidades: editEspecialidades,
+      });
+      setModalEditar(false);
+      carregarFuncionario();
+      api.get(`/desempenho/${id}`).then((r) => setDesempenho(r.data));
+    } finally {
+      setSalvandoEdit(false);
+    }
   }
 
   useEffect(() => {
@@ -66,6 +113,12 @@ export function FuncionarioDesempenho() {
           <p className="text-sm text-grafite-600 mt-1">{desempenho.cargo}</p>
         </div>
         <div className="flex items-center gap-4">
+          <button
+            onClick={abrirModalEditar}
+            className="text-xs font-medium text-teal-700 hover:text-teal-800"
+          >
+            Editar cadastro
+          </button>
           <Link to={`/funcionarios/${id}/resumo`} className="text-xs font-medium text-teal-700 hover:text-teal-800">
             Resumo mensal (contracheque) →
           </Link>
@@ -166,6 +219,103 @@ export function FuncionarioDesempenho() {
           </button>
         </form>
       </div>
+
+      <Modal titulo="Editar funcionário" aberto={modalEditar} onFechar={() => setModalEditar(false)}>
+        <form onSubmit={salvarEdicao}>
+          <Campo rotulo="Nome completo">
+            <input
+              required
+              className={classeInput}
+              value={editForm.nome}
+              onChange={(e) => setEditForm({ ...editForm, nome: e.target.value })}
+            />
+          </Campo>
+          <Campo rotulo="E-mail">
+            <input
+              required
+              type="email"
+              className={classeInput}
+              value={editForm.email}
+              onChange={(e) => setEditForm({ ...editForm, email: e.target.value })}
+            />
+          </Campo>
+          <div className="grid grid-cols-2 gap-3">
+            <Campo rotulo="Cargo">
+              <input
+                required
+                className={classeInput}
+                value={editForm.cargo}
+                onChange={(e) => setEditForm({ ...editForm, cargo: e.target.value })}
+              />
+            </Campo>
+            <Campo rotulo="Salário">
+              <div className="relative">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-grafite-500">R$</span>
+                <input
+                  required
+                  type="text"
+                  inputMode="decimal"
+                  className={`${classeInput} pl-9`}
+                  value={editForm.salarioAtual}
+                  onChange={(e) => {
+                    const raw = e.target.value.replace(/[^0-9,]/g, "");
+                    setEditForm({ ...editForm, salarioAtual: raw });
+                  }}
+                />
+              </div>
+            </Campo>
+          </div>
+          <Campo rotulo="Especialidades">
+            {editEspecialidades.length > 0 && (
+              <div className="flex flex-wrap gap-1.5 mb-2">
+                {editEspecialidades.map((esp, i) => (
+                  <span
+                    key={i}
+                    className="inline-flex items-center gap-1 bg-teal-50 text-teal-700 text-xs font-medium px-2.5 py-1 rounded-full"
+                  >
+                    {esp}
+                    <button
+                      type="button"
+                      onClick={() => setEditEspecialidades(editEspecialidades.filter((_, j) => j !== i))}
+                      className="text-teal-400 hover:text-teal-700"
+                    >
+                      ✕
+                    </button>
+                  </span>
+                ))}
+              </div>
+            )}
+            <div className="flex gap-2">
+              <input
+                placeholder="Ex: Ressonância Magnética"
+                className={classeInput}
+                value={novaEsp}
+                onChange={(e) => setNovaEsp(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    adicionarEsp();
+                  }
+                }}
+              />
+              <button
+                type="button"
+                onClick={adicionarEsp}
+                className="flex-shrink-0 text-sm font-medium text-teal-600 hover:text-teal-700 rounded-md px-3 py-2 transition-colors"
+              >
+                + Adicionar
+              </button>
+            </div>
+          </Campo>
+          <button
+            type="submit"
+            disabled={salvandoEdit}
+            className="w-full mt-2 bg-teal-600 hover:bg-teal-700 text-white text-sm font-medium rounded-md py-2 transition-colors disabled:opacity-60"
+          >
+            {salvandoEdit ? "Salvando..." : "Salvar alterações"}
+          </button>
+        </form>
+      </Modal>
     </div>
   );
 }

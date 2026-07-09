@@ -14,6 +14,7 @@ router.get("/", autorizar("DONO", "GESTOR"), asyncHandler(funcionarioController.
 router.get("/:id", autorizar("DONO", "GESTOR"), asyncHandler(funcionarioController.buscarPorId));
 router.get("/:id/rota", autorizar("DONO", "GESTOR"), asyncHandler(funcionarioController.rota));
 router.post("/", autorizar("DONO"), asyncHandler(funcionarioController.criar));
+router.patch("/:id", autorizar("DONO"), asyncHandler(funcionarioController.atualizar));
 router.patch(
   "/:id/salario",
   autorizar("DONO"),

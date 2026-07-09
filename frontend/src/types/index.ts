@@ -63,6 +63,7 @@ export interface Funcionario {
   salarioAtual: number;
   tipoComissao?: TipoComissao | null;
   valorComissao?: number | null;
+  especialidades?: string[];
   usuario: { nome: string; email: string };
 }
 
