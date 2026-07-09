@@ -75,7 +75,11 @@ export function ClientesList() {
     e.preventDefault();
     setSalvando(true);
     try {
-      await api.post("/clientes", form);
+      // Remove campos vazios para não falhar na validação do backend
+      const payload = Object.fromEntries(
+        Object.entries(form).filter(([, v]) => v !== "")
+      );
+      await api.post("/clientes", payload);
       setModalAberto(false);
       setForm(CLIENTE_VAZIO);
       carregar();
