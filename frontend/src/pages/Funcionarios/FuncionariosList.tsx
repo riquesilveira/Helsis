@@ -4,6 +4,19 @@ import { api } from "../../services/api";
 import { Funcionario } from "../../types";
 import { Campo, classeInput, Modal } from "../../components/Modal";
 
+/** Formata centavos como moeda brasileira: 350000 → "3.500,00" */
+function formatarMoeda(valor: string): string {
+  const apenas = valor.replace(/\D/g, "");
+  if (!apenas) return "";
+  const centavos = parseInt(apenas, 10);
+  return (centavos / 100).toLocaleString("pt-BR", { minimumFractionDigits: 2 });
+}
+
+/** Converte "3.500,00" → 3500 (número) */
+function moedaParaNumero(valor: string): number {
+  return Number(valor.replace(/\./g, "").replace(",", "."));
+}
+
 const FORM_VAZIO = {
   nome: "",
   email: "",
@@ -35,7 +48,7 @@ export function FuncionariosList() {
       nome: f.usuario.nome,
       email: f.usuario.email,
       cargo: f.cargo,
-      salarioAtual: String(Number(f.salarioAtual)).replace(".", ","),
+      salarioAtual: Number(f.salarioAtual).toLocaleString("pt-BR", { minimumFractionDigits: 2 }),
     });
     setEditEspecialidades(f.especialidades ?? []);
     setNovaEditEsp("");
@@ -58,7 +71,7 @@ export function FuncionariosList() {
         nome: editForm.nome,
         email: editForm.email,
         cargo: editForm.cargo,
-        salarioAtual: Number(editForm.salarioAtual.replace(/\./g, "").replace(",", ".")),
+        salarioAtual: moedaParaNumero(editForm.salarioAtual),
         especialidades: editEspecialidades,
       });
       setModalEditar(false);
@@ -97,7 +110,7 @@ export function FuncionariosList() {
         email: form.email,
         senha: form.senha,
         cargo: form.cargo,
-        salarioAtual: Number(form.salarioAtual.replace(/\./g, "").replace(",", ".")),
+        salarioAtual: moedaParaNumero(form.salarioAtual),
         dataAdmissao: form.dataAdmissao,
         especialidades,
       });
@@ -202,14 +215,11 @@ export function FuncionariosList() {
                 <input
                   required
                   type="text"
-                  inputMode="decimal"
+                  inputMode="numeric"
                   placeholder="0,00"
                   className={`${classeInput} pl-9`}
                   value={form.salarioAtual}
-                  onChange={(e) => {
-                    const raw = e.target.value.replace(/[^0-9.,]/g, "");
-                    setForm({ ...form, salarioAtual: raw });
-                  }}
+                  onChange={(e) => setForm({ ...form, salarioAtual: formatarMoeda(e.target.value) })}
                 />
               </div>
             </Campo>
@@ -309,13 +319,10 @@ export function FuncionariosList() {
                 <input
                   required
                   type="text"
-                  inputMode="decimal"
+                  inputMode="numeric"
                   className={`${classeInput} pl-9`}
                   value={editForm.salarioAtual}
-                  onChange={(e) => {
-                    const raw = e.target.value.replace(/[^0-9.,]/g, "");
-                    setEditForm({ ...editForm, salarioAtual: raw });
-                  }}
+                  onChange={(e) => setEditForm({ ...editForm, salarioAtual: formatarMoeda(e.target.value) })}
                 />
               </div>
             </Campo>

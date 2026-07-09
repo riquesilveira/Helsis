@@ -4,6 +4,17 @@ import { api } from "../../services/api";
 import { DesempenhoFuncionario, Funcionario, TipoComissao } from "../../types";
 import { Campo, classeInput, Modal } from "../../components/Modal";
 
+function formatarMoeda(valor: string): string {
+  const apenas = valor.replace(/\D/g, "");
+  if (!apenas) return "";
+  const centavos = parseInt(apenas, 10);
+  return (centavos / 100).toLocaleString("pt-BR", { minimumFractionDigits: 2 });
+}
+
+function moedaParaNumero(valor: string): number {
+  return Number(valor.replace(/\./g, "").replace(",", "."));
+}
+
 function CartaoMetrica({ rotulo, valor, destaque }: { rotulo: string; valor: string; destaque?: boolean }) {
   return (
     <div className="bg-white border border-grafite-200 rounded-lg p-5">
@@ -50,7 +61,7 @@ export function FuncionarioDesempenho() {
       nome: funcionario.usuario.nome,
       email: funcionario.usuario.email,
       cargo: funcionario.cargo,
-      salarioAtual: String(Number(funcionario.salarioAtual)).replace(".", ","),
+      salarioAtual: Number(funcionario.salarioAtual).toLocaleString("pt-BR", { minimumFractionDigits: 2 }),
     });
     setEditEspecialidades(funcionario.especialidades ?? []);
     setNovaEsp("");
@@ -73,7 +84,7 @@ export function FuncionarioDesempenho() {
         nome: editForm.nome,
         email: editForm.email,
         cargo: editForm.cargo,
-        salarioAtual: Number(editForm.salarioAtual.replace(/\./g, "").replace(",", ".")),
+        salarioAtual: moedaParaNumero(editForm.salarioAtual),
         especialidades: editEspecialidades,
       });
       setModalEditar(false);
@@ -256,13 +267,10 @@ export function FuncionarioDesempenho() {
                 <input
                   required
                   type="text"
-                  inputMode="decimal"
+                  inputMode="numeric"
                   className={`${classeInput} pl-9`}
                   value={editForm.salarioAtual}
-                  onChange={(e) => {
-                    const raw = e.target.value.replace(/[^0-9.,]/g, "");
-                    setEditForm({ ...editForm, salarioAtual: raw });
-                  }}
+                  onChange={(e) => setEditForm({ ...editForm, salarioAtual: formatarMoeda(e.target.value) })}
                 />
               </div>
             </Campo>
