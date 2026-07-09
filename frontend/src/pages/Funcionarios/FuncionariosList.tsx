@@ -21,6 +21,53 @@ export function FuncionariosList() {
   const [novaEspecialidade, setNovaEspecialidade] = useState("");
   const [salvando, setSalvando] = useState(false);
 
+  // modal de edição
+  const [modalEditar, setModalEditar] = useState(false);
+  const [editId, setEditId] = useState("");
+  const [editForm, setEditForm] = useState({ nome: "", email: "", cargo: "", salarioAtual: "" });
+  const [editEspecialidades, setEditEspecialidades] = useState<string[]>([]);
+  const [novaEditEsp, setNovaEditEsp] = useState("");
+  const [salvandoEdit, setSalvandoEdit] = useState(false);
+
+  function abrirModalEditar(f: Funcionario) {
+    setEditId(f.id);
+    setEditForm({
+      nome: f.usuario.nome,
+      email: f.usuario.email,
+      cargo: f.cargo,
+      salarioAtual: String(Number(f.salarioAtual)).replace(".", ","),
+    });
+    setEditEspecialidades(f.especialidades ?? []);
+    setNovaEditEsp("");
+    setModalEditar(true);
+  }
+
+  function adicionarEditEsp() {
+    const valor = novaEditEsp.trim();
+    if (valor && !editEspecialidades.includes(valor)) {
+      setEditEspecialidades([...editEspecialidades, valor]);
+    }
+    setNovaEditEsp("");
+  }
+
+  async function salvarEdicao(e: FormEvent) {
+    e.preventDefault();
+    setSalvandoEdit(true);
+    try {
+      await api.patch(`/funcionarios/${editId}`, {
+        nome: editForm.nome,
+        email: editForm.email,
+        cargo: editForm.cargo,
+        salarioAtual: Number(editForm.salarioAtual.replace(",", ".")),
+        especialidades: editEspecialidades,
+      });
+      setModalEditar(false);
+      carregar();
+    } finally {
+      setSalvandoEdit(false);
+    }
+  }
+
   function adicionarEspecialidade() {
     const valor = novaEspecialidade.trim();
     if (valor && !especialidades.includes(valor)) {
@@ -75,19 +122,26 @@ export function FuncionariosList() {
 
       <div className="bg-white border border-grafite-200 rounded-lg divide-y divide-grafite-100">
         {funcionarios.map((f) => (
-          <Link
-            key={f.id}
-            to={`/funcionarios/${f.id}`}
-            className="flex items-center justify-between px-5 py-4 hover:bg-grafite-50"
-          >
-            <div>
-              <p className="text-sm text-grafite-900">{f.usuario.nome}</p>
+          <div key={f.id} className="flex items-center justify-between px-5 py-4 hover:bg-grafite-50">
+            <Link to={`/funcionarios/${f.id}`} className="flex-1">
+              <div className="flex items-center gap-2">
+                <p className="text-sm text-grafite-900">{f.usuario.nome}</p>
+                <button
+                  onClick={(e) => {
+                    e.preventDefault();
+                    abrirModalEditar(f);
+                  }}
+                  className="text-xs font-medium text-teal-700 hover:text-teal-800"
+                >
+                  Editar
+                </button>
+              </div>
               <p className="text-xs text-grafite-500 mt-0.5">{f.cargo}</p>
-            </div>
+            </Link>
             <span className="codigo text-sm text-grafite-600">
               R$ {Number(f.salarioAtual).toLocaleString("pt-BR")}
             </span>
-          </Link>
+          </div>
         ))}
         {funcionarios.length === 0 && (
           <p className="text-sm text-grafite-500 px-5 py-4">Nenhum funcionário cadastrado.</p>
@@ -213,6 +267,103 @@ export function FuncionariosList() {
             className="w-full mt-2 bg-teal-600 hover:bg-teal-700 text-white text-sm font-medium rounded-md py-2 transition-colors disabled:opacity-60"
           >
             {salvando ? "Salvando..." : "Cadastrar funcionário"}
+          </button>
+        </form>
+      </Modal>
+
+      <Modal titulo="Editar funcionário" aberto={modalEditar} onFechar={() => setModalEditar(false)}>
+        <form onSubmit={salvarEdicao}>
+          <Campo rotulo="Nome completo">
+            <input
+              required
+              className={classeInput}
+              value={editForm.nome}
+              onChange={(e) => setEditForm({ ...editForm, nome: e.target.value })}
+            />
+          </Campo>
+          <Campo rotulo="E-mail">
+            <input
+              required
+              type="email"
+              className={classeInput}
+              value={editForm.email}
+              onChange={(e) => setEditForm({ ...editForm, email: e.target.value })}
+            />
+          </Campo>
+          <div className="grid grid-cols-2 gap-3">
+            <Campo rotulo="Cargo">
+              <input
+                required
+                className={classeInput}
+                value={editForm.cargo}
+                onChange={(e) => setEditForm({ ...editForm, cargo: e.target.value })}
+              />
+            </Campo>
+            <Campo rotulo="Salário">
+              <div className="relative">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-grafite-500">R$</span>
+                <input
+                  required
+                  type="text"
+                  inputMode="decimal"
+                  className={`${classeInput} pl-9`}
+                  value={editForm.salarioAtual}
+                  onChange={(e) => {
+                    const raw = e.target.value.replace(/[^0-9,]/g, "");
+                    setEditForm({ ...editForm, salarioAtual: raw });
+                  }}
+                />
+              </div>
+            </Campo>
+          </div>
+          <Campo rotulo="Especialidades">
+            {editEspecialidades.length > 0 && (
+              <div className="flex flex-wrap gap-1.5 mb-2">
+                {editEspecialidades.map((esp, i) => (
+                  <span
+                    key={i}
+                    className="inline-flex items-center gap-1 bg-teal-50 text-teal-700 text-xs font-medium px-2.5 py-1 rounded-full"
+                  >
+                    {esp}
+                    <button
+                      type="button"
+                      onClick={() => setEditEspecialidades(editEspecialidades.filter((_, j) => j !== i))}
+                      className="text-teal-400 hover:text-teal-700"
+                    >
+                      ✕
+                    </button>
+                  </span>
+                ))}
+              </div>
+            )}
+            <div className="flex gap-2">
+              <input
+                placeholder="Ex: Ressonância Magnética"
+                className={classeInput}
+                value={novaEditEsp}
+                onChange={(e) => setNovaEditEsp(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    adicionarEditEsp();
+                  }
+                }}
+              />
+              <button
+                type="button"
+                onClick={adicionarEditEsp}
+                className="flex-shrink-0 text-sm font-medium text-teal-600 hover:text-teal-700 rounded-md px-3 py-2 transition-colors"
+              >
+                + Adicionar
+              </button>
+            </div>
+          </Campo>
+          <button
+            type="submit"
+            disabled={salvandoEdit}
+            className="w-full mt-2 bg-teal-600 hover:bg-teal-700 text-white text-sm font-medium rounded-md py-2 transition-colors disabled:opacity-60"
+          >
+            {salvandoEdit ? "Salvando..." : "Salvar alterações"}
           </button>
         </form>
       </Modal>
