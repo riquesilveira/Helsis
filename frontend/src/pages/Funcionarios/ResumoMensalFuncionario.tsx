@@ -20,7 +20,7 @@ export function ResumoMensalFuncionario() {
   const [resumo, setResumo] = useState<ResumoMensal | null>(null);
 
   useEffect(() => {
-    api.get(`/desempenho/${id}/resumo-mensal`, { params: { mes, ano } }).then((r) => setResumo(r.data));
+    api.get(`/desempenho/${id}/resumo-mensal`, { params: { mes, ano } }).then((r) => setResumo(r.data)).catch(() => {});
   }, [id, mes, ano]);
 
   function mudarMes(delta: number) {

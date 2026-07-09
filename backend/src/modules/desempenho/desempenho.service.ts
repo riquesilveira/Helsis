@@ -57,11 +57,13 @@ export async function calcularDesempenhoFuncionario(
 
   const deslocamentos = await prisma.deslocamento.aggregate({
     where: { funcionarioId },
-    _sum: { custoPassagem: true, custoHospedagem: true },
+    _sum: { custoPassagem: true, custoHospedagem: true, custoAlimentacao: true },
   });
 
   const custoTotalDeslocamento =
-    Number(deslocamentos._sum.custoPassagem ?? 0) + Number(deslocamentos._sum.custoHospedagem ?? 0);
+    Number(deslocamentos._sum.custoPassagem ?? 0) +
+    Number(deslocamentos._sum.custoHospedagem ?? 0) +
+    Number(deslocamentos._sum.custoAlimentacao ?? 0);
 
   const pecasQueNaoResolveram = await prisma.pecaTrocada.count({
     where: { funcionarioId, resolveuProblema: false },

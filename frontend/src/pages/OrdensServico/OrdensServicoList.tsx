@@ -64,7 +64,7 @@ export function OrdensServicoList() {
   const [busca, setBusca] = useState("");
 
   useEffect(() => {
-    api.get("/ordens-servico").then((r) => setOrdens(r.data));
+    api.get("/ordens-servico").then((r) => setOrdens(r.data)).catch(() => {});
   }, []);
 
   const contagemPorStatus = useMemo(() => {

@@ -24,7 +24,7 @@ export function ManutencoesPreventivas() {
   const [equipamentos, setEquipamentos] = useState<EquipamentoComManutencao[]>([]);
 
   useEffect(() => {
-    api.get("/equipamentos/manutencoes-preventivas").then((r) => setEquipamentos(r.data));
+    api.get("/equipamentos/manutencoes-preventivas").then((r) => setEquipamentos(r.data)).catch(() => {});
   }, []);
 
   const contagem = {

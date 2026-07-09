@@ -26,7 +26,7 @@ export function ClienteDetail() {
   const [salvando, setSalvando] = useState(false);
 
   function carregar() {
-    api.get(`/clientes/${id}`).then((r) => setCliente(r.data));
+    api.get(`/clientes/${id}`).then((r) => setCliente(r.data)).catch(() => {});
   }
 
   useEffect(carregar, [id]);

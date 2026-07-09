@@ -15,11 +15,11 @@ export function RotaFuncionario() {
   const [data, setData] = useState(hojeISO());
 
   useEffect(() => {
-    api.get(`/funcionarios/${id}`).then((r) => setFuncionario(r.data));
+    api.get(`/funcionarios/${id}`).then((r) => setFuncionario(r.data)).catch(() => {});
   }, [id]);
 
   useEffect(() => {
-    api.get(`/funcionarios/${id}/rota`, { params: { data } }).then((r) => setRota(r.data));
+    api.get(`/funcionarios/${id}/rota`, { params: { data } }).then((r) => setRota(r.data)).catch(() => {});
   }, [id, data]);
 
   const dataFormatada = new Date(`${data}T00:00:00`).toLocaleDateString("pt-BR", {

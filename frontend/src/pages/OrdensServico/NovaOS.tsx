@@ -28,7 +28,7 @@ export function NovaOS() {
   );
 
   useEffect(() => {
-    api.get("/clientes").then((r) => setClientes(r.data));
+    api.get("/clientes").then((r) => setClientes(r.data)).catch(() => {});
     api.get("/funcionarios").then((r) => setFuncionarios(r.data)).catch(() => {});
   }, []);
 
@@ -38,7 +38,7 @@ export function NovaOS() {
       setEquipamentos([]);
       return;
     }
-    api.get(`/equipamentos?clienteId=${clienteId}`).then((r) => setEquipamentos(r.data));
+    api.get(`/equipamentos?clienteId=${clienteId}`).then((r) => setEquipamentos(r.data)).catch(() => {});
   }, [clienteId]);
 
   function handleTipoChange(novoTipo: TipoOS) {

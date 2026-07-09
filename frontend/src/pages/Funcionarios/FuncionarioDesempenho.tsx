@@ -52,7 +52,7 @@ export function FuncionarioDesempenho() {
       setFuncionario(r.data);
       setTipoComissao(r.data.tipoComissao ?? "");
       setValorComissao(r.data.valorComissao != null ? String(r.data.valorComissao) : "");
-    });
+    }).catch(() => {});
   }
 
   function abrirModalEditar() {
@@ -89,14 +89,14 @@ export function FuncionarioDesempenho() {
       });
       setModalEditar(false);
       carregarFuncionario();
-      api.get(`/desempenho/${id}`).then((r) => setDesempenho(r.data));
+      api.get(`/desempenho/${id}`).then((r) => setDesempenho(r.data)).catch(() => {});
     } finally {
       setSalvandoEdit(false);
     }
   }
 
   useEffect(() => {
-    api.get(`/desempenho/${id}`).then((r) => setDesempenho(r.data));
+    api.get(`/desempenho/${id}`).then((r) => setDesempenho(r.data)).catch(() => {});
     carregarFuncionario();
   }, [id]);
 

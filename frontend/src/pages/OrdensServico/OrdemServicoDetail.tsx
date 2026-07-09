@@ -75,11 +75,11 @@ export function OrdemServicoDetail() {
   const [salvandoFinanceiro, setSalvandoFinanceiro] = useState(false);
 
   function carregar() {
-    api.get(`/ordens-servico/${id}`).then((r) => setOs(r.data));
+    api.get(`/ordens-servico/${id}`).then((r) => setOs(r.data)).catch(() => {});
   }
 
   function carregarNotificacoes() {
-    api.get(`/ordens-servico/${id}/notificacoes`).then((r) => setNotificacoes(r.data));
+    api.get(`/ordens-servico/${id}/notificacoes`).then((r) => setNotificacoes(r.data)).catch(() => {});
   }
 
   useEffect(carregar, [id]);
@@ -91,7 +91,7 @@ export function OrdemServicoDetail() {
     return () => clearTimeout(timer);
   }, [id]);
   useEffect(() => {
-    api.get("/pecas").then((r) => setPecas(r.data));
+    api.get("/pecas").then((r) => setPecas(r.data)).catch(() => {});
   }, []);
 
   // inicializa os campos de fechamento financeiro quando a OS carrega

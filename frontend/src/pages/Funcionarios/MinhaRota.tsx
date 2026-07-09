@@ -20,7 +20,7 @@ export function MinhaRota() {
   const [data, setData] = useState(hojeISO());
 
   useEffect(() => {
-    api.get("/funcionarios/me/rota", { params: { data } }).then((r) => setRota(r.data));
+    api.get("/funcionarios/me/rota", { params: { data } }).then((r) => setRota(r.data)).catch(() => {});
   }, [data]);
 
   const dataFormatada = new Date(`${data}T00:00:00`).toLocaleDateString("pt-BR", {

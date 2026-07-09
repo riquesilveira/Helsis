@@ -96,7 +96,7 @@ export function FuncionariosList() {
   }
 
   function carregar() {
-    api.get("/funcionarios").then((r) => setFuncionarios(r.data));
+    api.get("/funcionarios").then((r) => setFuncionarios(r.data)).catch(() => {});
   }
 
   useEffect(carregar, []);
@@ -156,7 +156,7 @@ export function FuncionariosList() {
               <p className="text-xs text-grafite-500 mt-0.5">{f.cargo}</p>
             </Link>
             <span className="codigo text-sm text-grafite-600">
-              R$ {Number(f.salarioAtual).toLocaleString("pt-BR")}
+              R$ {Number(f.salarioAtual).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
             </span>
           </div>
         ))}

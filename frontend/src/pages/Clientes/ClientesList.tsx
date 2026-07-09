@@ -66,7 +66,7 @@ export function ClientesList() {
   }
 
   function carregar() {
-    api.get("/clientes").then((r) => setClientes(r.data));
+    api.get("/clientes").then((r) => setClientes(r.data)).catch(() => {});
   }
 
   useEffect(carregar, []);
