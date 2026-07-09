@@ -11,14 +11,27 @@ const FORM_VAZIO = {
   cargo: "",
   salarioAtual: "",
   dataAdmissao: new Date().toISOString().slice(0, 10),
-  especialidades: "",
 };
 
 export function FuncionariosList() {
   const [funcionarios, setFuncionarios] = useState<Funcionario[]>([]);
   const [modalAberto, setModalAberto] = useState(false);
   const [form, setForm] = useState(FORM_VAZIO);
+  const [especialidades, setEspecialidades] = useState<string[]>([]);
+  const [novaEspecialidade, setNovaEspecialidade] = useState("");
   const [salvando, setSalvando] = useState(false);
+
+  function adicionarEspecialidade() {
+    const valor = novaEspecialidade.trim();
+    if (valor && !especialidades.includes(valor)) {
+      setEspecialidades([...especialidades, valor]);
+    }
+    setNovaEspecialidade("");
+  }
+
+  function removerEspecialidade(index: number) {
+    setEspecialidades(especialidades.filter((_, i) => i !== index));
+  }
 
   function carregar() {
     api.get("/funcionarios").then((r) => setFuncionarios(r.data));
@@ -37,12 +50,11 @@ export function FuncionariosList() {
         cargo: form.cargo,
         salarioAtual: Number(form.salarioAtual),
         dataAdmissao: form.dataAdmissao,
-        especialidades: form.especialidades
-          ? form.especialidades.split(",").map((s) => s.trim()).filter(Boolean)
-          : [],
+        especialidades,
       });
       setModalAberto(false);
       setForm(FORM_VAZIO);
+      setEspecialidades([]);
       carregar();
     } finally {
       setSalvando(false);
@@ -147,13 +159,47 @@ export function FuncionariosList() {
               onChange={(e) => setForm({ ...form, dataAdmissao: e.target.value })}
             />
           </Campo>
-          <Campo rotulo="Especialidades (separadas por vírgula, opcional)">
-            <input
-              placeholder="Ex: Ressonância Magnética, Tomografia"
-              className={classeInput}
-              value={form.especialidades}
-              onChange={(e) => setForm({ ...form, especialidades: e.target.value })}
-            />
+          <Campo rotulo="Especialidades">
+            {especialidades.length > 0 && (
+              <div className="flex flex-wrap gap-1.5 mb-2">
+                {especialidades.map((esp, i) => (
+                  <span
+                    key={i}
+                    className="inline-flex items-center gap-1 bg-teal-50 text-teal-700 text-xs font-medium px-2.5 py-1 rounded-full"
+                  >
+                    {esp}
+                    <button
+                      type="button"
+                      onClick={() => removerEspecialidade(i)}
+                      className="text-teal-400 hover:text-teal-700"
+                    >
+                      ✕
+                    </button>
+                  </span>
+                ))}
+              </div>
+            )}
+            <div className="flex gap-2">
+              <input
+                placeholder="Ex: Ressonância Magnética"
+                className={classeInput}
+                value={novaEspecialidade}
+                onChange={(e) => setNovaEspecialidade(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    adicionarEspecialidade();
+                  }
+                }}
+              />
+              <button
+                type="button"
+                onClick={adicionarEspecialidade}
+                className="flex-shrink-0 text-sm font-medium text-teal-600 hover:text-teal-700 border border-teal-300 hover:border-teal-400 rounded-md px-3 py-2 transition-colors"
+              >
+                + Adicionar
+              </button>
+            </div>
           </Campo>
           <button
             type="submit"
