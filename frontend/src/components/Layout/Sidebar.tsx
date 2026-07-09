@@ -1,4 +1,4 @@
-import { NavLink } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
 import { usuarioLogado } from "../../services/auth";
 
 const LINKS = [
@@ -10,20 +10,33 @@ const LINKS = [
   { to: "/funcionarios", rotulo: "Equipe & desempenho", fim: false, restritoA: ["DONO", "GESTOR"] },
 ];
 
+const ROTULO_PAPEL: Record<string, string> = {
+  DONO: "Proprietário",
+  GESTOR: "Gestor",
+  TECNICO: "Técnico",
+  CLIENTE: "Cliente",
+};
+
 export function Sidebar() {
+  const navigate = useNavigate();
   const usuario = usuarioLogado();
   const links = LINKS.filter(
     (link) => !link.restritoA || (usuario && link.restritoA.includes(usuario.papel))
   );
 
+  function sair() {
+    localStorage.removeItem("token");
+    localStorage.removeItem("usuario");
+    navigate("/login");
+  }
+
   return (
     <aside className="w-60 flex-shrink-0 bg-grafite-950 text-grafite-100 min-h-screen flex flex-col print:hidden">
       <div className="px-5 py-5 border-b border-grafite-800">
-        <p className="font-semibold tracking-tight text-center">Sistema Inteligente de Gestão de Serviços</p>
-        <p className="text-xs text-grafite-400 mt-0.5">
-          {usuario ? usuario.nome : "Painel de gestão"}
-        </p>
+        <p className="font-semibold tracking-tight text-lg">Resso</p>
+        <p className="text-xs text-grafite-400 mt-0.5">Gestão de serviços</p>
       </div>
+
       <nav className="flex-1 px-3 py-4 space-y-1">
         {links.map((link) => (
           <NavLink
@@ -42,6 +55,19 @@ export function Sidebar() {
           </NavLink>
         ))}
       </nav>
+
+      {usuario && (
+        <div className="px-5 py-4 border-t border-grafite-800">
+          <p className="text-sm font-medium text-grafite-100 truncate">{usuario.nome}</p>
+          <p className="text-xs text-grafite-400 mt-0.5">{ROTULO_PAPEL[usuario.papel] ?? usuario.papel}</p>
+          <button
+            onClick={sair}
+            className="mt-3 text-xs text-grafite-400 hover:text-grafite-200 transition-colors"
+          >
+            Sair da conta
+          </button>
+        </div>
+      )}
     </aside>
   );
 }
