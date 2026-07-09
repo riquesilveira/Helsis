@@ -1,13 +1,31 @@
 import { NavLink, useNavigate } from "react-router-dom";
 import { usuarioLogado } from "../../services/auth";
+import {
+  LayoutDashboard,
+  MapPin,
+  ClipboardList,
+  CalendarClock,
+  Users,
+  UsersRound,
+  LogOut,
+} from "lucide-react";
+import { ComponentType } from "react";
 
-const LINKS = [
-  { to: "/", rotulo: "Painel", fim: true, restritoA: null as string[] | null },
-  { to: "/minha-rota", rotulo: "Minha rota", fim: false, restritoA: ["TECNICO"] },
-  { to: "/ordens-servico", rotulo: "Ordens de serviço", fim: false, restritoA: null as string[] | null },
-  { to: "/manutencoes-preventivas", rotulo: "Manutenções preventivas", fim: false, restritoA: null as string[] | null },
-  { to: "/clientes", rotulo: "Clientes", fim: false, restritoA: null as string[] | null },
-  { to: "/funcionarios", rotulo: "Equipe & desempenho", fim: false, restritoA: ["DONO", "GESTOR"] },
+interface LinkConfig {
+  to: string;
+  rotulo: string;
+  fim: boolean;
+  restritoA: string[] | null;
+  icone: ComponentType<{ size?: number; className?: string }>;
+}
+
+const LINKS: LinkConfig[] = [
+  { to: "/", rotulo: "Painel", fim: true, restritoA: null, icone: LayoutDashboard },
+  { to: "/minha-rota", rotulo: "Minha rota", fim: false, restritoA: ["TECNICO"], icone: MapPin },
+  { to: "/ordens-servico", rotulo: "Ordens de serviço", fim: false, restritoA: null, icone: ClipboardList },
+  { to: "/manutencoes-preventivas", rotulo: "Manutenções preventivas", fim: false, restritoA: null, icone: CalendarClock },
+  { to: "/clientes", rotulo: "Clientes", fim: false, restritoA: null, icone: Users },
+  { to: "/funcionarios", rotulo: "Equipe & desempenho", fim: false, restritoA: ["DONO", "GESTOR"], icone: UsersRound },
 ];
 
 const ROTULO_PAPEL: Record<string, string> = {
@@ -38,22 +56,26 @@ export function Sidebar() {
       </div>
 
       <nav className="flex-1 px-3 py-4 space-y-1">
-        {links.map((link) => (
-          <NavLink
-            key={link.to}
-            to={link.to}
-            end={link.fim}
-            className={({ isActive }) =>
-              `block px-3 py-2 rounded-md text-sm transition-colors ${
-                isActive
-                  ? "bg-teal-600 text-white"
-                  : "text-grafite-200 hover:bg-grafite-800"
-              }`
-            }
-          >
-            {link.rotulo}
-          </NavLink>
-        ))}
+        {links.map((link) => {
+          const Icone = link.icone;
+          return (
+            <NavLink
+              key={link.to}
+              to={link.to}
+              end={link.fim}
+              className={({ isActive }) =>
+                `flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors ${
+                  isActive
+                    ? "bg-teal-600 text-white"
+                    : "text-grafite-200 hover:bg-grafite-800"
+                }`
+              }
+            >
+              <Icone size={18} className="flex-shrink-0" />
+              {link.rotulo}
+            </NavLink>
+          );
+        })}
       </nav>
 
       {usuario && (
@@ -62,8 +84,9 @@ export function Sidebar() {
           <p className="text-xs text-grafite-400 mt-0.5">{ROTULO_PAPEL[usuario.papel] ?? usuario.papel}</p>
           <button
             onClick={sair}
-            className="mt-3 text-xs text-grafite-400 hover:text-grafite-200 transition-colors"
+            className="mt-3 flex items-center gap-2 text-xs text-grafite-400 hover:text-grafite-200 transition-colors"
           >
+            <LogOut size={14} />
             Sair da conta
           </button>
         </div>
