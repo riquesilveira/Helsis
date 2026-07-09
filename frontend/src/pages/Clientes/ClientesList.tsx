@@ -27,30 +27,33 @@ export function ClientesList() {
   const cacheMunicipios = useRef<MunicipioIBGE[]>();
   const timerCidade = useRef<ReturnType<typeof setTimeout>>();
 
+  // Pré-carrega os municípios assim que o modal abre
+  useEffect(() => {
+    if (modalAberto && !cacheMunicipios.current) {
+      fetch("https://servicodados.ibge.gov.br/api/v1/localidades/municipios?orderBy=nome")
+        .then((res) => res.json())
+        .then((dados) => { cacheMunicipios.current = dados; })
+        .catch(() => {});
+    }
+  }, [modalAberto]);
+
   function buscarCidades(termo: string) {
     clearTimeout(timerCidade.current);
-    if (termo.length < 2) {
+    if (termo.length < 1) {
       setSugestoesCidade([]);
       return;
     }
-    timerCidade.current = setTimeout(async () => {
-      try {
-        if (!cacheMunicipios.current) {
-          const res = await fetch(
-            "https://servicodados.ibge.gov.br/api/v1/localidades/municipios?orderBy=nome"
-          );
-          cacheMunicipios.current = await res.json();
-        }
-        const termoLower = termo.toLowerCase();
-        setSugestoesCidade(
-          cacheMunicipios.current!
-            .filter((m) => m.nome.toLowerCase().includes(termoLower))
-            .slice(0, 8)
-        );
-      } catch {
-        setSugestoesCidade([]);
-      }
-    }, 300);
+    timerCidade.current = setTimeout(() => {
+      if (!cacheMunicipios.current) return;
+      const termoNorm = termo.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+      setSugestoesCidade(
+        cacheMunicipios.current
+          .filter((m) =>
+            m.nome.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").startsWith(termoNorm)
+          )
+          .slice(0, 8)
+      );
+    }, 150);
   }
 
   function selecionarCidade(municipio: MunicipioIBGE) {
