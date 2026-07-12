@@ -1,5 +1,6 @@
 import { PrismaClient, PapelUsuario, ModalidadeAtendimento, StatusOS, TipoOS } from "@prisma/client";
 import bcrypt from "bcryptjs";
+import { EQUIPAMENTOS_CATALOGO } from "./equipamentosCatalogo";
 
 const prisma = new PrismaClient();
 
@@ -90,6 +91,19 @@ async function criarOSFechada(input: {
 }
 
 async function main() {
+  // ------------------------------------------------------------------
+  // Catálogo de referência de equipamentos (tipo/marca/modelo) — sempre
+  // roda, mesmo em bancos já existentes, e é idempotente (upsert).
+  // ------------------------------------------------------------------
+  for (const item of EQUIPAMENTOS_CATALOGO) {
+    await prisma.equipamentoCatalogo.upsert({
+      where: { tipo_marca_modelo: item },
+      update: {},
+      create: item,
+    });
+  }
+  console.log(`Catálogo de equipamentos: ${EQUIPAMENTOS_CATALOGO.length} itens.`);
+
   const senhaHash = await bcrypt.hash("123456", 10);
 
   // ------------------------------------------------------------------

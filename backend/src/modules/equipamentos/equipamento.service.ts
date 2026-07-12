@@ -21,6 +21,14 @@ export function somarMeses(data: Date, meses: number): Date {
   return resultado;
 }
 
+// Catálogo de referência (tipo/marca/modelo) usado para sugerir/autocompletar
+// o formulário de novo equipamento. Lista pequena e estática — sem paginação.
+export function listarCatalogo() {
+  return prisma.equipamentoCatalogo.findMany({
+    orderBy: [{ tipo: "asc" }, { marca: "asc" }, { modelo: "asc" }],
+  });
+}
+
 export function listarEquipamentos(clienteId?: string) {
   return prisma.equipamento.findMany({
     where: clienteId ? { clienteId } : undefined,

@@ -48,6 +48,13 @@ export interface Equipamento {
   proximaManutencaoPreventiva?: string | null;
 }
 
+export interface EquipamentoCatalogoItem {
+  id: string;
+  tipo: string;
+  marca: string;
+  modelo: string;
+}
+
 export type StatusManutencaoPreventiva = "ATRASADA" | "PROXIMA" | "EM_DIA";
 
 export interface EquipamentoComManutencao extends Equipamento {

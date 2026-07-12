@@ -9,6 +9,7 @@ router.use(autenticar);
 
 // Precisa vir antes de "/:id" para não ser interpretado como um id.
 router.get("/manutencoes-preventivas", asyncHandler(equipamentoController.manutencoesPreventivas));
+router.get("/catalogo", asyncHandler(equipamentoController.catalogo));
 
 router.get("/", autorizar("DONO", "GESTOR", "TECNICO"), asyncHandler(equipamentoController.listar));
 router.get("/:id", autorizar("DONO", "GESTOR", "TECNICO"), asyncHandler(equipamentoController.buscarPorId));

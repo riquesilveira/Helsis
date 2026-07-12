@@ -125,6 +125,19 @@ model Equipamento {
   @@map("equipamentos")
 }
 
+// Catálogo de referência (tipo/marca/modelo) pré-cadastrado para sugerir
+// no formulário de novo equipamento — não é obrigatório, só facilita a
+// digitação e evita variações do mesmo fabricante (ex: "Philips" vs "philips").
+model EquipamentoCatalogo {
+  id     String @id @default(uuid())
+  tipo   String
+  marca  String
+  modelo String
+
+  @@unique([tipo, marca, modelo])
+  @@map("equipamentos_catalogo")
+}
+
 // ----------------------------------------------------------------------------
 // ORDEM DE SERVIÇO (o núcleo do sistema)
 // ----------------------------------------------------------------------------

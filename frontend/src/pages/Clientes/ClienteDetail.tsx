@@ -1,7 +1,7 @@
 import { FormEvent, useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { api } from "../../services/api";
-import { Cliente, Equipamento } from "../../types";
+import { Cliente, Equipamento, EquipamentoCatalogoItem } from "../../types";
 import { Campo, classeInput, Modal } from "../../components/Modal";
 
 const EQUIPAMENTO_VAZIO = {
@@ -18,6 +18,10 @@ function formatarProximaData(iso?: string | null) {
   return new Date(iso).toLocaleDateString("pt-BR");
 }
 
+function normalizar(texto: string) {
+  return texto.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+}
+
 export function ClienteDetail() {
   const { id } = useParams();
   const [cliente, setCliente] = useState<Cliente | null>(null);
@@ -25,11 +29,50 @@ export function ClienteDetail() {
   const [form, setForm] = useState(EQUIPAMENTO_VAZIO);
   const [salvando, setSalvando] = useState(false);
 
+  // Catálogo de referência (tipo/marca/modelo) — carregado uma vez ao abrir
+  // o modal, usado só pra sugerir. O usuário sempre pode digitar algo novo.
+  const [catalogo, setCatalogo] = useState<EquipamentoCatalogoItem[]>([]);
+  const [campoFocado, setCampoFocado] = useState<"tipo" | "marca" | "modelo" | null>(null);
+
   function carregar() {
     api.get(`/clientes/${id}`).then((r) => setCliente(r.data)).catch(() => {});
   }
 
   useEffect(carregar, [id]);
+
+  useEffect(() => {
+    if (modalAberto && catalogo.length === 0) {
+      api.get("/equipamentos/catalogo").then((r) => setCatalogo(r.data)).catch(() => {});
+    }
+  }, [modalAberto, catalogo.length]);
+
+  const tiposUnicos = Array.from(new Set(catalogo.map((c) => c.tipo)));
+  const sugestoesTipo = form.tipo
+    ? tiposUnicos.filter((t) => normalizar(t).startsWith(normalizar(form.tipo))).slice(0, 8)
+    : [];
+
+  // Marca: prioriza marcas do tipo já selecionado, mas cai pra todas se
+  // o tipo digitado ainda não bater com nenhum item do catálogo.
+  const marcasDoTipo = form.tipo
+    ? catalogo.filter((c) => normalizar(c.tipo) === normalizar(form.tipo))
+    : catalogo;
+  const marcasUnicas = Array.from(new Set((marcasDoTipo.length ? marcasDoTipo : catalogo).map((c) => c.marca)));
+  const sugestoesMarca = form.marca
+    ? marcasUnicas.filter((m) => normalizar(m).startsWith(normalizar(form.marca))).slice(0, 8)
+    : [];
+
+  // Modelo: filtra pela marca (e tipo, se houver) já selecionados.
+  const modelosDaMarca = catalogo.filter(
+    (c) =>
+      (!form.marca || normalizar(c.marca) === normalizar(form.marca)) &&
+      (!form.tipo || normalizar(c.tipo) === normalizar(form.tipo))
+  );
+  const sugestoesModelo = form.modelo
+    ? modelosDaMarca
+        .map((c) => c.modelo)
+        .filter((m) => normalizar(m).startsWith(normalizar(form.modelo)))
+        .slice(0, 8)
+    : [];
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
@@ -111,28 +154,82 @@ export function ClienteDetail() {
       >
         <form onSubmit={handleSubmit}>
           <Campo rotulo="Tipo de equipamento">
-            <input
-              required
-              placeholder="Ex: Ressonância Magnética 1.5T, Tomógrafo 64 canais"
-              className={classeInput}
-              value={form.tipo}
-              onChange={(e) => setForm({ ...form, tipo: e.target.value })}
-            />
+            <div className="relative">
+              <input
+                required
+                autoComplete="off"
+                placeholder="Ex: Ressonância Magnética, Tomógrafo"
+                className={classeInput}
+                value={form.tipo}
+                onChange={(e) => setForm({ ...form, tipo: e.target.value })}
+                onFocus={() => setCampoFocado("tipo")}
+                onBlur={() => setTimeout(() => setCampoFocado(null), 200)}
+              />
+              {campoFocado === "tipo" && sugestoesTipo.length > 0 && (
+                <ul className="absolute z-10 left-0 right-0 top-full mt-1 bg-white border border-grafite-200 rounded-md shadow-lg max-h-48 overflow-y-auto">
+                  {sugestoesTipo.map((t) => (
+                    <li
+                      key={t}
+                      className="px-3 py-2 text-sm text-grafite-900 hover:bg-teal-50 cursor-pointer"
+                      onMouseDown={() => setForm({ ...form, tipo: t })}
+                    >
+                      {t}
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
           </Campo>
           <div className="grid grid-cols-2 gap-3">
             <Campo rotulo="Marca">
-              <input
-                className={classeInput}
-                value={form.marca}
-                onChange={(e) => setForm({ ...form, marca: e.target.value })}
-              />
+              <div className="relative">
+                <input
+                  autoComplete="off"
+                  className={classeInput}
+                  value={form.marca}
+                  onChange={(e) => setForm({ ...form, marca: e.target.value })}
+                  onFocus={() => setCampoFocado("marca")}
+                  onBlur={() => setTimeout(() => setCampoFocado(null), 200)}
+                />
+                {campoFocado === "marca" && sugestoesMarca.length > 0 && (
+                  <ul className="absolute z-10 left-0 right-0 top-full mt-1 bg-white border border-grafite-200 rounded-md shadow-lg max-h-48 overflow-y-auto">
+                    {sugestoesMarca.map((m) => (
+                      <li
+                        key={m}
+                        className="px-3 py-2 text-sm text-grafite-900 hover:bg-teal-50 cursor-pointer"
+                        onMouseDown={() => setForm({ ...form, marca: m })}
+                      >
+                        {m}
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
             </Campo>
             <Campo rotulo="Modelo">
-              <input
-                className={classeInput}
-                value={form.modelo}
-                onChange={(e) => setForm({ ...form, modelo: e.target.value })}
-              />
+              <div className="relative">
+                <input
+                  autoComplete="off"
+                  className={classeInput}
+                  value={form.modelo}
+                  onChange={(e) => setForm({ ...form, modelo: e.target.value })}
+                  onFocus={() => setCampoFocado("modelo")}
+                  onBlur={() => setTimeout(() => setCampoFocado(null), 200)}
+                />
+                {campoFocado === "modelo" && sugestoesModelo.length > 0 && (
+                  <ul className="absolute z-10 left-0 right-0 top-full mt-1 bg-white border border-grafite-200 rounded-md shadow-lg max-h-48 overflow-y-auto">
+                    {sugestoesModelo.map((m) => (
+                      <li
+                        key={m}
+                        className="px-3 py-2 text-sm text-grafite-900 hover:bg-teal-50 cursor-pointer"
+                        onMouseDown={() => setForm({ ...form, modelo: m })}
+                      >
+                        {m}
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
             </Campo>
           </div>
           <Campo rotulo="Número de série (opcional)">

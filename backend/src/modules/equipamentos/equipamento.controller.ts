@@ -23,6 +23,11 @@ export async function manutencoesPreventivas(_req: Request, res: Response) {
   res.json(await equipamentoService.listarManutencoesPreventivas());
 }
 
+// Idem — catálogo de referência tipo/marca/modelo pra autocomplete.
+export async function catalogo(_req: Request, res: Response) {
+  res.json(await equipamentoService.listarCatalogo());
+}
+
 export async function buscarPorId(req: Request, res: Response) {
   const equipamento = await equipamentoService.buscarEquipamentoPorId(req.params.id);
   res.json(equipamento);
