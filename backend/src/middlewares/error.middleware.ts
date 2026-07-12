@@ -1,4 +1,5 @@
 import { Request, Response, NextFunction } from "express";
+import { ZodError } from "zod";
 import { AppError } from "../utils/AppError";
 
 export function errorMiddleware(
@@ -10,6 +11,11 @@ export function errorMiddleware(
 ) {
   if (err instanceof AppError) {
     return res.status(err.statusCode).json({ erro: err.message });
+  }
+
+  if (err instanceof ZodError) {
+    const mensagem = err.errors.map((e) => e.message).join(", ");
+    return res.status(400).json({ erro: mensagem });
   }
 
   console.error(err);
