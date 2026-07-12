@@ -28,6 +28,7 @@ export function ClienteDetail() {
   const [modalAberto, setModalAberto] = useState(false);
   const [form, setForm] = useState(EQUIPAMENTO_VAZIO);
   const [salvando, setSalvando] = useState(false);
+  const [editandoId, setEditandoId] = useState<string | null>(null);
 
   // Catálogo de referência (tipo/marca/modelo) — carregado uma vez ao abrir
   // o modal, usado só pra sugerir. O usuário sempre pode digitar algo novo.
@@ -74,19 +75,49 @@ export function ClienteDetail() {
         .slice(0, 8)
     : [];
 
+  function fecharModal() {
+    setModalAberto(false);
+    setEditandoId(null);
+    setForm(EQUIPAMENTO_VAZIO);
+  }
+
+  function abrirNovo() {
+    setEditandoId(null);
+    setForm(EQUIPAMENTO_VAZIO);
+    setModalAberto(true);
+  }
+
+  function abrirEdicao(eq: Equipamento) {
+    setForm({
+      tipo: eq.tipo,
+      marca: eq.marca ?? "",
+      modelo: eq.modelo ?? "",
+      numeroSerie: eq.numeroSerie ?? "",
+      localInstalacao: eq.localInstalacao ?? "",
+      frequenciaManutencaoMeses: eq.frequenciaManutencaoMeses ? String(eq.frequenciaManutencaoMeses) : "",
+    });
+    setEditandoId(eq.id);
+    setModalAberto(true);
+  }
+
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     setSalvando(true);
     try {
-      await api.post("/equipamentos", {
+      const dados = {
         ...form,
-        clienteId: id,
         frequenciaManutencaoMeses: form.frequenciaManutencaoMeses
           ? Number(form.frequenciaManutencaoMeses)
-          : undefined,
-      });
-      setModalAberto(false);
-      setForm(EQUIPAMENTO_VAZIO);
+          : editandoId
+          ? null // edição: campo limpo pelo usuário deve remover a preventiva
+          : undefined, // criação: campo vazio simplesmente não é enviado
+      };
+      if (editandoId) {
+        await api.put(`/equipamentos/${editandoId}`, dados);
+      } else {
+        await api.post("/equipamentos", { ...dados, clienteId: id });
+      }
+      fecharModal();
       carregar();
     } finally {
       setSalvando(false);
@@ -108,7 +139,7 @@ export function ClienteDetail() {
       <div className="flex items-center justify-between">
         <h2 className="text-sm font-medium text-grafite-900">Equipamentos</h2>
         <button
-          onClick={() => setModalAberto(true)}
+          onClick={abrirNovo}
           className="text-xs font-medium text-teal-700 hover:text-teal-800"
         >
           + Novo equipamento
@@ -134,12 +165,20 @@ export function ClienteDetail() {
                 <p className="text-xs text-grafite-400 mt-0.5">Sem manutenção preventiva agendada</p>
               )}
             </div>
-            <Link
-              to={`/ordens-servico/nova?clienteId=${cliente.id}&equipamentoId=${eq.id}`}
-              className="text-xs font-medium text-teal-700 hover:text-teal-800 flex-shrink-0"
-            >
-              Abrir OS →
-            </Link>
+            <div className="flex items-center gap-3 flex-shrink-0">
+              <button
+                onClick={() => abrirEdicao(eq)}
+                className="text-xs font-medium text-grafite-600 hover:text-grafite-900"
+              >
+                Editar
+              </button>
+              <Link
+                to={`/ordens-servico/nova?clienteId=${cliente.id}&equipamentoId=${eq.id}`}
+                className="text-xs font-medium text-teal-700 hover:text-teal-800"
+              >
+                Abrir OS →
+              </Link>
+            </div>
           </div>
         ))}
         {(cliente.equipamentos ?? []).length === 0 && (
@@ -148,9 +187,9 @@ export function ClienteDetail() {
       </div>
 
       <Modal
-        titulo="Novo equipamento"
+        titulo={editandoId ? "Editar equipamento" : "Novo equipamento"}
         aberto={modalAberto}
-        onFechar={() => setModalAberto(false)}
+        onFechar={fecharModal}
       >
         <form onSubmit={handleSubmit}>
           <Campo rotulo="Tipo de equipamento">
@@ -264,7 +303,7 @@ export function ClienteDetail() {
             disabled={salvando}
             className="w-full mt-2 bg-teal-600 hover:bg-teal-700 text-white text-sm font-medium rounded-md py-2 transition-colors disabled:opacity-60"
           >
-            {salvando ? "Salvando..." : "Cadastrar equipamento"}
+            {salvando ? "Salvando..." : editandoId ? "Salvar alterações" : "Cadastrar equipamento"}
           </button>
         </form>
       </Modal>
