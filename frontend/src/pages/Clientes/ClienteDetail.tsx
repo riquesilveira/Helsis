@@ -39,6 +39,13 @@ export function ClienteDetail() {
   const refMarca = useRef<HTMLInputElement>(null);
   const refModelo = useRef<HTMLInputElement>(null);
 
+  // Texto de busca de cada campo, separado do valor salvo em `form`. Ao focar
+  // um campo já preenchido (ex: pra trocar o equipamento por outro), a busca
+  // reinicia vazia, mostrando o catálogo inteiro em vez de só o item já escolhido.
+  const [buscaTipo, setBuscaTipo] = useState("");
+  const [buscaMarca, setBuscaMarca] = useState("");
+  const [buscaModelo, setBuscaModelo] = useState("");
+
   function carregar() {
     api.get(`/clientes/${id}`).then((r) => setCliente(r.data)).catch(() => {});
   }
@@ -51,11 +58,12 @@ export function ClienteDetail() {
     }
   }, [modalAberto, catalogo.length]);
 
-  // Filtro por prefixo quando o campo tem texto; com o campo vazio (ex: ao
-  // clicar no chevron) mostra a lista inteira, como um select.
+  // Filtro por prefixo usa o texto de busca (não o valor salvo), então ao
+  // focar um campo já preenchido a lista inteira aparece, permitindo trocar
+  // o equipamento por outro em vez de só ver a opção já escolhida.
   const tiposUnicos = Array.from(new Set(catalogo.map((c) => c.tipo)));
   const sugestoesTipo = tiposUnicos
-    .filter((t) => normalizar(t).startsWith(normalizar(form.tipo)))
+    .filter((t) => normalizar(t).startsWith(normalizar(buscaTipo)))
     .slice(0, 8);
 
   // Marca: prioriza marcas do tipo já selecionado, mas cai pra todas se
@@ -65,7 +73,7 @@ export function ClienteDetail() {
     : catalogo;
   const marcasUnicas = Array.from(new Set((marcasDoTipo.length ? marcasDoTipo : catalogo).map((c) => c.marca)));
   const sugestoesMarca = marcasUnicas
-    .filter((m) => normalizar(m).startsWith(normalizar(form.marca)))
+    .filter((m) => normalizar(m).startsWith(normalizar(buscaMarca)))
     .slice(0, 8);
 
   // Modelo: filtra pela marca (e tipo, se houver) já selecionados.
@@ -76,18 +84,26 @@ export function ClienteDetail() {
   );
   const sugestoesModelo = modelosDaMarca
     .map((c) => c.modelo)
-    .filter((m) => normalizar(m).startsWith(normalizar(form.modelo)))
+    .filter((m) => normalizar(m).startsWith(normalizar(buscaModelo)))
     .slice(0, 8);
+
+  function limparBusca() {
+    setBuscaTipo("");
+    setBuscaMarca("");
+    setBuscaModelo("");
+  }
 
   function fecharModal() {
     setModalAberto(false);
     setEditandoId(null);
     setForm(EQUIPAMENTO_VAZIO);
+    limparBusca();
   }
 
   function abrirNovo() {
     setEditandoId(null);
     setForm(EQUIPAMENTO_VAZIO);
+    limparBusca();
     setModalAberto(true);
   }
 
@@ -100,6 +116,7 @@ export function ClienteDetail() {
       localInstalacao: eq.localInstalacao ?? "",
       frequenciaManutencaoMeses: eq.frequenciaManutencaoMeses ? String(eq.frequenciaManutencaoMeses) : "",
     });
+    limparBusca();
     setEditandoId(eq.id);
     setModalAberto(true);
   }
@@ -205,8 +222,14 @@ export function ClienteDetail() {
                 placeholder="Ex: Ressonância Magnética, Tomógrafo"
                 className={`${classeInput} pr-8`}
                 value={form.tipo}
-                onChange={(e) => setForm({ ...form, tipo: e.target.value })}
-                onFocus={() => setCampoFocado("tipo")}
+                onChange={(e) => {
+                  setForm({ ...form, tipo: e.target.value });
+                  setBuscaTipo(e.target.value);
+                }}
+                onFocus={() => {
+                  setCampoFocado("tipo");
+                  setBuscaTipo("");
+                }}
                 onBlur={() => setTimeout(() => setCampoFocado((atual) => (atual === "tipo" ? null : atual)), 200)}
               />
               <button
@@ -225,7 +248,20 @@ export function ClienteDetail() {
                     <li
                       key={t}
                       className="px-3 py-2 text-sm text-grafite-900 hover:bg-teal-50 cursor-pointer"
-                      onMouseDown={() => setForm({ ...form, tipo: t })}
+                      onMouseDown={() => {
+                        const mudouTipo = normalizar(t) !== normalizar(form.tipo);
+                        setForm({
+                          ...form,
+                          tipo: t,
+                          marca: mudouTipo ? "" : form.marca,
+                          modelo: mudouTipo ? "" : form.modelo,
+                        });
+                        setBuscaTipo(t);
+                        if (mudouTipo) {
+                          setBuscaMarca("");
+                          setBuscaModelo("");
+                        }
+                      }}
                     >
                       {t}
                     </li>
@@ -242,8 +278,14 @@ export function ClienteDetail() {
                   autoComplete="off"
                   className={`${classeInput} pr-8`}
                   value={form.marca}
-                  onChange={(e) => setForm({ ...form, marca: e.target.value })}
-                  onFocus={() => setCampoFocado("marca")}
+                  onChange={(e) => {
+                    setForm({ ...form, marca: e.target.value });
+                    setBuscaMarca(e.target.value);
+                  }}
+                  onFocus={() => {
+                    setCampoFocado("marca");
+                    setBuscaMarca("");
+                  }}
                   onBlur={() => setTimeout(() => setCampoFocado((atual) => (atual === "marca" ? null : atual)), 200)}
                 />
                 <button
@@ -262,7 +304,12 @@ export function ClienteDetail() {
                       <li
                         key={m}
                         className="px-3 py-2 text-sm text-grafite-900 hover:bg-teal-50 cursor-pointer"
-                        onMouseDown={() => setForm({ ...form, marca: m })}
+                        onMouseDown={() => {
+                          const mudouMarca = normalizar(m) !== normalizar(form.marca);
+                          setForm({ ...form, marca: m, modelo: mudouMarca ? "" : form.modelo });
+                          setBuscaMarca(m);
+                          if (mudouMarca) setBuscaModelo("");
+                        }}
                       >
                         {m}
                       </li>
@@ -278,8 +325,14 @@ export function ClienteDetail() {
                   autoComplete="off"
                   className={`${classeInput} pr-8`}
                   value={form.modelo}
-                  onChange={(e) => setForm({ ...form, modelo: e.target.value })}
-                  onFocus={() => setCampoFocado("modelo")}
+                  onChange={(e) => {
+                    setForm({ ...form, modelo: e.target.value });
+                    setBuscaModelo(e.target.value);
+                  }}
+                  onFocus={() => {
+                    setCampoFocado("modelo");
+                    setBuscaModelo("");
+                  }}
                   onBlur={() => setTimeout(() => setCampoFocado((atual) => (atual === "modelo" ? null : atual)), 200)}
                 />
                 <button
@@ -298,7 +351,10 @@ export function ClienteDetail() {
                       <li
                         key={m}
                         className="px-3 py-2 text-sm text-grafite-900 hover:bg-teal-50 cursor-pointer"
-                        onMouseDown={() => setForm({ ...form, modelo: m })}
+                        onMouseDown={() => {
+                          setForm({ ...form, modelo: m });
+                          setBuscaModelo(m);
+                        }}
                       >
                         {m}
                       </li>
