@@ -1,3 +1,4 @@
+import { useEffect, useRef, useState } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import { usuarioLogado } from "../../services/auth";
 import {
@@ -9,6 +10,7 @@ import {
   UsersRound,
   Settings,
   LogOut,
+  ChevronUp,
   type LucideIcon,
 } from "lucide-react";
 
@@ -39,9 +41,23 @@ const ROTULO_PAPEL: Record<string, string> = {
 export function Sidebar() {
   const navigate = useNavigate();
   const usuario = usuarioLogado();
+  const [menuAberto, setMenuAberto] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+
   const links = LINKS.filter(
     (link) => !link.restritoA || (usuario && link.restritoA.includes(usuario.papel))
   );
+
+  // fecha o dropdown ao clicar fora
+  useEffect(() => {
+    function handleClickFora(e: MouseEvent) {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setMenuAberto(false);
+      }
+    }
+    if (menuAberto) document.addEventListener("mousedown", handleClickFora);
+    return () => document.removeEventListener("mousedown", handleClickFora);
+  }, [menuAberto]);
 
   function sair() {
     localStorage.removeItem("token");
@@ -80,37 +96,54 @@ export function Sidebar() {
       </nav>
 
       {usuario && (
-        <div className="px-4 py-4 border-t border-grafite-800">
-          <div className="flex items-center gap-3">
+        <div ref={menuRef} className="relative border-t border-grafite-800">
+          {/* Dropdown — abre pra cima */}
+          {menuAberto && (
+            <div className="absolute bottom-full left-2 right-2 mb-1 bg-grafite-900 border border-grafite-700 rounded-lg shadow-lg py-1 z-50">
+              <NavLink
+                to="/configuracoes"
+                onClick={() => setMenuAberto(false)}
+                className={({ isActive }) =>
+                  `flex items-center gap-3 px-4 py-2.5 text-sm transition-colors ${
+                    isActive
+                      ? "text-teal-400 bg-grafite-800"
+                      : "text-grafite-200 hover:bg-grafite-800"
+                  }`
+                }
+              >
+                <Settings size={16} />
+                Configurações
+              </NavLink>
+              <div className="border-t border-grafite-700 my-1" />
+              <button
+                onClick={() => { setMenuAberto(false); sair(); }}
+                className="flex items-center gap-3 px-4 py-2.5 text-sm text-red-400 hover:bg-grafite-800 w-full transition-colors"
+              >
+                <LogOut size={16} />
+                Sair da conta
+              </button>
+            </div>
+          )}
+
+          {/* Botão do perfil */}
+          <button
+            onClick={() => setMenuAberto(!menuAberto)}
+            className="w-full flex items-center gap-3 px-4 py-4 hover:bg-grafite-900 transition-colors"
+          >
             <div className="w-9 h-9 rounded-full bg-teal-600 flex items-center justify-center text-white text-sm font-semibold flex-shrink-0">
               {usuario.nome.charAt(0).toUpperCase()}
             </div>
-            <div className="min-w-0">
+            <div className="min-w-0 flex-1 text-left">
               <p className="text-sm font-medium text-grafite-100 truncate">{usuario.nome}</p>
               <p className="text-xs text-grafite-400 truncate">{ROTULO_PAPEL[usuario.papel] ?? usuario.papel}</p>
             </div>
-          </div>
-          <div className="flex items-center gap-3 mt-3">
-            <NavLink
-              to="/configuracoes"
-              className={({ isActive }) =>
-                `flex items-center gap-1.5 text-xs transition-colors ${
-                  isActive ? "text-teal-400" : "text-grafite-400 hover:text-grafite-200"
-                }`
-              }
-            >
-              <Settings size={14} />
-              Configurações
-            </NavLink>
-            <span className="text-grafite-700">·</span>
-            <button
-              onClick={sair}
-              className="flex items-center gap-1.5 text-xs text-grafite-400 hover:text-grafite-200 transition-colors"
-            >
-              <LogOut size={14} />
-              Sair
-            </button>
-          </div>
+            <ChevronUp
+              size={16}
+              className={`text-grafite-400 flex-shrink-0 transition-transform duration-200 ${
+                menuAberto ? "" : "rotate-180"
+              }`}
+            />
+          </button>
         </div>
       )}
     </aside>
