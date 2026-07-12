@@ -1,5 +1,6 @@
-import { FormEvent, useEffect, useState } from "react";
+import { FormEvent, useEffect, useRef, useState } from "react";
 import { Link, useParams } from "react-router-dom";
+import { ChevronDown } from "lucide-react";
 import { api } from "../../services/api";
 import { Cliente, Equipamento, EquipamentoCatalogoItem } from "../../types";
 import { Campo, classeInput, Modal } from "../../components/Modal";
@@ -34,6 +35,9 @@ export function ClienteDetail() {
   // o modal, usado só pra sugerir. O usuário sempre pode digitar algo novo.
   const [catalogo, setCatalogo] = useState<EquipamentoCatalogoItem[]>([]);
   const [campoFocado, setCampoFocado] = useState<"tipo" | "marca" | "modelo" | null>(null);
+  const refTipo = useRef<HTMLInputElement>(null);
+  const refMarca = useRef<HTMLInputElement>(null);
+  const refModelo = useRef<HTMLInputElement>(null);
 
   function carregar() {
     api.get(`/clientes/${id}`).then((r) => setCliente(r.data)).catch(() => {});
@@ -47,10 +51,12 @@ export function ClienteDetail() {
     }
   }, [modalAberto, catalogo.length]);
 
+  // Filtro por prefixo quando o campo tem texto; com o campo vazio (ex: ao
+  // clicar no chevron) mostra a lista inteira, como um select.
   const tiposUnicos = Array.from(new Set(catalogo.map((c) => c.tipo)));
-  const sugestoesTipo = form.tipo
-    ? tiposUnicos.filter((t) => normalizar(t).startsWith(normalizar(form.tipo))).slice(0, 8)
-    : [];
+  const sugestoesTipo = tiposUnicos
+    .filter((t) => normalizar(t).startsWith(normalizar(form.tipo)))
+    .slice(0, 8);
 
   // Marca: prioriza marcas do tipo já selecionado, mas cai pra todas se
   // o tipo digitado ainda não bater com nenhum item do catálogo.
@@ -58,9 +64,9 @@ export function ClienteDetail() {
     ? catalogo.filter((c) => normalizar(c.tipo) === normalizar(form.tipo))
     : catalogo;
   const marcasUnicas = Array.from(new Set((marcasDoTipo.length ? marcasDoTipo : catalogo).map((c) => c.marca)));
-  const sugestoesMarca = form.marca
-    ? marcasUnicas.filter((m) => normalizar(m).startsWith(normalizar(form.marca))).slice(0, 8)
-    : [];
+  const sugestoesMarca = marcasUnicas
+    .filter((m) => normalizar(m).startsWith(normalizar(form.marca)))
+    .slice(0, 8);
 
   // Modelo: filtra pela marca (e tipo, se houver) já selecionados.
   const modelosDaMarca = catalogo.filter(
@@ -68,12 +74,10 @@ export function ClienteDetail() {
       (!form.marca || normalizar(c.marca) === normalizar(form.marca)) &&
       (!form.tipo || normalizar(c.tipo) === normalizar(form.tipo))
   );
-  const sugestoesModelo = form.modelo
-    ? modelosDaMarca
-        .map((c) => c.modelo)
-        .filter((m) => normalizar(m).startsWith(normalizar(form.modelo)))
-        .slice(0, 8)
-    : [];
+  const sugestoesModelo = modelosDaMarca
+    .map((c) => c.modelo)
+    .filter((m) => normalizar(m).startsWith(normalizar(form.modelo)))
+    .slice(0, 8);
 
   function fecharModal() {
     setModalAberto(false);
@@ -195,15 +199,26 @@ export function ClienteDetail() {
           <Campo rotulo="Tipo de equipamento">
             <div className="relative">
               <input
+                ref={refTipo}
                 required
                 autoComplete="off"
                 placeholder="Ex: Ressonância Magnética, Tomógrafo"
-                className={classeInput}
+                className={`${classeInput} pr-8`}
                 value={form.tipo}
                 onChange={(e) => setForm({ ...form, tipo: e.target.value })}
                 onFocus={() => setCampoFocado("tipo")}
                 onBlur={() => setTimeout(() => setCampoFocado(null), 200)}
               />
+              <button
+                type="button"
+                tabIndex={-1}
+                aria-label="Ver tipos disponíveis"
+                onMouseDown={(e) => e.preventDefault()}
+                onClick={() => refTipo.current?.focus()}
+                className="absolute right-2 top-1/2 -translate-y-1/2 text-grafite-400 hover:text-grafite-600"
+              >
+                <ChevronDown size={16} />
+              </button>
               {campoFocado === "tipo" && sugestoesTipo.length > 0 && (
                 <ul className="absolute z-10 left-0 right-0 top-full mt-1 bg-white border border-grafite-200 rounded-md shadow-lg max-h-48 overflow-y-auto">
                   {sugestoesTipo.map((t) => (
@@ -223,13 +238,24 @@ export function ClienteDetail() {
             <Campo rotulo="Marca">
               <div className="relative">
                 <input
+                  ref={refMarca}
                   autoComplete="off"
-                  className={classeInput}
+                  className={`${classeInput} pr-8`}
                   value={form.marca}
                   onChange={(e) => setForm({ ...form, marca: e.target.value })}
                   onFocus={() => setCampoFocado("marca")}
                   onBlur={() => setTimeout(() => setCampoFocado(null), 200)}
                 />
+                <button
+                  type="button"
+                  tabIndex={-1}
+                  aria-label="Ver marcas disponíveis"
+                  onMouseDown={(e) => e.preventDefault()}
+                  onClick={() => refMarca.current?.focus()}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 text-grafite-400 hover:text-grafite-600"
+                >
+                  <ChevronDown size={16} />
+                </button>
                 {campoFocado === "marca" && sugestoesMarca.length > 0 && (
                   <ul className="absolute z-10 left-0 right-0 top-full mt-1 bg-white border border-grafite-200 rounded-md shadow-lg max-h-48 overflow-y-auto">
                     {sugestoesMarca.map((m) => (
@@ -248,13 +274,24 @@ export function ClienteDetail() {
             <Campo rotulo="Modelo">
               <div className="relative">
                 <input
+                  ref={refModelo}
                   autoComplete="off"
-                  className={classeInput}
+                  className={`${classeInput} pr-8`}
                   value={form.modelo}
                   onChange={(e) => setForm({ ...form, modelo: e.target.value })}
                   onFocus={() => setCampoFocado("modelo")}
                   onBlur={() => setTimeout(() => setCampoFocado(null), 200)}
                 />
+                <button
+                  type="button"
+                  tabIndex={-1}
+                  aria-label="Ver modelos disponíveis"
+                  onMouseDown={(e) => e.preventDefault()}
+                  onClick={() => refModelo.current?.focus()}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 text-grafite-400 hover:text-grafite-600"
+                >
+                  <ChevronDown size={16} />
+                </button>
                 {campoFocado === "modelo" && sugestoesModelo.length > 0 && (
                   <ul className="absolute z-10 left-0 right-0 top-full mt-1 bg-white border border-grafite-200 rounded-md shadow-lg max-h-48 overflow-y-auto">
                     {sugestoesModelo.map((m) => (
