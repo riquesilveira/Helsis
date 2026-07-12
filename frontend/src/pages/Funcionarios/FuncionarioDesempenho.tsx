@@ -3,6 +3,7 @@ import { Link, useParams } from "react-router-dom";
 import { api } from "../../services/api";
 import { DesempenhoFuncionario, Funcionario, TipoComissao } from "../../types";
 import { Campo, classeInput, Modal } from "../../components/Modal";
+import { formatarReais } from "../../utils/formatters";
 
 function formatarMoeda(valor: string): string {
   const apenas = valor.replace(/\D/g, "");
@@ -24,10 +25,6 @@ function CartaoMetrica({ rotulo, valor, destaque }: { rotulo: string; valor: str
       </p>
     </div>
   );
-}
-
-function formatarReais(valor: number) {
-  return `R$ ${valor.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`;
 }
 
 export function FuncionarioDesempenho() {

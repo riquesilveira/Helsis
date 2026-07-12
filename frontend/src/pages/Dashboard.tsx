@@ -4,29 +4,21 @@ import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianG
 import { ClipboardList, DollarSign, Receipt, Wallet, ArrowUpRight, ArrowDownRight, LucideIcon } from "lucide-react";
 import { api } from "../services/api";
 import { Funcionario, OrdemServico } from "../types";
+import { formatarReais, tempoRelativo } from "../utils/formatters";
 
-function formatarReais(valor: number) {
-  return `R$ ${valor.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`;
-}
+const ROTULO_STATUS: Record<string, string> = {
+  RECEBIDO: "Recebido",
+  DIAGNOSTICO: "Em diagnóstico",
+  AGUARDANDO_PECA: "Aguardando peça",
+  EM_REPARO: "Em reparo",
+  CONCLUIDO: "Concluído",
+  CANCELADO: "Cancelado",
+};
 
 function mesmoMes(iso: string | null, data: Date) {
   if (!iso) return false;
   const d = new Date(iso);
   return d.getMonth() === data.getMonth() && d.getFullYear() === data.getFullYear();
-}
-
-function tempoRelativo(iso: string): string {
-  const diffMs = Date.now() - new Date(iso).getTime();
-  const minutos = Math.floor(diffMs / 60_000);
-  const horas = Math.floor(diffMs / 3_600_000);
-  const dias = Math.floor(diffMs / 86_400_000);
-
-  if (minutos < 1) return "agora mesmo";
-  if (minutos < 60) return `há ${minutos} min`;
-  if (horas < 24) return `há ${horas}h`;
-  if (dias < 30) return `há ${dias} dia${dias > 1 ? "s" : ""}`;
-  const meses = Math.floor(dias / 30);
-  return `há ${meses} ${meses > 1 ? "meses" : "mês"}`;
 }
 
 function valorPecas(os: OrdemServico) {
@@ -302,7 +294,7 @@ export function Dashboard() {
                 <p className="text-xs text-grafite-500 mt-0.5">{os.descricaoProblema}</p>
               </div>
               <div className="text-right flex-shrink-0 ml-4">
-                <span className="text-xs codigo text-teal-700">{os.statusAtual}</span>
+                <span className="text-xs codigo text-teal-700">{ROTULO_STATUS[os.statusAtual] ?? os.statusAtual}</span>
                 <p className="text-[11px] text-grafite-400 mt-0.5" title={new Date(os.dataAbertura).toLocaleString("pt-BR")}>
                   {tempoRelativo(os.dataAbertura)}
                 </p>

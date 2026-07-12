@@ -64,6 +64,7 @@ export function Configuracoes() {
       usuario.email = data.email;
       localStorage.setItem("usuario", JSON.stringify(usuario));
       setMsgPerfil({ tipo: "ok", texto: "Perfil atualizado com sucesso." });
+      setTimeout(() => setMsgPerfil(null), 4000);
     } catch (err: any) {
       setMsgPerfil({ tipo: "erro", texto: err?.response?.data?.erro ?? "Não foi possível atualizar o perfil." });
     } finally {
@@ -85,6 +86,7 @@ export function Configuracoes() {
       setNovaSenha("");
       setConfirmarSenha("");
       setMsgSenha({ tipo: "ok", texto: "Senha alterada com sucesso." });
+      setTimeout(() => setMsgSenha(null), 4000);
     } catch (err: any) {
       setMsgSenha({ tipo: "erro", texto: err?.response?.data?.erro ?? "Não foi possível alterar a senha." });
     } finally {

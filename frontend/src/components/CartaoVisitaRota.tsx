@@ -27,7 +27,7 @@ const COR_STATUS: Record<string, string> = {
  */
 export function CartaoVisitaRota({ os }: { os: OrdemServico }) {
   const ultimoEvento =
-    os.statusHistoricos.length > 1 ? os.statusHistoricos[os.statusHistoricos.length - 1] : null;
+    os.statusHistoricos.length > 0 ? os.statusHistoricos[os.statusHistoricos.length - 1] : null;
 
   return (
     <Link

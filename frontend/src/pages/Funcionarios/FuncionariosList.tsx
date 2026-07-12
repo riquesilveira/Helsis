@@ -28,11 +28,13 @@ const FORM_VAZIO = {
 
 export function FuncionariosList() {
   const [funcionarios, setFuncionarios] = useState<Funcionario[]>([]);
+  const [carregando, setCarregando] = useState(true);
   const [modalAberto, setModalAberto] = useState(false);
   const [form, setForm] = useState(FORM_VAZIO);
   const [especialidades, setEspecialidades] = useState<string[]>([]);
   const [novaEspecialidade, setNovaEspecialidade] = useState("");
   const [salvando, setSalvando] = useState(false);
+  const [erroSubmit, setErroSubmit] = useState<string | null>(null);
 
   // modal de edição
   const [modalEditar, setModalEditar] = useState(false);
@@ -41,6 +43,7 @@ export function FuncionariosList() {
   const [editEspecialidades, setEditEspecialidades] = useState<string[]>([]);
   const [novaEditEsp, setNovaEditEsp] = useState("");
   const [salvandoEdit, setSalvandoEdit] = useState(false);
+  const [erroEdit, setErroEdit] = useState<string | null>(null);
 
   function abrirModalEditar(f: Funcionario) {
     setEditId(f.id);
@@ -65,6 +68,7 @@ export function FuncionariosList() {
 
   async function salvarEdicao(e: FormEvent) {
     e.preventDefault();
+    setErroEdit(null);
     setSalvandoEdit(true);
     try {
       await api.patch(`/funcionarios/${editId}`, {
@@ -77,7 +81,7 @@ export function FuncionariosList() {
       setModalEditar(false);
       carregar();
     } catch (err: any) {
-      alert(err?.response?.data?.erro ?? "Não foi possível salvar. Tente novamente.");
+      setErroEdit(err?.response?.data?.erro ?? "Não foi possível salvar. Tente novamente.");
     } finally {
       setSalvandoEdit(false);
     }
@@ -96,13 +100,15 @@ export function FuncionariosList() {
   }
 
   function carregar() {
-    api.get("/funcionarios").then((r) => setFuncionarios(r.data)).catch(() => {});
+    setCarregando(true);
+    api.get("/funcionarios").then((r) => setFuncionarios(r.data)).catch(() => {}).finally(() => setCarregando(false));
   }
 
   useEffect(carregar, []);
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
+    setErroSubmit(null);
     setSalvando(true);
     try {
       await api.post("/funcionarios", {
@@ -119,7 +125,7 @@ export function FuncionariosList() {
       setEspecialidades([]);
       carregar();
     } catch (err: any) {
-      alert(err?.response?.data?.erro ?? "Não foi possível cadastrar. Tente novamente.");
+      setErroSubmit(err?.response?.data?.erro ?? "Não foi possível cadastrar. Tente novamente.");
     } finally {
       setSalvando(false);
     }
@@ -138,7 +144,10 @@ export function FuncionariosList() {
       </div>
 
       <div className="bg-white border border-grafite-200 rounded-lg divide-y divide-grafite-100">
-        {funcionarios.map((f) => (
+        {carregando && (
+          <p className="text-sm text-grafite-500 px-5 py-4">Carregando...</p>
+        )}
+        {!carregando && funcionarios.map((f) => (
           <div key={f.id} className="flex items-center justify-between px-5 py-4 hover:bg-grafite-50">
             <Link to={`/funcionarios/${f.id}`} className="flex-1">
               <div className="flex items-center gap-2">
@@ -160,12 +169,12 @@ export function FuncionariosList() {
             </span>
           </div>
         ))}
-        {funcionarios.length === 0 && (
+        {!carregando && funcionarios.length === 0 && (
           <p className="text-sm text-grafite-500 px-5 py-4">Nenhum funcionário cadastrado.</p>
         )}
       </div>
 
-      <Modal titulo="Novo funcionário" aberto={modalAberto} onFechar={() => setModalAberto(false)}>
+      <Modal titulo="Novo funcionário" aberto={modalAberto} onFechar={() => { setModalAberto(false); setErroSubmit(null); }}>
         <form onSubmit={handleSubmit}>
           <Campo rotulo="Nome completo">
             <input
@@ -275,6 +284,9 @@ export function FuncionariosList() {
               </button>
             </div>
           </Campo>
+          {erroSubmit && (
+            <p className="text-xs text-red-500 mb-3">{erroSubmit}</p>
+          )}
           <button
             type="submit"
             disabled={salvando}
@@ -285,7 +297,7 @@ export function FuncionariosList() {
         </form>
       </Modal>
 
-      <Modal titulo="Editar funcionário" aberto={modalEditar} onFechar={() => setModalEditar(false)}>
+      <Modal titulo="Editar funcionário" aberto={modalEditar} onFechar={() => { setModalEditar(false); setErroEdit(null); }}>
         <form onSubmit={salvarEdicao}>
           <Campo rotulo="Nome completo">
             <input
@@ -369,6 +381,9 @@ export function FuncionariosList() {
               </button>
             </div>
           </Campo>
+          {erroEdit && (
+            <p className="text-xs text-red-500 mb-3">{erroEdit}</p>
+          )}
           <button
             type="submit"
             disabled={salvandoEdit}

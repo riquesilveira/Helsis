@@ -2,15 +2,12 @@ import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { api } from "../../services/api";
 import { ResumoMensal } from "../../types";
+import { formatarReais } from "../../utils/formatters";
 
 const NOMES_MESES = [
   "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
   "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro",
 ];
-
-function formatarReais(valor: number) {
-  return `R$ ${valor.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`;
-}
 
 export function ResumoMensalFuncionario() {
   const { id } = useParams();
@@ -41,7 +38,7 @@ export function ResumoMensalFuncionario() {
 
   const descricaoComissao =
     resumo.tipoComissao === "PERCENTUAL"
-      ? `${resumo.valorConfigComissao}% sobre a mão de obra de cada atendimento`
+      ? `${resumo.valorConfigComissao ?? 0}% sobre a mão de obra de cada atendimento`
       : resumo.tipoComissao === "FIXO"
       ? `${formatarReais(resumo.valorConfigComissao ?? 0)} fixos por atendimento concluído`
       : "Sem comissão configurada";

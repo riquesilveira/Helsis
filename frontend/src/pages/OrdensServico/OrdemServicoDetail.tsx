@@ -5,30 +5,13 @@ import { NotificacaoItem, OrdemServico, OPCOES_STATUS, PecaCatalogo, StatusOS } 
 import { StatusTimeline } from "../../components/StatusTimeline";
 import { Campo, classeInput, Modal } from "../../components/Modal";
 import { usuarioLogado } from "../../services/auth";
+import { formatarReais, tempoRelativo } from "../../utils/formatters";
 
 const ROTULO_MODALIDADE: Record<OrdemServico["modalidade"], string> = {
   VISITA_TECNICA: "Visita técnica",
   OFICINA: "Oficina",
   REMOTO: "Suporte remoto",
 };
-
-function formatarReais(valor: number) {
-  return `R$ ${valor.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`;
-}
-
-function tempoRelativo(iso: string): string {
-  const diffMs = Date.now() - new Date(iso).getTime();
-  const minutos = Math.floor(diffMs / 60_000);
-  const horas = Math.floor(diffMs / 3_600_000);
-  const dias = Math.floor(diffMs / 86_400_000);
-
-  if (minutos < 1) return "agora mesmo";
-  if (minutos < 60) return `há ${minutos} min`;
-  if (horas < 24) return `há ${horas}h`;
-  if (dias < 30) return `há ${dias} dia${dias > 1 ? "s" : ""}`;
-  const meses = Math.floor(dias / 30);
-  return `há ${meses} ${meses > 1 ? "meses" : "mês"}`;
-}
 
 export function OrdemServicoDetail() {
   const { id } = useParams();
@@ -39,10 +22,11 @@ export function OrdemServicoDetail() {
   const [notificacoes, setNotificacoes] = useState<NotificacaoItem[]>([]);
 
   // formulário de status
-  const [novoStatus, setNovoStatus] = useState<StatusOS>("DIAGNOSTICO");
+  const [novoStatus, setNovoStatus] = useState<StatusOS>("RECEBIDO");
   const [observacao, setObservacao] = useState("");
   const [novaTentativa, setNovaTentativa] = useState(false);
   const [enviandoStatus, setEnviandoStatus] = useState(false);
+  const [erroStatus, setErroStatus] = useState<string | null>(null);
 
   // formulário de peça trocada
   const [modalPecaAberto, setModalPecaAberto] = useState(false);
@@ -53,11 +37,14 @@ export function OrdemServicoDetail() {
   );
   const [garantiaMeses, setGarantiaMeses] = useState(3);
   const [enviandoPeca, setEnviandoPeca] = useState(false);
+  const [erroPeca, setErroPeca] = useState<string | null>(null);
 
   // modal de nova peça no catálogo (quando a peça ainda não existe)
   const [modalNovaPeca, setModalNovaPeca] = useState(false);
   const [nomeNovaPeca, setNomeNovaPeca] = useState("");
   const [precoNovaPeca, setPrecoNovaPeca] = useState("");
+  const [erroCriarPeca, setErroCriarPeca] = useState<string | null>(null);
+  const [enviandoNovaPeca, setEnviandoNovaPeca] = useState(false);
 
   // formulário de deslocamento
   const [modalDeslocamentoAberto, setModalDeslocamentoAberto] = useState(false);
@@ -69,13 +56,23 @@ export function OrdemServicoDetail() {
   const [diasViagem, setDiasViagem] = useState("");
   const [enviandoDeslocamento, setEnviandoDeslocamento] = useState(false);
 
+  // confirmação de exclusão de deslocamento
+  const [modalConfirmarExclusao, setModalConfirmarExclusao] = useState(false);
+  const [deslocamentoParaExcluir, setDeslocamentoParaExcluir] = useState<string | null>(null);
+  const [erroDeslocamento, setErroDeslocamento] = useState<string | null>(null);
+
   // fechamento financeiro
   const [valorMaoDeObra, setValorMaoDeObra] = useState("");
   const [valorComissao, setValorComissao] = useState("");
   const [salvandoFinanceiro, setSalvandoFinanceiro] = useState(false);
 
   function carregar() {
-    api.get(`/ordens-servico/${id}`).then((r) => setOs(r.data)).catch(() => {});
+    api.get(`/ordens-servico/${id}`).then((r) => {
+      const dados: OrdemServico = r.data;
+      setOs(dados);
+      // Fix #5: inicializa novoStatus com o status atual da OS
+      setNovoStatus(dados.statusAtual);
+    }).catch(() => {});
   }
 
   function carregarNotificacoes() {
@@ -107,6 +104,7 @@ export function OrdemServicoDetail() {
 
   async function handleAtualizarStatus(e: FormEvent) {
     e.preventDefault();
+    setErroStatus(null);
     setEnviandoStatus(true);
     try {
       await api.patch(`/ordens-servico/${id}/status`, {
@@ -120,6 +118,8 @@ export function OrdemServicoDetail() {
       carregar();
       // pequeno atraso: a notificação é enviada em segundo plano no backend
       setTimeout(carregarNotificacoes, 1200);
+    } catch (err: any) {
+      setErroStatus(err?.response?.data?.erro ?? "Não foi possível atualizar o status.");
     } finally {
       setEnviandoStatus(false);
     }
@@ -128,6 +128,7 @@ export function OrdemServicoDetail() {
   async function handleRegistrarPeca(e: FormEvent) {
     e.preventDefault();
     if (!os?.funcionario) return;
+    setErroPeca(null);
     setEnviandoPeca(true);
     try {
       await api.post(`/ordens-servico/${id}/pecas`, {
@@ -141,6 +142,8 @@ export function OrdemServicoDetail() {
       setModalPecaAberto(false);
       setPecaCatalogoId("");
       carregar();
+    } catch (err: any) {
+      setErroPeca(err?.response?.data?.erro ?? "Não foi possível registrar a peça.");
     } finally {
       setEnviandoPeca(false);
     }
@@ -172,23 +175,43 @@ export function OrdemServicoDetail() {
     }
   }
 
-  async function handleExcluirDeslocamento(deslocamentoId: string) {
-    if (!confirm("Tem certeza que deseja excluir este deslocamento?")) return;
-    await api.delete(`/ordens-servico/${id}/deslocamentos/${deslocamentoId}`);
-    carregar();
+  function solicitarExclusaoDeslocamento(deslocamentoId: string) {
+    setDeslocamentoParaExcluir(deslocamentoId);
+    setErroDeslocamento(null);
+    setModalConfirmarExclusao(true);
+  }
+
+  async function confirmarExclusaoDeslocamento() {
+    if (!deslocamentoParaExcluir) return;
+    try {
+      await api.delete(`/ordens-servico/${id}/deslocamentos/${deslocamentoParaExcluir}`);
+      setModalConfirmarExclusao(false);
+      setDeslocamentoParaExcluir(null);
+      carregar();
+    } catch (err: any) {
+      setErroDeslocamento(err?.response?.data?.erro ?? "Não foi possível excluir o deslocamento.");
+    }
   }
 
   async function handleCriarPeca(e: FormEvent) {
     e.preventDefault();
-    const { data } = await api.post("/pecas", {
-      nome: nomeNovaPeca,
-      precoUnitario: precoNovaPeca ? Number(precoNovaPeca) : undefined,
-    });
-    setPecas((atual) => [...atual, data]);
-    setPecaCatalogoId(data.id);
-    setNomeNovaPeca("");
-    setPrecoNovaPeca("");
-    setModalNovaPeca(false);
+    setErroCriarPeca(null);
+    setEnviandoNovaPeca(true);
+    try {
+      const { data } = await api.post("/pecas", {
+        nome: nomeNovaPeca,
+        precoUnitario: precoNovaPeca ? Number(precoNovaPeca) : undefined,
+      });
+      setPecas((atual) => [...atual, data]);
+      setPecaCatalogoId(data.id);
+      setNomeNovaPeca("");
+      setPrecoNovaPeca("");
+      setModalNovaPeca(false);
+    } catch (err: any) {
+      setErroCriarPeca(err?.response?.data?.erro ?? "Não foi possível cadastrar a peça.");
+    } finally {
+      setEnviandoNovaPeca(false);
+    }
   }
 
   // calcula a comissão automaticamente a partir da config do técnico —
@@ -351,6 +374,9 @@ export function OrdemServicoDetail() {
               />
               Essa mudança representa uma nova tentativa de resolver o problema
             </label>
+            {erroStatus && (
+              <p className="text-xs text-red-500 mb-3">{erroStatus}</p>
+            )}
             <button
               type="submit"
               disabled={enviandoStatus}
@@ -473,7 +499,7 @@ export function OrdemServicoDetail() {
                   )}
                   {podeVerFinanceiro && (
                     <button
-                      onClick={() => handleExcluirDeslocamento(d.id)}
+                      onClick={() => solicitarExclusaoDeslocamento(d.id)}
                       className="text-xs text-red-500 hover:text-red-700"
                       title="Excluir deslocamento"
                     >
@@ -488,6 +514,9 @@ export function OrdemServicoDetail() {
             <p className="text-sm text-grafite-500 py-3">Nenhum deslocamento registrado ainda.</p>
           )}
         </div>
+        {erroDeslocamento && (
+          <p className="text-xs text-red-500 mt-2">{erroDeslocamento}</p>
+        )}
       </div>
 
       {/* Fechamento financeiro — editável só por dono/gestor (é quem decide o
@@ -584,7 +613,7 @@ export function OrdemServicoDetail() {
       <Modal
         titulo="Registrar peça trocada"
         aberto={modalPecaAberto}
-        onFechar={() => setModalPecaAberto(false)}
+        onFechar={() => { setModalPecaAberto(false); setErroPeca(null); }}
       >
         <form onSubmit={handleRegistrarPeca}>
           <Campo rotulo="Peça">
@@ -643,6 +672,9 @@ export function OrdemServicoDetail() {
               <option value="nao">Não, será preciso tentar outra coisa</option>
             </select>
           </Campo>
+          {erroPeca && (
+            <p className="text-xs text-red-500 mb-3">{erroPeca}</p>
+          )}
           <button
             type="submit"
             disabled={enviandoPeca}
@@ -732,7 +764,7 @@ export function OrdemServicoDetail() {
       <Modal
         titulo="Cadastrar nova peça no catálogo"
         aberto={modalNovaPeca}
-        onFechar={() => setModalNovaPeca(false)}
+        onFechar={() => { setModalNovaPeca(false); setErroCriarPeca(null); }}
       >
         <form onSubmit={handleCriarPeca}>
           <Campo rotulo="Nome da peça">
@@ -753,13 +785,47 @@ export function OrdemServicoDetail() {
               onChange={(e) => setPrecoNovaPeca(e.target.value)}
             />
           </Campo>
+          {erroCriarPeca && (
+            <p className="text-xs text-red-500 mb-3">{erroCriarPeca}</p>
+          )}
           <button
             type="submit"
-            className="w-full mt-2 bg-teal-600 hover:bg-teal-700 text-white text-sm font-medium rounded-md py-2 transition-colors"
+            disabled={enviandoNovaPeca}
+            className="w-full mt-2 bg-teal-600 hover:bg-teal-700 text-white text-sm font-medium rounded-md py-2 transition-colors disabled:opacity-60"
           >
-            Cadastrar peça
+            {enviandoNovaPeca ? "Cadastrando..." : "Cadastrar peça"}
           </button>
         </form>
+      </Modal>
+
+      {/* Modal de confirmação de exclusão de deslocamento */}
+      <Modal
+        titulo="Excluir deslocamento"
+        aberto={modalConfirmarExclusao}
+        onFechar={() => { setModalConfirmarExclusao(false); setDeslocamentoParaExcluir(null); setErroDeslocamento(null); }}
+      >
+        <p className="text-sm text-grafite-700 mb-5">
+          Tem certeza que deseja excluir este deslocamento? Essa ação não pode ser desfeita.
+        </p>
+        {erroDeslocamento && (
+          <p className="text-xs text-red-500 mb-3">{erroDeslocamento}</p>
+        )}
+        <div className="flex gap-3 justify-end">
+          <button
+            type="button"
+            onClick={() => { setModalConfirmarExclusao(false); setDeslocamentoParaExcluir(null); setErroDeslocamento(null); }}
+            className="px-4 py-2 text-sm font-medium text-grafite-700 border border-grafite-200 rounded-md hover:bg-grafite-50 transition-colors"
+          >
+            Cancelar
+          </button>
+          <button
+            type="button"
+            onClick={confirmarExclusaoDeslocamento}
+            className="px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-md transition-colors"
+          >
+            Excluir
+          </button>
+        </div>
       </Modal>
     </div>
   );

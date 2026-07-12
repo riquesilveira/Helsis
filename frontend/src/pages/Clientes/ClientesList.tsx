@@ -17,6 +17,7 @@ const CLIENTE_VAZIO = { nome: "", telefone: "", email: "", documento: "", cidade
 
 export function ClientesList() {
   const [clientes, setClientes] = useState<Cliente[]>([]);
+  const [carregando, setCarregando] = useState(true);
   const [modalAberto, setModalAberto] = useState(false);
   const [form, setForm] = useState(CLIENTE_VAZIO);
   const [salvando, setSalvando] = useState(false);
@@ -66,7 +67,8 @@ export function ClientesList() {
   }
 
   function carregar() {
-    api.get("/clientes").then((r) => setClientes(r.data)).catch(() => {});
+    setCarregando(true);
+    api.get("/clientes").then((r) => setClientes(r.data)).catch(() => {}).finally(() => setCarregando(false));
   }
 
   useEffect(carregar, []);
@@ -101,7 +103,10 @@ export function ClientesList() {
       </div>
 
       <div className="bg-white border border-grafite-200 rounded-lg divide-y divide-grafite-100">
-        {clientes.map((c) => (
+        {carregando && (
+          <p className="text-sm text-grafite-500 px-5 py-4">Carregando...</p>
+        )}
+        {!carregando && clientes.map((c) => (
           <Link
             key={c.id}
             to={`/clientes/${c.id}`}
@@ -119,7 +124,7 @@ export function ClientesList() {
             </span>
           </Link>
         ))}
-        {clientes.length === 0 && (
+        {!carregando && clientes.length === 0 && (
           <p className="text-sm text-grafite-500 px-5 py-4">Nenhum cliente cadastrado ainda.</p>
         )}
       </div>

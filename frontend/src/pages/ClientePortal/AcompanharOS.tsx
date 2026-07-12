@@ -36,7 +36,13 @@ export function AcompanharOS() {
     );
   }
 
-  if (!dados) return null;
+  if (!dados) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-grafite-50 px-4">
+        <p className="text-sm text-grafite-500">Carregando...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-grafite-50 px-4 py-10">

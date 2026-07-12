@@ -22,9 +22,11 @@ function formatarData(iso?: string | null) {
 
 export function ManutencoesPreventivas() {
   const [equipamentos, setEquipamentos] = useState<EquipamentoComManutencao[]>([]);
+  const [carregando, setCarregando] = useState(true);
 
   useEffect(() => {
-    api.get("/equipamentos/manutencoes-preventivas").then((r) => setEquipamentos(r.data)).catch(() => {});
+    setCarregando(true);
+    api.get("/equipamentos/manutencoes-preventivas").then((r) => setEquipamentos(r.data)).catch(() => {}).finally(() => setCarregando(false));
   }, []);
 
   const contagem = {
@@ -64,7 +66,10 @@ export function ManutencoesPreventivas() {
       </div>
 
       <div className="bg-white border border-grafite-200 rounded-lg divide-y divide-grafite-100">
-        {equipamentos.map((eq) => (
+        {carregando && (
+          <p className="text-sm text-grafite-500 px-5 py-4">Carregando...</p>
+        )}
+        {!carregando && equipamentos.map((eq) => (
           <div key={eq.id} className="flex items-center justify-between px-5 py-4">
             <div>
               <p className="text-sm text-grafite-900">
@@ -88,7 +93,7 @@ export function ManutencoesPreventivas() {
             </div>
           </div>
         ))}
-        {equipamentos.length === 0 && (
+        {!carregando && equipamentos.length === 0 && (
           <p className="text-sm text-grafite-500 px-5 py-4">
             Nenhum equipamento com manutenção preventiva agendada ainda. Defina uma frequência ao
             cadastrar ou editar um equipamento.

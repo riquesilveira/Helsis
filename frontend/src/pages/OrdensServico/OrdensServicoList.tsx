@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { api } from "../../services/api";
 import { OPCOES_STATUS, OrdemServico, StatusOS } from "../../types";
+import { tempoRelativo } from "../../utils/formatters";
 
 type Periodo = "todas" | "24h" | "7dias" | "15dias" | "30dias" | "personalizado";
 
@@ -36,19 +37,14 @@ function dentroDoPeriodo(os: OrdemServico, periodo: Periodo, dataInicio: string,
   return Date.now() - new Date(os.dataAbertura).getTime() <= limiteMs;
 }
 
-function tempoRelativo(iso: string): string {
-  const diffMs = Date.now() - new Date(iso).getTime();
-  const minutos = Math.floor(diffMs / 60_000);
-  const horas = Math.floor(diffMs / 3_600_000);
-  const dias = Math.floor(diffMs / 86_400_000);
-
-  if (minutos < 1) return "agora mesmo";
-  if (minutos < 60) return `há ${minutos} min`;
-  if (horas < 24) return `há ${horas}h`;
-  if (dias < 30) return `há ${dias} dia${dias > 1 ? "s" : ""}`;
-  const meses = Math.floor(dias / 30);
-  return `há ${meses} ${meses > 1 ? "meses" : "mês"}`;
-}
+const ROTULO_STATUS: Record<string, string> = {
+  RECEBIDO: "Recebido",
+  DIAGNOSTICO: "Em diagnóstico",
+  AGUARDANDO_PECA: "Aguardando peça",
+  EM_REPARO: "Em reparo",
+  CONCLUIDO: "Concluído",
+  CANCELADO: "Cancelado",
+};
 
 const ABAS_STATUS: { chave: StatusOS | "todos"; rotulo: string }[] = [
   { chave: "todos", rotulo: "Todos" },
@@ -57,6 +53,7 @@ const ABAS_STATUS: { chave: StatusOS | "todos"; rotulo: string }[] = [
 
 export function OrdensServicoList() {
   const [ordens, setOrdens] = useState<OrdemServico[]>([]);
+  const [carregando, setCarregando] = useState(true);
   const [statusFiltro, setStatusFiltro] = useState<StatusOS | "todos">("todos");
   const [periodo, setPeriodo] = useState<Periodo>("todas");
   const [dataInicio, setDataInicio] = useState("");
@@ -64,7 +61,8 @@ export function OrdensServicoList() {
   const [busca, setBusca] = useState("");
 
   useEffect(() => {
-    api.get("/ordens-servico").then((r) => setOrdens(r.data)).catch(() => {});
+    setCarregando(true);
+    api.get("/ordens-servico").then((r) => setOrdens(r.data)).catch(() => {}).finally(() => setCarregando(false));
   }, []);
 
   const contagemPorStatus = useMemo(() => {
@@ -183,7 +181,10 @@ export function OrdensServicoList() {
       </div>
 
       <div className="bg-white border border-grafite-200 rounded-lg divide-y divide-grafite-100">
-        {ordensFiltradas.map((os) => (
+        {carregando && (
+          <p className="text-sm text-grafite-500 px-5 py-4">Carregando...</p>
+        )}
+        {!carregando && ordensFiltradas.map((os) => (
           <Link
             key={os.id}
             to={`/ordens-servico/${os.id}`}
@@ -198,14 +199,14 @@ export function OrdensServicoList() {
               </p>
             </div>
             <div className="text-right flex-shrink-0 ml-4">
-              <span className="text-xs codigo text-teal-700">{os.statusAtual}</span>
+              <span className="text-xs codigo text-teal-700">{ROTULO_STATUS[os.statusAtual] ?? os.statusAtual}</span>
               <p className="text-[11px] text-grafite-400 mt-0.5" title={new Date(os.dataAbertura).toLocaleString("pt-BR")}>
                 {tempoRelativo(os.dataAbertura)}
               </p>
             </div>
           </Link>
         ))}
-        {ordensFiltradas.length === 0 && (
+        {!carregando && ordensFiltradas.length === 0 && (
           <p className="text-sm text-grafite-500 px-5 py-4">
             {ordens.length === 0
               ? "Nenhuma ordem de serviço cadastrada."
