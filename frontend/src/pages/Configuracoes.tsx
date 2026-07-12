@@ -1,5 +1,6 @@
 import { FormEvent, useEffect, useState } from "react";
 import { api } from "../services/api";
+import { usuarioLogado } from "../services/auth";
 import { Campo, classeInput } from "../components/Modal";
 import { Settings, User, Lock, Shield, Calendar } from "lucide-react";
 
@@ -35,11 +36,19 @@ export function Configuracoes() {
   const [msgSenha, setMsgSenha] = useState<{ tipo: "ok" | "erro"; texto: string } | null>(null);
 
   useEffect(() => {
+    // tenta buscar do backend; se falhar, usa localStorage como fallback
     api.get("/auth/me").then((r) => {
       setPerfil(r.data);
       setNome(r.data.nome);
       setEmail(r.data.email);
-    }).catch(() => {});
+    }).catch(() => {
+      const local = usuarioLogado();
+      if (local) {
+        setPerfil({ id: local.id, nome: local.nome, email: local.email, papel: local.papel, criadoEm: "" });
+        setNome(local.nome);
+        setEmail(local.email);
+      }
+    });
   }, []);
 
   async function salvarPerfil(e: FormEvent) {
@@ -105,17 +114,19 @@ export function Configuracoes() {
               {ROTULO_PAPEL[perfil.papel] ?? perfil.papel}
             </p>
           </div>
-          <div>
-            <p className="text-xs text-grafite-500">Membro desde</p>
-            <p className="text-sm text-grafite-900 mt-0.5 flex items-center gap-1.5">
-              <Calendar size={14} className="text-grafite-400" />
-              {new Date(perfil.criadoEm).toLocaleDateString("pt-BR", {
-                day: "2-digit",
-                month: "long",
-                year: "numeric",
-              })}
-            </p>
-          </div>
+          {perfil.criadoEm && (
+            <div>
+              <p className="text-xs text-grafite-500">Membro desde</p>
+              <p className="text-sm text-grafite-900 mt-0.5 flex items-center gap-1.5">
+                <Calendar size={14} className="text-grafite-400" />
+                {new Date(perfil.criadoEm).toLocaleDateString("pt-BR", {
+                  day: "2-digit",
+                  month: "long",
+                  year: "numeric",
+                })}
+              </p>
+            </div>
+          )}
         </div>
       </div>
 
