@@ -7,6 +7,7 @@ import {
   CalendarClock,
   Users,
   UsersRound,
+  Settings,
   LogOut,
   type LucideIcon,
 } from "lucide-react";
@@ -29,7 +30,7 @@ const LINKS: LinkConfig[] = [
 ];
 
 const ROTULO_PAPEL: Record<string, string> = {
-  DONO: "Proprietário",
+  DONO: "Diretor Técnico",
   GESTOR: "Gestor",
   TECNICO: "Técnico",
   CLIENTE: "Cliente",
@@ -79,16 +80,37 @@ export function Sidebar() {
       </nav>
 
       {usuario && (
-        <div className="px-5 py-4 border-t border-grafite-800">
-          <p className="text-sm font-medium text-grafite-100 truncate">{usuario.nome}</p>
-          <p className="text-xs text-grafite-400 mt-0.5">{ROTULO_PAPEL[usuario.papel] ?? usuario.papel}</p>
-          <button
-            onClick={sair}
-            className="mt-3 flex items-center gap-2 text-xs text-grafite-400 hover:text-grafite-200 transition-colors"
-          >
-            <LogOut size={14} />
-            Sair da conta
-          </button>
+        <div className="px-4 py-4 border-t border-grafite-800">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-full bg-teal-600 flex items-center justify-center text-white text-sm font-semibold flex-shrink-0">
+              {usuario.nome.charAt(0).toUpperCase()}
+            </div>
+            <div className="min-w-0">
+              <p className="text-sm font-medium text-grafite-100 truncate">{usuario.nome}</p>
+              <p className="text-xs text-grafite-400 truncate">{ROTULO_PAPEL[usuario.papel] ?? usuario.papel}</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-3 mt-3">
+            <NavLink
+              to="/configuracoes"
+              className={({ isActive }) =>
+                `flex items-center gap-1.5 text-xs transition-colors ${
+                  isActive ? "text-teal-400" : "text-grafite-400 hover:text-grafite-200"
+                }`
+              }
+            >
+              <Settings size={14} />
+              Configurações
+            </NavLink>
+            <span className="text-grafite-700">·</span>
+            <button
+              onClick={sair}
+              className="flex items-center gap-1.5 text-xs text-grafite-400 hover:text-grafite-200 transition-colors"
+            >
+              <LogOut size={14} />
+              Sair
+            </button>
+          </div>
         </div>
       )}
     </aside>

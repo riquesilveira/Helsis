@@ -8,6 +8,57 @@ interface LoginInput {
   senha: string;
 }
 
+interface AlterarSenhaInput {
+  usuarioId: string;
+  senhaAtual: string;
+  novaSenha: string;
+}
+
+interface AtualizarPerfilInput {
+  usuarioId: string;
+  nome?: string;
+  email?: string;
+}
+
+export async function alterarSenha({ usuarioId, senhaAtual, novaSenha }: AlterarSenhaInput) {
+  const usuario = await prisma.usuario.findUnique({ where: { id: usuarioId } });
+  if (!usuario) throw new AppError("Usuário não encontrado.", 404);
+
+  const senhaConfere = await bcrypt.compare(senhaAtual, usuario.senhaHash);
+  if (!senhaConfere) throw new AppError("Senha atual incorreta.", 400);
+
+  const novoHash = await bcrypt.hash(novaSenha, 10);
+  await prisma.usuario.update({ where: { id: usuarioId }, data: { senhaHash: novoHash } });
+}
+
+export async function atualizarPerfil({ usuarioId, nome, email }: AtualizarPerfilInput) {
+  const data: Record<string, string> = {};
+  if (nome) data.nome = nome;
+  if (email) {
+    const existente = await prisma.usuario.findUnique({ where: { email } });
+    if (existente && existente.id !== usuarioId) {
+      throw new AppError("Este e-mail já está em uso.", 400);
+    }
+    data.email = email;
+  }
+
+  const usuario = await prisma.usuario.update({
+    where: { id: usuarioId },
+    data,
+    select: { id: true, nome: true, email: true, papel: true },
+  });
+  return usuario;
+}
+
+export async function buscarPerfil(usuarioId: string) {
+  const usuario = await prisma.usuario.findUnique({
+    where: { id: usuarioId },
+    select: { id: true, nome: true, email: true, papel: true, criadoEm: true },
+  });
+  if (!usuario) throw new AppError("Usuário não encontrado.", 404);
+  return usuario;
+}
+
 export async function login({ email, senha }: LoginInput) {
   const usuario = await prisma.usuario.findUnique({ where: { email } });
 

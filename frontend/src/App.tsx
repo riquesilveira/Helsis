@@ -14,6 +14,7 @@ import { RotaFuncionario } from "./pages/Funcionarios/RotaFuncionario";
 import { ResumoMensalFuncionario } from "./pages/Funcionarios/ResumoMensalFuncionario";
 import { MinhaRota } from "./pages/Funcionarios/MinhaRota";
 import { AcompanharOS } from "./pages/ClientePortal/AcompanharOS";
+import { Configuracoes } from "./pages/Configuracoes";
 
 function RotaProtegida({ children }: { children: React.ReactNode }) {
   const autenticado = Boolean(localStorage.getItem("token"));
@@ -47,6 +48,7 @@ export default function App() {
         <Route path="/funcionarios/:id" element={<FuncionarioDesempenho />} />
         <Route path="/funcionarios/:id/rota" element={<RotaFuncionario />} />
         <Route path="/funcionarios/:id/resumo" element={<ResumoMensalFuncionario />} />
+        <Route path="/configuracoes" element={<Configuracoes />} />
       </Route>
     </Routes>
   );
