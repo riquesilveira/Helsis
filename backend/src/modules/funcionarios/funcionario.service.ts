@@ -88,7 +88,13 @@ export async function atualizarFuncionario(id: string, dados: AtualizarFuncionar
 
   const updateUsuario: Record<string, unknown> = {};
   if (dados.nome !== undefined) updateUsuario.nome = dados.nome;
-  if (dados.email !== undefined) updateUsuario.email = dados.email;
+  if (dados.email !== undefined) {
+    const existente = await prisma.usuario.findUnique({ where: { email: dados.email } });
+    if (existente && existente.id !== funcionario.usuarioId) {
+      throw new AppError("Este e-mail já está em uso.", 400);
+    }
+    updateUsuario.email = dados.email;
+  }
 
   if (Object.keys(updateUsuario).length > 0) {
     await prisma.usuario.update({ where: { id: funcionario.usuarioId }, data: updateUsuario });

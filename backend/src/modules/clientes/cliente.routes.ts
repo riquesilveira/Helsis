@@ -7,8 +7,8 @@ const router = Router();
 
 router.use(autenticar);
 
-router.get("/", asyncHandler(clienteController.listar));
-router.get("/:id", asyncHandler(clienteController.buscarPorId));
+router.get("/", autorizar("DONO", "GESTOR", "TECNICO"), asyncHandler(clienteController.listar));
+router.get("/:id", autorizar("DONO", "GESTOR", "TECNICO"), asyncHandler(clienteController.buscarPorId));
 router.post("/", autorizar("DONO", "GESTOR"), asyncHandler(clienteController.criar));
 router.put("/:id", autorizar("DONO", "GESTOR"), asyncHandler(clienteController.atualizar));
 router.delete("/:id", autorizar("DONO"), asyncHandler(clienteController.remover));

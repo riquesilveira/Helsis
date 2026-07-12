@@ -9,7 +9,7 @@ const criarFuncionarioSchema = z.object({
   senha: z.string().min(6),
   cargo: z.string().min(2),
   salarioAtual: z.number().positive(),
-  dataAdmissao: z.string(),
+  dataAdmissao: z.string().refine((v) => !isNaN(Date.parse(v)), "Data inválida."),
   especialidades: z.array(z.string()).optional(),
 });
 

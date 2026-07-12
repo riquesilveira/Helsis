@@ -2,7 +2,7 @@ import { ModalidadeAtendimento, StatusOS, TipoOS } from "@prisma/client";
 import { prisma } from "../../lib/prisma";
 import { AppError } from "../../utils/AppError";
 import { notificarClienteSobreStatus } from "../notificacoes/notificacao.service";
-import { registrarManutencaoPreventivaConcluida } from "../equipamentos/equipamento.service";
+import { registrarManutencaoPreventivaConcluida, somarMeses } from "../equipamentos/equipamento.service";
 
 export interface CriarOSInput {
   clienteId: string;
@@ -111,6 +111,14 @@ export async function buscarOrdemServicoPorId(id: string) {
   return os;
 }
 
+/**
+ * Resolve o perfil de cliente a partir do id do USUÁRIO logado (vindo do token JWT).
+ * Retorna null se o usuário não tiver um perfil de cliente associado.
+ */
+export async function buscarClientePorUsuarioId(usuarioId: string) {
+  return prisma.cliente.findUnique({ where: { usuarioId } });
+}
+
 export async function criarOrdemServico(dados: CriarOSInput) {
   const os = await prisma.ordemServico.create({
     data: {
@@ -149,26 +157,33 @@ export async function criarOrdemServico(dados: CriarOSInput) {
 export async function atualizarStatus(osId: string, dados: AtualizarStatusInput) {
   const os = await buscarOrdemServicoPorId(osId);
 
-  const tentativaAtual = dados.novaTentativa ? os.numeroTentativas + 1 : os.numeroTentativas;
+  // tentativaNumero no histórico é sempre baseado em os.numeroTentativas (valor
+  // ANTES de qualquer incremento nesta chamada) + 1, de forma que a primeira
+  // tentativa (numeroTentativas=0) gere tentativaNumero=1, a segunda gere 2, etc.
+  const tentativaNumeroHistorico = os.numeroTentativas + 1;
+
+  // Só incrementa o contador de tentativas quando novaTentativa=true.
+  const novoNumeroTentativas = dados.novaTentativa ? os.numeroTentativas + 1 : os.numeroTentativas;
 
   const dadosAtualizacao: Record<string, unknown> = {
     statusAtual: dados.status,
-    numeroTentativas: tentativaAtual,
+    numeroTentativas: novoNumeroTentativas,
     statusHistoricos: {
       create: {
         status: dados.status,
         observacao: dados.observacao,
         funcionarioId: dados.funcionarioId,
-        tentativaNumero: tentativaAtual + 1, // tentativa "1" = numeroTentativas 0
+        tentativaNumero: tentativaNumeroHistorico,
       },
     },
   };
 
   // Quando a OS é concluída, fixamos se foi resolvida já na primeira tentativa.
-  // Isso é o dado bruto usado depois na avaliação de desempenho do técnico.
+  // Usa os.numeroTentativas (antes do incremento) para refletir o estado REAL:
+  // se o técnico nunca registrou uma nova tentativa antes deste CONCLUIDO, é primeira.
   if (dados.status === StatusOS.CONCLUIDO) {
     dadosAtualizacao.dataConclusao = new Date();
-    dadosAtualizacao.resolvidoNaPrimeira = tentativaAtual === 0;
+    dadosAtualizacao.resolvidoNaPrimeira = os.numeroTentativas === 0;
   }
 
   const osAtualizada = await prisma.ordemServico.update({
@@ -203,7 +218,7 @@ export async function registrarPecaTrocada(osId: string, dados: RegistrarPecaInp
   const os = await buscarOrdemServicoPorId(osId);
 
   const garantiaAte = dados.garantiaMeses
-    ? new Date(Date.now() + dados.garantiaMeses * 30 * 24 * 60 * 60 * 1000)
+    ? somarMeses(new Date(), dados.garantiaMeses)
     : null;
 
   // Se o preço não veio explícito, usa o preço padrão cadastrado no
@@ -283,7 +298,16 @@ export async function registrarDeslocamento(osId: string, dados: RegistrarDesloc
   });
 }
 
-export async function atualizarDeslocamento(deslocamentoId: string, dados: AtualizarDeslocamentoInput) {
+export async function atualizarDeslocamento(
+  deslocamentoId: string,
+  ordemServicoId: string,
+  dados: AtualizarDeslocamentoInput
+) {
+  const deslocamento = await prisma.deslocamento.findUnique({ where: { id: deslocamentoId } });
+  if (!deslocamento || deslocamento.ordemServicoId !== ordemServicoId) {
+    throw new AppError("Deslocamento não encontrado nesta ordem de serviço.", 404);
+  }
+
   return prisma.deslocamento.update({
     where: { id: deslocamentoId },
     data: {
@@ -297,7 +321,12 @@ export async function atualizarDeslocamento(deslocamentoId: string, dados: Atual
   });
 }
 
-export async function excluirDeslocamento(deslocamentoId: string) {
+export async function excluirDeslocamento(deslocamentoId: string, ordemServicoId: string) {
+  const deslocamento = await prisma.deslocamento.findUnique({ where: { id: deslocamentoId } });
+  if (!deslocamento || deslocamento.ordemServicoId !== ordemServicoId) {
+    throw new AppError("Deslocamento não encontrado nesta ordem de serviço.", 404);
+  }
+
   return prisma.deslocamento.delete({ where: { id: deslocamentoId } });
 }
 

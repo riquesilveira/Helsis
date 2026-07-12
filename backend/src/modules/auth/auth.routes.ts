@@ -1,4 +1,5 @@
 import { Router } from "express";
+import rateLimit from "express-rate-limit";
 import { asyncHandler } from "../../utils/asyncHandler";
 import { autenticar } from "../../middlewares/auth.middleware";
 import {
@@ -10,7 +11,15 @@ import {
 
 const router = Router();
 
-router.post("/login", asyncHandler(loginController));
+const loginLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutos
+  max: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { erro: "Muitas tentativas de login. Aguarde 15 minutos e tente novamente." },
+});
+
+router.post("/login", loginLimiter, asyncHandler(loginController));
 
 // Rotas autenticadas — perfil e senha do próprio usuário
 router.get("/me", autenticar, asyncHandler(perfilController));

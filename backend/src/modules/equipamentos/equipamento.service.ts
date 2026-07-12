@@ -11,9 +11,13 @@ export interface EquipamentoInput {
   frequenciaManutencaoMeses?: number | null;
 }
 
-function somarMeses(data: Date, meses: number): Date {
+export function somarMeses(data: Date, meses: number): Date {
   const resultado = new Date(data);
+  const diaOriginal = resultado.getDate();
+  resultado.setDate(1); // evita overflow ao mudar o mês
   resultado.setMonth(resultado.getMonth() + meses);
+  const ultimoDiaDoMesDestino = new Date(resultado.getFullYear(), resultado.getMonth() + 1, 0).getDate();
+  resultado.setDate(Math.min(diaOriginal, ultimoDiaDoMesDestino));
   return resultado;
 }
 

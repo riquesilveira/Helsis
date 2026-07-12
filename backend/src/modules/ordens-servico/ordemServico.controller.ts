@@ -2,14 +2,16 @@ import { Request, Response } from "express";
 import { z } from "zod";
 import { ModalidadeAtendimento, StatusOS, TipoOS } from "@prisma/client";
 import * as osService from "./ordemServico.service";
+import { buscarFuncionarioPorUsuarioId } from "../funcionarios/funcionario.service";
 import { listarNotificacoes } from "../notificacoes/notificacao.service";
+import { AppError } from "../../utils/AppError";
 
 const criarOSSchema = z.object({
   clienteId: z.string().uuid(),
   equipamentoId: z.string().uuid(),
   funcionarioId: z.string().uuid().optional(),
   tipo: z.nativeEnum(TipoOS).optional(),
-  dataAgendada: z.string().optional(),
+  dataAgendada: z.string().refine((v) => !isNaN(Date.parse(v)), "Data inválida.").optional(),
   modalidade: z.nativeEnum(ModalidadeAtendimento),
   descricaoProblema: z.string().min(5),
 });
@@ -21,9 +23,11 @@ const atualizarStatusSchema = z.object({
   novaTentativa: z.boolean().optional(),
 });
 
+// Para TECNICO, funcionarioId é derivado do token — não aceitar do body.
+// Para DONO/GESTOR, funcionarioId pode vir do body (registrar em nome de outro).
 const registrarPecaSchema = z.object({
   pecaCatalogoId: z.string().uuid(),
-  funcionarioId: z.string().uuid(),
+  funcionarioId: z.string().uuid().optional(),
   tipoServico: z.string().min(2),
   quantidade: z.number().int().positive().optional(),
   resolveuProblema: z.boolean().optional(),
@@ -57,10 +61,26 @@ const atualizarDeslocamentoSchema = z.object({
 
 export async function listar(req: Request, res: Response) {
   const { status, clienteId, funcionarioId, tipo } = req.query;
+  const papel = req.usuario!.papel;
+
+  let filtroClienteId = clienteId as string | undefined;
+  let filtroFuncionarioId = funcionarioId as string | undefined;
+
+  if (papel === "CLIENTE") {
+    // CLIENTE só vê suas próprias OS — força o filtro pelo clienteId vinculado ao login
+    const cliente = await osService.buscarClientePorUsuarioId(req.usuario!.id);
+    if (!cliente) throw new AppError("Nenhum perfil de cliente associado a este usuário.", 404);
+    filtroClienteId = cliente.id;
+  } else if (papel === "TECNICO") {
+    // TECNICO só vê as OS atribuídas a ele — força o filtro pelo funcionarioId do login
+    const funcionario = await buscarFuncionarioPorUsuarioId(req.usuario!.id);
+    filtroFuncionarioId = funcionario.id;
+  }
+
   const ordens = await osService.listarOrdensServico({
     status: status as StatusOS | undefined,
-    clienteId: clienteId as string | undefined,
-    funcionarioId: funcionarioId as string | undefined,
+    clienteId: filtroClienteId,
+    funcionarioId: filtroFuncionarioId,
     tipo: tipo as TipoOS | undefined,
   });
   res.json(ordens);
@@ -68,6 +88,20 @@ export async function listar(req: Request, res: Response) {
 
 export async function buscarPorId(req: Request, res: Response) {
   const os = await osService.buscarOrdemServicoPorId(req.params.id);
+  const papel = req.usuario!.papel;
+
+  if (papel === "TECNICO") {
+    const funcionario = await buscarFuncionarioPorUsuarioId(req.usuario!.id);
+    if (os.funcionarioId !== funcionario.id) {
+      throw new AppError("Você não tem permissão para visualizar esta ordem de serviço.", 403);
+    }
+  } else if (papel === "CLIENTE") {
+    const cliente = await osService.buscarClientePorUsuarioId(req.usuario!.id);
+    if (!cliente || os.clienteId !== cliente.id) {
+      throw new AppError("Você não tem permissão para visualizar esta ordem de serviço.", 403);
+    }
+  }
+
   res.json(os);
 }
 
@@ -79,13 +113,40 @@ export async function criar(req: Request, res: Response) {
 
 export async function atualizarStatus(req: Request, res: Response) {
   const dados = atualizarStatusSchema.parse(req.body);
+
+  // TECNICO só pode alterar status de OS atribuída a ele
+  if (req.usuario!.papel === "TECNICO") {
+    const os = await osService.buscarOrdemServicoPorId(req.params.id);
+    const funcionario = await buscarFuncionarioPorUsuarioId(req.usuario!.id);
+    if (os.funcionarioId !== funcionario.id) {
+      throw new AppError("Você não tem permissão para alterar esta ordem de serviço.", 403);
+    }
+  }
+
   const os = await osService.atualizarStatus(req.params.id, dados);
   res.json(os);
 }
 
 export async function registrarPeca(req: Request, res: Response) {
-  const dados = registrarPecaSchema.parse(req.body);
-  const peca = await osService.registrarPecaTrocada(req.params.id, dados);
+  const dadosBrutos = registrarPecaSchema.parse(req.body);
+
+  let funcionarioId = dadosBrutos.funcionarioId;
+
+  if (req.usuario!.papel === "TECNICO") {
+    // Para TECNICO, deriva o funcionarioId do token e verifica que a OS é dele
+    const funcionario = await buscarFuncionarioPorUsuarioId(req.usuario!.id);
+    const os = await osService.buscarOrdemServicoPorId(req.params.id);
+    if (os.funcionarioId !== funcionario.id) {
+      throw new AppError("Você não tem permissão para registrar peças nesta ordem de serviço.", 403);
+    }
+    funcionarioId = funcionario.id;
+  }
+
+  if (!funcionarioId) {
+    throw new AppError("funcionarioId é obrigatório.", 400);
+  }
+
+  const peca = await osService.registrarPecaTrocada(req.params.id, { ...dadosBrutos, funcionarioId });
   res.status(201).json(peca);
 }
 
@@ -110,12 +171,16 @@ export async function registrarDeslocamento(req: Request, res: Response) {
 
 export async function atualizarDeslocamento(req: Request, res: Response) {
   const dados = atualizarDeslocamentoSchema.parse(req.body);
-  const deslocamento = await osService.atualizarDeslocamento(req.params.deslocamentoId, dados);
+  const deslocamento = await osService.atualizarDeslocamento(
+    req.params.deslocamentoId,
+    req.params.id,
+    dados
+  );
   res.json(deslocamento);
 }
 
 export async function excluirDeslocamento(req: Request, res: Response) {
-  await osService.excluirDeslocamento(req.params.deslocamentoId);
+  await osService.excluirDeslocamento(req.params.deslocamentoId, req.params.id);
   res.status(204).end();
 }
 

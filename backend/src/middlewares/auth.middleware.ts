@@ -21,7 +21,7 @@ export function autenticar(req: Request, _res: Response, next: NextFunction) {
   const header = req.headers.authorization;
 
   if (!header?.startsWith("Bearer ")) {
-    throw new AppError("Token não informado.", 401);
+    return next(new AppError("Token não informado.", 401));
   }
 
   const token = header.replace("Bearer ", "");
@@ -31,7 +31,7 @@ export function autenticar(req: Request, _res: Response, next: NextFunction) {
     req.usuario = payload;
     next();
   } catch {
-    throw new AppError("Token inválido ou expirado.", 401);
+    return next(new AppError("Token inválido ou expirado.", 401));
   }
 }
 
@@ -42,7 +42,7 @@ export function autenticar(req: Request, _res: Response, next: NextFunction) {
 export function autorizar(...papeisPermitidos: UsuarioLogado["papel"][]) {
   return (req: Request, _res: Response, next: NextFunction) => {
     if (!req.usuario || !papeisPermitidos.includes(req.usuario.papel)) {
-      throw new AppError("Você não tem permissão para essa ação.", 403);
+      return next(new AppError("Você não tem permissão para essa ação.", 403));
     }
     next();
   };

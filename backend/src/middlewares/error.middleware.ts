@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import { ZodError } from "zod";
+import { Prisma } from "@prisma/client";
 import { AppError } from "../utils/AppError";
 
 export function errorMiddleware(
@@ -16,6 +17,10 @@ export function errorMiddleware(
   if (err instanceof ZodError) {
     const mensagem = err.errors.map((e) => e.message).join(", ");
     return res.status(400).json({ erro: mensagem });
+  }
+
+  if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === "P2003") {
+    return res.status(400).json({ erro: "Não é possível excluir: existem registros vinculados a este item." });
   }
 
   console.error(err);
