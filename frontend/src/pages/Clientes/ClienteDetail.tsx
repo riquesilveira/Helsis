@@ -207,7 +207,7 @@ export function ClienteDetail() {
                 value={form.tipo}
                 onChange={(e) => setForm({ ...form, tipo: e.target.value })}
                 onFocus={() => setCampoFocado("tipo")}
-                onBlur={() => setTimeout(() => setCampoFocado(null), 200)}
+                onBlur={() => setTimeout(() => setCampoFocado((atual) => (atual === "tipo" ? null : atual)), 200)}
               />
               <button
                 type="button"
@@ -244,7 +244,7 @@ export function ClienteDetail() {
                   value={form.marca}
                   onChange={(e) => setForm({ ...form, marca: e.target.value })}
                   onFocus={() => setCampoFocado("marca")}
-                  onBlur={() => setTimeout(() => setCampoFocado(null), 200)}
+                  onBlur={() => setTimeout(() => setCampoFocado((atual) => (atual === "marca" ? null : atual)), 200)}
                 />
                 <button
                   type="button"
@@ -280,7 +280,7 @@ export function ClienteDetail() {
                   value={form.modelo}
                   onChange={(e) => setForm({ ...form, modelo: e.target.value })}
                   onFocus={() => setCampoFocado("modelo")}
-                  onBlur={() => setTimeout(() => setCampoFocado(null), 200)}
+                  onBlur={() => setTimeout(() => setCampoFocado((atual) => (atual === "modelo" ? null : atual)), 200)}
                 />
                 <button
                   type="button"
