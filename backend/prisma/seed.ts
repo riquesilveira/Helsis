@@ -382,6 +382,75 @@ async function main() {
     },
   });
 
+  // OS abertas agendadas pra HOJE — garante que todos os técnicos apareçam
+  // com afazeres no painel "Agenda de hoje, por técnico" do dashboard.
+  const hojeAs = (hora: number) => {
+    const d = new Date();
+    d.setHours(hora, 0, 0, 0);
+    return d;
+  };
+
+  const agendaHoje = [
+    {
+      clienteId: institutoSantaFe.id,
+      equipamentoId: mamografo.id,
+      funcionarioId: marina.funcionario!.id,
+      statusAtual: StatusOS.DIAGNOSTICO,
+      descricaoProblema: "Mamógrafo com alerta de calibração do detector digital.",
+      hora: 9,
+    },
+    {
+      clienteId: hospitalRegional.id,
+      equipamentoId: ultrassom.id,
+      funcionarioId: marina.funcionario!.id,
+      statusAtual: StatusOS.RECEBIDO,
+      descricaoProblema: "Transdutor com falha intermitente de imagem.",
+      hora: 15,
+    },
+    {
+      clienteId: institutoSantaFe.id,
+      equipamentoId: raioX.id,
+      funcionarioId: carlos.funcionario!.id,
+      statusAtual: StatusOS.EM_REPARO,
+      descricaoProblema: "Raio-X com ruído na fonte de alta tensão.",
+      hora: 8,
+    },
+    {
+      clienteId: hospitalRegional.id,
+      equipamentoId: ultrassom.id,
+      funcionarioId: carlos.funcionario!.id,
+      statusAtual: StatusOS.DIAGNOSTICO,
+      descricaoProblema: "Ultrassom não liga após queda de energia.",
+      hora: 13,
+    },
+    {
+      clienteId: clinicaSaoLucas.id,
+      equipamentoId: tomografo.id,
+      funcionarioId: joao.funcionario!.id,
+      statusAtual: StatusOS.RECEBIDO,
+      descricaoProblema: "Tomógrafo travando durante a inicialização.",
+      hora: 16,
+    },
+  ];
+
+  for (const item of agendaHoje) {
+    await prisma.ordemServico.create({
+      data: {
+        clienteId: item.clienteId,
+        equipamentoId: item.equipamentoId,
+        funcionarioId: item.funcionarioId,
+        modalidade: ModalidadeAtendimento.VISITA_TECNICA,
+        statusAtual: item.statusAtual,
+        descricaoProblema: item.descricaoProblema,
+        numeroTentativas: 0,
+        dataAgendada: hojeAs(item.hora),
+        statusHistoricos: {
+          create: [{ status: StatusOS.RECEBIDO, tentativaNumero: 1, observacao: "Chamado aberto." }],
+        },
+      },
+    });
+  }
+
   // ------------------------------------------------------------------
   // ORDENS DE SERVIÇO CONCLUÍDAS — espalhadas pelos últimos ~45 dias,
   // pra dar densidade real ao gráfico de faturamento e ao painel de

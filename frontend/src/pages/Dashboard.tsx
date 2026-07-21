@@ -284,13 +284,6 @@ export function Dashboard() {
                         : "border-transparent text-grafite-500 hover:text-grafite-900"
                     }`}
                   >
-                    <span
-                      className={`flex h-6 w-6 items-center justify-center rounded-full text-[11px] font-semibold ${
-                        ativo ? "bg-teal-600 text-white" : "bg-grafite-100 text-grafite-600"
-                      }`}
-                    >
-                      {funcionario.usuario.nome.charAt(0).toUpperCase()}
-                    </span>
                     {funcionario.usuario.nome.split(" ")[0]}
                     <span
                       className={`codigo rounded-full px-1.5 text-[11px] ${
