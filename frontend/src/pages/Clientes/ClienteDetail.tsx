@@ -1,9 +1,24 @@
 import { FormEvent, useEffect, useRef, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import { ChevronDown } from "lucide-react";
+import {
+  ArrowLeft,
+  ArrowRight,
+  CalendarClock,
+  ChevronDown,
+  Cpu,
+  Mail,
+  MapPin,
+  Pencil,
+  Phone,
+  Plus,
+  type LucideIcon,
+} from "lucide-react";
 import { api } from "../../services/api";
 import { Cliente, Equipamento, EquipamentoCatalogoItem } from "../../types";
 import { Campo, classeInput, Modal } from "../../components/Modal";
+import { Card } from "../../components/ui/Card";
+import { Button, classeBotao } from "../../components/ui/Button";
+import { HospitalLogo, corHospital } from "../../components/ui/HospitalLogo";
 
 const EQUIPAMENTO_VAZIO = {
   tipo: "",
@@ -147,63 +162,106 @@ export function ClienteDetail() {
 
   if (!cliente) return <p className="text-sm text-grafite-500">Carregando...</p>;
 
+  const [c1, c2] = corHospital(cliente.nome);
+  const equipamentos = cliente.equipamentos ?? [];
+  const endereco = [cliente.endereco, [cliente.cidade, cliente.estado].filter(Boolean).join("/")]
+    .filter(Boolean)
+    .join(" — ");
+
   return (
-    <div className="space-y-6 max-w-2xl">
-      <div>
-        <h1 className="text-xl font-semibold text-grafite-900">{cliente.nome}</h1>
-        <p className="text-sm text-grafite-600 mt-1">
-          {cliente.telefone}
-          {cliente.email ? ` — ${cliente.email}` : ""}
-        </p>
-      </div>
+    <div className="space-y-6 max-w-3xl">
+      <Link
+        to="/clientes"
+        className="inline-flex items-center gap-1.5 text-sm text-grafite-500 hover:text-grafite-900 transition-colors"
+      >
+        <ArrowLeft size={16} />
+        Clientes
+      </Link>
 
-      <div className="flex items-center justify-between">
-        <h2 className="text-sm font-medium text-grafite-900">Equipamentos</h2>
-        <button
-          onClick={abrirNovo}
-          className="text-xs font-medium text-teal-700 hover:text-teal-800"
-        >
-          + Novo equipamento
-        </button>
-      </div>
-
-      <div className="bg-white border border-grafite-200 rounded-lg divide-y divide-grafite-100">
-        {(cliente.equipamentos ?? []).map((eq: Equipamento) => (
-          <div key={eq.id} className="flex items-center justify-between px-5 py-4">
-            <div>
-              <p className="text-sm text-grafite-900">{eq.tipo}</p>
-              <p className="text-xs text-grafite-500 mt-0.5">
-                {eq.marca} {eq.modelo} {eq.numeroSerie ? `— nº ${eq.numeroSerie}` : ""}
-              </p>
-              {eq.frequenciaManutencaoMeses ? (
-                <p className="text-xs text-teal-700 mt-0.5">
-                  Preventiva a cada {eq.frequenciaManutencaoMeses} meses
-                  {eq.proximaManutencaoPreventiva
-                    ? ` · próxima em ${formatarProximaData(eq.proximaManutencaoPreventiva)}`
-                    : ""}
-                </p>
-              ) : (
-                <p className="text-xs text-grafite-400 mt-0.5">Sem manutenção preventiva agendada</p>
+      {/* Header / hero do estabelecimento */}
+      <Card className="overflow-hidden p-0">
+        <div className="h-24" style={{ background: `linear-gradient(135deg, ${c1}, ${c2})` }} />
+        <div className="px-6 pb-6">
+          <div className="-mt-10 flex items-end gap-4">
+            <HospitalLogo nome={cliente.nome} size={80} className="ring-4 ring-white" />
+            <div className="min-w-0 pb-1">
+              <h1 className="text-2xl font-semibold tracking-tight text-grafite-900 truncate">
+                {cliente.nome}
+              </h1>
+              {cliente.documento && (
+                <p className="codigo text-xs text-grafite-500 mt-0.5">{cliente.documento}</p>
               )}
             </div>
-            <div className="flex items-center gap-3 flex-shrink-0">
+          </div>
+
+          <div className="mt-5 grid gap-4 sm:grid-cols-3">
+            <InfoItem icone={Phone} rotulo="Telefone" valor={cliente.telefone} />
+            <InfoItem icone={Mail} rotulo="E-mail" valor={cliente.email} />
+            <InfoItem icone={MapPin} rotulo="Endereço" valor={endereco} />
+          </div>
+        </div>
+      </Card>
+
+      {/* Equipamentos */}
+      <div className="flex items-center justify-between">
+        <h2 className="text-base font-semibold text-grafite-900">
+          Equipamentos
+          <span className="ml-2 text-sm font-normal text-grafite-400">{equipamentos.length}</span>
+        </h2>
+        <Button tamanho="sm" onClick={abrirNovo}>
+          <Plus size={14} />
+          Novo equipamento
+        </Button>
+      </div>
+
+      <div className="space-y-2">
+        {equipamentos.map((eq: Equipamento) => (
+          <Card key={eq.id} className="flex items-center justify-between gap-4 px-5 py-4">
+            <div className="flex min-w-0 items-center gap-3">
+              <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-teal-50 text-teal-700">
+                <Cpu size={18} />
+              </div>
+              <div className="min-w-0">
+                <p className="text-sm font-semibold text-grafite-900 truncate">{eq.tipo}</p>
+                <p className="text-xs text-grafite-500 mt-0.5 truncate">
+                  {[eq.marca, eq.modelo].filter(Boolean).join(" ")}
+                  {eq.numeroSerie ? ` — nº ${eq.numeroSerie}` : ""}
+                </p>
+                {eq.frequenciaManutencaoMeses ? (
+                  <p className="mt-1 flex items-center gap-1 text-[11px] font-medium text-teal-700">
+                    <CalendarClock size={12} className="flex-shrink-0" />
+                    Preventiva a cada {eq.frequenciaManutencaoMeses} meses
+                    {eq.proximaManutencaoPreventiva
+                      ? ` · próxima em ${formatarProximaData(eq.proximaManutencaoPreventiva)}`
+                      : ""}
+                  </p>
+                ) : (
+                  <p className="mt-1 text-[11px] text-grafite-400">Sem manutenção preventiva agendada</p>
+                )}
+              </div>
+            </div>
+            <div className="flex flex-shrink-0 items-center gap-2">
               <button
                 onClick={() => abrirEdicao(eq)}
-                className="text-xs font-medium text-grafite-600 hover:text-grafite-900"
+                className="inline-flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-medium text-grafite-600 hover:bg-grafite-100 hover:text-grafite-900 transition-colors"
               >
+                <Pencil size={13} />
                 Editar
               </button>
               <Link
                 to={`/ordens-servico/nova?clienteId=${cliente.id}&equipamentoId=${eq.id}`}
-                className="text-xs font-medium text-teal-700 hover:text-teal-800"
+                className={classeBotao("secondary", "sm")}
               >
-                Abrir OS →
+                Abrir OS
+                <ArrowRight size={13} />
               </Link>
             </div>
-          </div>
+          </Card>
         ))}
-        {(cliente.equipamentos ?? []).length === 0 && (
-          <p className="text-sm text-grafite-500 px-5 py-4">Nenhum equipamento cadastrado.</p>
+        {equipamentos.length === 0 && (
+          <Card className="px-5 py-8 text-center text-sm text-grafite-500">
+            Nenhum equipamento cadastrado.
+          </Card>
         )}
       </div>
 
@@ -243,7 +301,7 @@ export function ClienteDetail() {
                 <ChevronDown size={16} />
               </button>
               {campoFocado === "tipo" && sugestoesTipo.length > 0 && (
-                <ul className="absolute z-10 left-0 right-0 top-full mt-1 bg-white border border-grafite-200 rounded-md shadow-lg max-h-48 overflow-y-auto">
+                <ul className="absolute z-10 left-0 right-0 top-full mt-1 bg-white border border-grafite-100 rounded-xl shadow-dropdown max-h-48 overflow-y-auto">
                   {sugestoesTipo.map((t) => (
                     <li
                       key={t}
@@ -299,7 +357,7 @@ export function ClienteDetail() {
                   <ChevronDown size={16} />
                 </button>
                 {campoFocado === "marca" && sugestoesMarca.length > 0 && (
-                  <ul className="absolute z-10 left-0 right-0 top-full mt-1 bg-white border border-grafite-200 rounded-md shadow-lg max-h-48 overflow-y-auto">
+                  <ul className="absolute z-10 left-0 right-0 top-full mt-1 bg-white border border-grafite-100 rounded-xl shadow-dropdown max-h-48 overflow-y-auto">
                     {sugestoesMarca.map((m) => (
                       <li
                         key={m}
@@ -346,7 +404,7 @@ export function ClienteDetail() {
                   <ChevronDown size={16} />
                 </button>
                 {campoFocado === "modelo" && sugestoesModelo.length > 0 && (
-                  <ul className="absolute z-10 left-0 right-0 top-full mt-1 bg-white border border-grafite-200 rounded-md shadow-lg max-h-48 overflow-y-auto">
+                  <ul className="absolute z-10 left-0 right-0 top-full mt-1 bg-white border border-grafite-100 rounded-xl shadow-dropdown max-h-48 overflow-y-auto">
                     {sugestoesModelo.map((m) => (
                       <li
                         key={m}
@@ -391,15 +449,33 @@ export function ClienteDetail() {
               Deixe em branco se esse equipamento só tem manutenção corretiva (sob demanda).
             </span>
           </Campo>
-          <button
-            type="submit"
-            disabled={salvando}
-            className="w-full mt-2 bg-teal-600 hover:bg-teal-700 text-white text-sm font-medium rounded-md py-2 transition-colors disabled:opacity-60"
-          >
+          <button type="submit" disabled={salvando} className={`${classeBotao("primary")} mt-2 w-full`}>
             {salvando ? "Salvando..." : editandoId ? "Salvar alterações" : "Cadastrar equipamento"}
           </button>
         </form>
       </Modal>
+    </div>
+  );
+}
+
+function InfoItem({
+  icone: Icone,
+  rotulo,
+  valor,
+}: {
+  icone: LucideIcon;
+  rotulo: string;
+  valor?: string | null;
+}) {
+  return (
+    <div className="flex items-start gap-2.5">
+      <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-grafite-100 text-grafite-500">
+        <Icone size={15} />
+      </div>
+      <div className="min-w-0">
+        <p className="text-[11px] font-medium uppercase tracking-wide text-grafite-400">{rotulo}</p>
+        <p className="text-sm text-grafite-800 break-words">{valor || "—"}</p>
+      </div>
     </div>
   );
 }

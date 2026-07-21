@@ -1,5 +1,6 @@
 import { FormEvent, useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
+import { ArrowLeft } from "lucide-react";
 import { api } from "../../services/api";
 import { DesempenhoFuncionario, Funcionario, TipoComissao } from "../../types";
 import { Campo, classeInput, Modal } from "../../components/Modal";
@@ -115,6 +116,14 @@ export function FuncionarioDesempenho() {
 
   return (
     <div className="space-y-6 max-w-3xl">
+      <Link
+        to="/funcionarios"
+        className="inline-flex items-center gap-1.5 text-sm text-grafite-500 hover:text-grafite-900 transition-colors"
+      >
+        <ArrowLeft size={16} />
+        Equipe & desempenho
+      </Link>
+
       <div className="flex items-start justify-between">
         <div>
           <div className="flex items-center gap-2">

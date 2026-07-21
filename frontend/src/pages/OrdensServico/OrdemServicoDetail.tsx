@@ -1,5 +1,6 @@
 import { FormEvent, useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
+import { ArrowLeft } from "lucide-react";
 import { api } from "../../services/api";
 import { NotificacaoItem, OrdemServico, OPCOES_STATUS, PecaCatalogo, StatusOS } from "../../types";
 import { StatusTimeline } from "../../components/StatusTimeline";
@@ -256,6 +257,14 @@ export function OrdemServicoDetail() {
 
   return (
     <div className="space-y-6 max-w-3xl">
+      <Link
+        to="/ordens-servico"
+        className="inline-flex items-center gap-1.5 text-sm text-grafite-500 hover:text-grafite-900 transition-colors"
+      >
+        <ArrowLeft size={16} />
+        Ordens de serviço
+      </Link>
+
       <div>
         <div className="flex items-center gap-2">
           <p className="codigo text-sm text-grafite-500">OS #{os.numero}</p>

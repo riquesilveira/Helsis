@@ -162,6 +162,7 @@ function DespesasPorTipo({ dados }: { dados: { tipo: string; valor: number }[] }
 export function Dashboard() {
   const [ordens, setOrdens] = useState<OrdemServico[]>([]);
   const [funcionarios, setFuncionarios] = useState<Funcionario[]>([]);
+  const [abaTecnico, setAbaTecnico] = useState<string>("");
 
   useEffect(() => {
     api.get("/ordens-servico").then((r) => setOrdens(r.data)).catch(() => {});
@@ -218,9 +219,14 @@ export function Dashboard() {
 
   const hoje = new Date().toISOString().slice(0, 10);
   const agendaDoDia = funcionarios.map((f) => {
-    const doDia = abertas.filter((o) => o.funcionario?.id === f.id && o.dataAgendada?.slice(0, 10) === hoje);
-    return { funcionario: f, quantidade: doDia.length, proxima: doDia[0] };
+    const doDia = abertas
+      .filter((o) => o.funcionario?.id === f.id && o.dataAgendada?.slice(0, 10) === hoje)
+      .sort((a, b) => (a.dataAgendada ?? "").localeCompare(b.dataAgendada ?? ""));
+    return { funcionario: f, quantidade: doDia.length, atendimentos: doDia };
   });
+
+  const tecnicoAtivoId = abaTecnico || agendaDoDia[0]?.funcionario.id || "";
+  const agendaAtiva = agendaDoDia.find((a) => a.funcionario.id === tecnicoAtivoId);
 
   return (
     <div className="space-y-8">
@@ -260,41 +266,87 @@ export function Dashboard() {
 
       <div>
         <h2 className="text-base font-semibold text-grafite-900 mb-3">Agenda de hoje, por técnico</h2>
-        <Card className="divide-y divide-grafite-100 overflow-hidden">
-          {agendaDoDia.map(({ funcionario, quantidade, proxima }) => (
-            <Link
-              key={funcionario.id}
-              to={`/funcionarios/${funcionario.id}/rota`}
-              className="group flex items-center justify-between px-5 py-3.5 hover:bg-grafite-50 transition-colors"
-            >
-              <div className="flex items-center gap-3">
-                <div className="flex h-9 w-9 items-center justify-center rounded-full bg-grafite-100 text-sm font-semibold text-grafite-600">
-                  {funcionario.usuario.nome.charAt(0).toUpperCase()}
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-grafite-900">{funcionario.usuario.nome}</p>
-                  <p className="text-xs text-grafite-500">{funcionario.cargo}</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-3">
-                <div className="text-right">
-                  <p className={`text-sm font-medium ${quantidade === 0 ? "text-grafite-400" : "text-teal-700"}`}>
-                    {quantidade === 0 ? "Livre hoje" : `${quantidade} atendimento(s)`}
-                  </p>
-                  {proxima && (
-                    <p className="text-xs text-grafite-500 mt-0.5">
-                      Próximo: {proxima.cliente.nome} — {proxima.equipamento.tipo}
-                    </p>
+        {agendaDoDia.length === 0 ? (
+          <Card className="px-5 py-4 text-sm text-grafite-500">Nenhum técnico cadastrado ainda.</Card>
+        ) : (
+          <Card className="overflow-hidden p-0">
+            {/* Abas dos técnicos */}
+            <div className="flex items-center gap-1 overflow-x-auto border-b border-grafite-100 px-3 pt-2">
+              {agendaDoDia.map(({ funcionario, quantidade }) => {
+                const ativo = funcionario.id === tecnicoAtivoId;
+                return (
+                  <button
+                    key={funcionario.id}
+                    onClick={() => setAbaTecnico(funcionario.id)}
+                    className={`flex items-center gap-2 whitespace-nowrap rounded-t-lg border-b-2 px-3 py-2.5 text-sm transition-colors ${
+                      ativo
+                        ? "border-teal-600 text-grafite-900 font-medium"
+                        : "border-transparent text-grafite-500 hover:text-grafite-900"
+                    }`}
+                  >
+                    <span
+                      className={`flex h-6 w-6 items-center justify-center rounded-full text-[11px] font-semibold ${
+                        ativo ? "bg-teal-600 text-white" : "bg-grafite-100 text-grafite-600"
+                      }`}
+                    >
+                      {funcionario.usuario.nome.charAt(0).toUpperCase()}
+                    </span>
+                    {funcionario.usuario.nome.split(" ")[0]}
+                    <span
+                      className={`codigo rounded-full px-1.5 text-[11px] ${
+                        ativo ? "bg-teal-100 text-teal-700" : "bg-grafite-100 text-grafite-500"
+                      }`}
+                    >
+                      {quantidade}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Atendimentos do técnico selecionado */}
+            <div className="divide-y divide-grafite-100">
+              {agendaAtiva && agendaAtiva.atendimentos.length > 0 ? (
+                agendaAtiva.atendimentos.map((os) => (
+                  <Link
+                    key={os.id}
+                    to={`/ordens-servico/${os.id}`}
+                    className="group flex items-center justify-between gap-4 px-5 py-3.5 transition-colors hover:bg-grafite-50"
+                  >
+                    <div className="flex min-w-0 items-center gap-3">
+                      <HospitalLogo nome={os.cliente.nome} size={36} />
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-2">
+                          <span className="codigo flex-shrink-0 rounded-full bg-grafite-100 px-2 py-0.5 text-[11px] font-medium text-grafite-600">
+                            #{os.numero}
+                          </span>
+                          <p className="truncate text-sm font-semibold text-grafite-900">{os.cliente.nome}</p>
+                        </div>
+                        <p className="mt-0.5 truncate text-xs text-grafite-500">{os.equipamento.tipo}</p>
+                      </div>
+                    </div>
+                    <div className="flex flex-shrink-0 items-center gap-3">
+                      <StatusBadge status={os.statusAtual} />
+                      <ChevronRight size={16} className="text-grafite-300 transition-colors group-hover:text-grafite-500" />
+                    </div>
+                  </Link>
+                ))
+              ) : (
+                <div className="flex items-center justify-between px-5 py-6">
+                  <p className="text-sm text-grafite-400">Livre hoje — nenhum atendimento agendado.</p>
+                  {agendaAtiva && (
+                    <Link
+                      to={`/funcionarios/${agendaAtiva.funcionario.id}/rota`}
+                      className="text-xs font-medium text-teal-700 hover:text-teal-800"
+                    >
+                      Ver rota
+                    </Link>
                   )}
                 </div>
-                <ChevronRight size={16} className="text-grafite-300 group-hover:text-grafite-500 transition-colors" />
-              </div>
-            </Link>
-          ))}
-          {agendaDoDia.length === 0 && (
-            <p className="text-sm text-grafite-500 px-5 py-4">Nenhum técnico cadastrado ainda.</p>
-          )}
-        </Card>
+              )}
+            </div>
+          </Card>
+        )}
       </div>
 
       <div>

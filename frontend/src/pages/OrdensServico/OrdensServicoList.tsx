@@ -43,6 +43,10 @@ function dentroDoPeriodo(os: OrdemServico, periodo: Periodo, dataInicio: string,
   return Date.now() - new Date(os.dataAbertura).getTime() <= limiteMs;
 }
 
+function normalizar(texto: string) {
+  return texto.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+}
+
 const ABAS_STATUS: { chave: StatusOS | "todos"; rotulo: string }[] = [
   { chave: "todos", rotulo: "Todos" },
   ...OPCOES_STATUS.map((op) => ({ chave: op.status, rotulo: op.rotulo })),
@@ -75,13 +79,17 @@ export function OrdensServicoList() {
     .filter((o) => statusFiltro === "todos" || o.statusAtual === statusFiltro)
     .filter((o) => dentroDoPeriodo(o, periodo, dataInicio, dataFim))
     .filter((o) => {
-      if (!busca.trim()) return true;
-      const termo = busca.trim().toLowerCase();
-      return (
-        o.cliente.nome.toLowerCase().includes(termo) ||
-        String(o.numero).includes(termo) ||
-        o.equipamento.tipo.toLowerCase().includes(termo)
-      );
+      const termo = normalizar(busca.trim());
+      if (!termo) return true;
+      return [
+        o.cliente.nome,
+        `#${o.numero}`,
+        String(o.numero),
+        o.equipamento.tipo,
+        o.funcionario?.usuario?.nome,
+      ]
+        .filter(Boolean)
+        .some((campo) => normalizar(campo as string).includes(termo));
     });
 
   return (

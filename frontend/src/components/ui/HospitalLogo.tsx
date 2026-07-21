@@ -31,6 +31,11 @@ const GRADIENTES: [string, string][] = [
   ["#475569", "#334155"], // slate
 ];
 
+/** Par de cores do gradiente estável para um nome — usado no logo e no header. */
+export function corHospital(nome: string): [string, string] {
+  return GRADIENTES[hash(nome) % GRADIENTES.length];
+}
+
 function hash(texto: string): number {
   let h = 0;
   for (let i = 0; i < texto.length; i++) {
