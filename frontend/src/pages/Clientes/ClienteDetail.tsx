@@ -169,7 +169,7 @@ export function ClienteDetail() {
     .join(" — ");
 
   return (
-    <div className="space-y-6 max-w-3xl">
+    <div className="space-y-6 max-w-5xl mx-auto">
       <Link
         to="/clientes"
         className="inline-flex items-center gap-1.5 text-sm text-grafite-500 hover:text-grafite-900 transition-colors"
@@ -180,21 +180,17 @@ export function ClienteDetail() {
 
       {/* Header / hero do estabelecimento */}
       <Card className="overflow-hidden p-0">
-        <div className="h-24" style={{ background: `linear-gradient(135deg, ${c1}, ${c2})` }} />
-        <div className="px-6 pb-6">
-          <div className="-mt-10 flex items-end gap-4">
-            <HospitalLogo nome={cliente.nome} size={80} className="ring-4 ring-white" />
-            <div className="min-w-0 pb-1">
-              <h1 className="text-2xl font-semibold tracking-tight text-grafite-900 truncate">
-                {cliente.nome}
-              </h1>
-              {cliente.documento && (
-                <p className="codigo text-xs text-grafite-500 mt-0.5">{cliente.documento}</p>
-              )}
-            </div>
-          </div>
+        <div className="h-28" style={{ background: `linear-gradient(135deg, ${c1}, ${c2})` }} />
+        <div className="px-6 pb-8 text-center">
+          <HospitalLogo nome={cliente.nome} size={104} className="mx-auto -mt-14 ring-4 ring-white" />
+          <h1 className="mt-3 text-2xl font-semibold tracking-tight text-grafite-900">
+            {cliente.nome}
+          </h1>
+          {cliente.documento && (
+            <p className="codigo mt-1 text-xs text-grafite-500">{cliente.documento}</p>
+          )}
 
-          <div className="mt-5 grid gap-4 sm:grid-cols-3">
+          <div className="mx-auto mt-6 grid max-w-3xl gap-4 sm:grid-cols-3 sm:gap-0 sm:divide-x sm:divide-grafite-100">
             <InfoItem icone={Phone} rotulo="Telefone" valor={cliente.telefone} />
             <InfoItem icone={Mail} rotulo="E-mail" valor={cliente.email} />
             <InfoItem icone={MapPin} rotulo="Endereço" valor={endereco} />
@@ -468,14 +464,12 @@ function InfoItem({
   valor?: string | null;
 }) {
   return (
-    <div className="flex items-start gap-2.5">
-      <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-grafite-100 text-grafite-500">
-        <Icone size={15} />
+    <div className="flex flex-col items-center gap-1.5 px-4 py-1">
+      <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-grafite-100 text-grafite-500">
+        <Icone size={16} />
       </div>
-      <div className="min-w-0">
-        <p className="text-[11px] font-medium uppercase tracking-wide text-grafite-400">{rotulo}</p>
-        <p className="text-sm text-grafite-800 break-words">{valor || "—"}</p>
-      </div>
+      <p className="text-[11px] font-medium uppercase tracking-wide text-grafite-400">{rotulo}</p>
+      <p className="break-words text-center text-sm text-grafite-800">{valor || "—"}</p>
     </div>
   );
 }
