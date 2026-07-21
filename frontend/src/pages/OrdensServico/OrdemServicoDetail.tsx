@@ -21,6 +21,13 @@ export function OrdemServicoDetail() {
   // Designar/reatribuir chamado é função do Suporte (N2) para cima.
   const podeDesignar =
     usuario?.papel === "DONO" || usuario?.papel === "GESTOR" || usuario?.papel === "SUPORTE";
+  // Fechamento parcial × total: o técnico (N1) só faz o fechamento parcial
+  // (AGUARDANDO_VALIDACAO). A conclusão (fechamento total) é validada pelo
+  // Suporte (N2) para cima, então CONCLUIDO fica fora da lista para o técnico.
+  const opcoesStatus =
+    usuario?.papel === "TECNICO"
+      ? OPCOES_STATUS.filter((op) => op.status !== "CONCLUIDO")
+      : OPCOES_STATUS;
   const [os, setOs] = useState<OrdemServico | null>(null);
   const [pecas, setPecas] = useState<PecaCatalogo[]>([]);
   const [notificacoes, setNotificacoes] = useState<NotificacaoItem[]>([]);
@@ -421,7 +428,7 @@ export function OrdemServicoDetail() {
                 value={novoStatus}
                 onChange={(e) => setNovoStatus(e.target.value as StatusOS)}
               >
-                {OPCOES_STATUS.map((op) => (
+                {opcoesStatus.map((op) => (
                   <option key={op.status} value={op.status}>
                     {op.rotulo}
                   </option>

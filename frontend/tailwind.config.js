@@ -29,6 +29,7 @@ export default {
           diagnostico: "#B98A2E",
           aguardando: "#C1502E",
           reparo: "#0F8B8D",
+          validacao: "#7A5AA6",
           concluido: "#3F8F5F",
           cancelado: "#9B3B3B",
         },

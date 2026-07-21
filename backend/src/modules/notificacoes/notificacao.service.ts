@@ -8,6 +8,7 @@ const ROTULOS_STATUS: Record<StatusOS, string> = {
   DIAGNOSTICO: "Seu equipamento está em diagnóstico",
   AGUARDANDO_PECA: "Aguardando chegada de peça",
   EM_REPARO: "Seu equipamento está em reparo",
+  AGUARDANDO_VALIDACAO: "O reparo foi finalizado e está passando pela validação final",
   CONCLUIDO: "O reparo foi concluído e o equipamento já está liberado para uso",
   CANCELADO: "O atendimento foi cancelado",
 };

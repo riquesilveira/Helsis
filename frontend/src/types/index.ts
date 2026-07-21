@@ -3,6 +3,7 @@ export type StatusOS =
   | "DIAGNOSTICO"
   | "AGUARDANDO_PECA"
   | "EM_REPARO"
+  | "AGUARDANDO_VALIDACAO"
   | "CONCLUIDO"
   | "CANCELADO";
 
@@ -11,6 +12,7 @@ export const ETAPAS_STATUS: { status: StatusOS; rotulo: string }[] = [
   { status: "DIAGNOSTICO", rotulo: "Diagnóstico" },
   { status: "AGUARDANDO_PECA", rotulo: "Aguardando peça" },
   { status: "EM_REPARO", rotulo: "Em reparo" },
+  { status: "AGUARDANDO_VALIDACAO", rotulo: "Aguardando validação" },
   { status: "CONCLUIDO", rotulo: "Concluído" },
 ];
 

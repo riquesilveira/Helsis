@@ -5,6 +5,7 @@ const CORES_STATUS: Record<StatusOS, string> = {
   DIAGNOSTICO: "bg-status-diagnostico",
   AGUARDANDO_PECA: "bg-status-aguardando",
   EM_REPARO: "bg-status-reparo",
+  AGUARDANDO_VALIDACAO: "bg-status-validacao",
   CONCLUIDO: "bg-status-concluido",
   CANCELADO: "bg-status-cancelado",
 };

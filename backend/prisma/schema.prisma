@@ -148,8 +148,10 @@ enum StatusOS {
   DIAGNOSTICO        // em avaliação
   AGUARDANDO_PECA    // peça pedida, esperando chegar
   EM_REPARO          // conserto em andamento (inclui o teste final antes de fechar)
-  CONCLUIDO          // reparo finalizado — como o atendimento é no local do
-                     // cliente, não existe uma etapa separada de "entrega"
+  AGUARDANDO_VALIDACAO // técnico (N1) fez o fechamento parcial — aguarda validação
+                       // do suporte (N2+) para o fechamento total
+  CONCLUIDO          // reparo finalizado e validado — como o atendimento é no local
+                     // do cliente, não existe uma etapa separada de "entrega"
   CANCELADO
 }
 

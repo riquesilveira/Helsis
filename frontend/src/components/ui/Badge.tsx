@@ -5,6 +5,7 @@ const ROTULO_STATUS: Record<StatusOS, string> = {
   DIAGNOSTICO: "Em diagnóstico",
   AGUARDANDO_PECA: "Aguardando peça",
   EM_REPARO: "Em reparo",
+  AGUARDANDO_VALIDACAO: "Aguardando validação",
   CONCLUIDO: "Concluído",
   CANCELADO: "Cancelado",
 };
@@ -16,6 +17,7 @@ const CLASSE_STATUS: Record<StatusOS, string> = {
   DIAGNOSTICO: "bg-status-diagnostico/10 text-status-diagnostico",
   AGUARDANDO_PECA: "bg-status-aguardando/10 text-status-aguardando",
   EM_REPARO: "bg-status-reparo/10 text-status-reparo",
+  AGUARDANDO_VALIDACAO: "bg-status-validacao/10 text-status-validacao",
   CONCLUIDO: "bg-status-concluido/10 text-status-concluido",
   CANCELADO: "bg-status-cancelado/10 text-status-cancelado",
 };
@@ -25,6 +27,7 @@ const PONTO_STATUS: Record<StatusOS, string> = {
   DIAGNOSTICO: "bg-status-diagnostico",
   AGUARDANDO_PECA: "bg-status-aguardando",
   EM_REPARO: "bg-status-reparo",
+  AGUARDANDO_VALIDACAO: "bg-status-validacao",
   CONCLUIDO: "bg-status-concluido",
   CANCELADO: "bg-status-cancelado",
 };
