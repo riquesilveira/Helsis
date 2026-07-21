@@ -152,6 +152,50 @@ export async function criarOrdemServico(dados: CriarOSInput) {
 }
 
 /**
+ * Designa (ou reatribui) o técnico responsável por uma OS. É a função que o
+ * Suporte (N2) usa para distribuir os chamados abertos entre os técnicos, ou
+ * para passar um chamado de um técnico para outro. Registra a troca na
+ * timeline pra ficar rastreável quem passou pra quem, sem mexer no status.
+ */
+export async function atribuirTecnico(osId: string, funcionarioId: string) {
+  const os = await buscarOrdemServicoPorId(osId);
+
+  const funcionario = await prisma.funcionario.findUnique({
+    where: { id: funcionarioId },
+    include: { usuario: { select: { nome: true } } },
+  });
+  if (!funcionario) throw new AppError("Técnico não encontrado.", 404);
+
+  const eraReatribuicao = os.funcionarioId && os.funcionarioId !== funcionarioId;
+  const observacao = eraReatribuicao
+    ? `Chamado reatribuído para ${funcionario.usuario.nome}.`
+    : `Chamado designado a ${funcionario.usuario.nome}.`;
+
+  return prisma.ordemServico.update({
+    where: { id: osId },
+    data: {
+      funcionarioId,
+      statusHistoricos: {
+        create: {
+          status: os.statusAtual,
+          observacao,
+          funcionarioId,
+          tentativaNumero: os.numeroTentativas + 1,
+        },
+      },
+    },
+    include: {
+      cliente: true,
+      equipamento: true,
+      funcionario: { include: { usuario: true } },
+      statusHistoricos: { orderBy: { criadoEm: "asc" } },
+      pecasTrocadas: { include: { pecaCatalogo: true } },
+      deslocamentos: true,
+    },
+  });
+}
+
+/**
  * Atualiza o status da OS e registra a entrada correspondente na timeline.
  * É essa timeline que o cliente enxerga como "acompanhamento", igual rastreio
  * de entrega.

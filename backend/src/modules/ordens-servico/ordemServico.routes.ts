@@ -31,6 +31,12 @@ router.get(
   autorizar("DONO", "GESTOR", "SUPORTE"),
   asyncHandler(osController.notificacoes)
 );
+// Designar/reatribuir chamado a um técnico é função do Suporte (N2) para cima.
+router.patch(
+  "/:id/atribuir",
+  autorizar("DONO", "GESTOR", "SUPORTE"),
+  asyncHandler(osController.atribuirTecnico)
+);
 router.patch(
   "/:id/financeiro",
   autorizar("DONO", "GESTOR"),

@@ -2,7 +2,7 @@ import { FormEvent, useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { ArrowLeft, Car, Plane } from "lucide-react";
 import { api } from "../../services/api";
-import { NotificacaoItem, OrdemServico, OPCOES_STATUS, PecaCatalogo, StatusOS } from "../../types";
+import { Funcionario, NotificacaoItem, OrdemServico, OPCOES_STATUS, PecaCatalogo, StatusOS } from "../../types";
 import { StatusTimeline } from "../../components/StatusTimeline";
 import { Campo, classeInput, Modal } from "../../components/Modal";
 import { usuarioLogado } from "../../services/auth";
@@ -18,9 +18,18 @@ export function OrdemServicoDetail() {
   const { id } = useParams();
   const usuario = usuarioLogado();
   const podeVerFinanceiro = usuario?.papel === "DONO" || usuario?.papel === "GESTOR";
+  // Designar/reatribuir chamado é função do Suporte (N2) para cima.
+  const podeDesignar =
+    usuario?.papel === "DONO" || usuario?.papel === "GESTOR" || usuario?.papel === "SUPORTE";
   const [os, setOs] = useState<OrdemServico | null>(null);
   const [pecas, setPecas] = useState<PecaCatalogo[]>([]);
   const [notificacoes, setNotificacoes] = useState<NotificacaoItem[]>([]);
+
+  // designar técnico
+  const [tecnicos, setTecnicos] = useState<Funcionario[]>([]);
+  const [tecnicoSelecionado, setTecnicoSelecionado] = useState("");
+  const [atribuindo, setAtribuindo] = useState(false);
+  const [erroAtribuir, setErroAtribuir] = useState<string | null>(null);
 
   // formulário de status
   const [novoStatus, setNovoStatus] = useState<StatusOS>("RECEBIDO");
@@ -92,6 +101,30 @@ export function OrdemServicoDetail() {
   useEffect(() => {
     api.get("/pecas").then((r) => setPecas(r.data)).catch(() => {});
   }, []);
+
+  // lista de técnicos para o seletor de designação (só quem pode designar)
+  useEffect(() => {
+    if (podeDesignar) {
+      api.get("/funcionarios").then((r) => setTecnicos(r.data)).catch(() => {});
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  async function handleAtribuir(e: FormEvent) {
+    e.preventDefault();
+    if (!tecnicoSelecionado) return;
+    setErroAtribuir(null);
+    setAtribuindo(true);
+    try {
+      await api.patch(`/ordens-servico/${id}/atribuir`, { funcionarioId: tecnicoSelecionado });
+      setTecnicoSelecionado("");
+      carregar();
+    } catch (err: any) {
+      setErroAtribuir(err?.response?.data?.erro ?? "Não foi possível designar o técnico.");
+    } finally {
+      setAtribuindo(false);
+    }
+  }
 
   // inicializa os campos de fechamento financeiro quando a OS carrega
   // (mas não toda vez que ela é recarregada, pra não sobrescrever o que
@@ -344,6 +377,32 @@ export function OrdemServicoDetail() {
           <p className="text-sm text-grafite-900 mt-1">
             {os.funcionario?.usuario.nome ?? "Não atribuído"}
           </p>
+          {podeDesignar && os.statusAtual !== "CONCLUIDO" && os.statusAtual !== "CANCELADO" && (
+            <form onSubmit={handleAtribuir} className="mt-3 flex flex-col gap-2">
+              <select
+                className={classeInput}
+                value={tecnicoSelecionado}
+                onChange={(e) => setTecnicoSelecionado(e.target.value)}
+              >
+                <option value="">{os.funcionario ? "Reatribuir para..." : "Designar técnico..."}</option>
+                {tecnicos
+                  .filter((t) => t.id !== os.funcionario?.id)
+                  .map((t) => (
+                    <option key={t.id} value={t.id}>
+                      {t.usuario.nome}
+                    </option>
+                  ))}
+              </select>
+              <button
+                type="submit"
+                disabled={atribuindo || !tecnicoSelecionado}
+                className="bg-teal-600 hover:bg-teal-700 text-white text-xs font-medium rounded-md px-3 py-1.5 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                {atribuindo ? "Salvando..." : os.funcionario ? "Reatribuir" : "Designar"}
+              </button>
+              {erroAtribuir && <p className="text-xs text-red-500">{erroAtribuir}</p>}
+            </form>
+          )}
         </div>
         <div className="bg-white border border-grafite-200 rounded-lg p-5">
           <p className="text-xs text-grafite-500">Tentativas até agora</p>

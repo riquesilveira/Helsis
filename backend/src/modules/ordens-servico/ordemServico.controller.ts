@@ -35,6 +35,10 @@ const registrarPecaSchema = z.object({
   precoUnitario: z.number().positive().optional(),
 });
 
+const atribuirTecnicoSchema = z.object({
+  funcionarioId: z.string().uuid(),
+});
+
 const atualizarFinanceiroSchema = z.object({
   valorMaoDeObra: z.number().nonnegative(),
   valorComissaoManual: z.number().nonnegative().optional(),
@@ -150,6 +154,12 @@ export async function registrarPeca(req: Request, res: Response) {
 
   const peca = await osService.registrarPecaTrocada(req.params.id, { ...dadosBrutos, funcionarioId });
   res.status(201).json(peca);
+}
+
+export async function atribuirTecnico(req: Request, res: Response) {
+  const { funcionarioId } = atribuirTecnicoSchema.parse(req.body);
+  const os = await osService.atribuirTecnico(req.params.id, funcionarioId);
+  res.json(os);
 }
 
 export async function atualizarFinanceiro(req: Request, res: Response) {
