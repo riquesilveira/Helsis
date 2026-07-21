@@ -1,10 +1,11 @@
 import { FormEvent, useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import { ArrowLeft, Car, Plane } from "lucide-react";
+import { ArrowLeft, Car, Pencil, Plane } from "lucide-react";
 import { api } from "../../services/api";
 import {
   Causa,
   Defeito,
+  DeslocamentoItem,
   Funcionario,
   NotificacaoItem,
   OrdemServico,
@@ -91,6 +92,8 @@ export function OrdemServicoDetail() {
   const [custoAlimentacao, setCustoAlimentacao] = useState("");
   const [diasViagem, setDiasViagem] = useState("");
   const [enviandoDeslocamento, setEnviandoDeslocamento] = useState(false);
+  // id do deslocamento em edição — null quando o modal está em modo "novo".
+  const [deslocamentoEditando, setDeslocamentoEditando] = useState<string | null>(null);
 
   // confirmação de exclusão de deslocamento
   const [modalConfirmarExclusao, setModalConfirmarExclusao] = useState(false);
@@ -222,29 +225,74 @@ export function OrdemServicoDetail() {
     }
   }
 
-  async function handleRegistrarDeslocamento(e: FormEvent) {
+  function limparFormDeslocamento() {
+    setModalTransporte("CARRO");
+    setOrigemCidade("");
+    setDestinoCidade("");
+    setCustoPassagem("");
+    setCustoHospedagem("");
+    setCustoAlimentacao("");
+    setDiasViagem("");
+  }
+
+  function abrirNovoDeslocamento() {
+    setDeslocamentoEditando(null);
+    limparFormDeslocamento();
+    setErroDeslocamento(null);
+    setModalDeslocamentoAberto(true);
+  }
+
+  function abrirEdicaoDeslocamento(d: DeslocamentoItem) {
+    setDeslocamentoEditando(d.id);
+    setModalTransporte(d.modalTransporte ?? "CARRO");
+    setOrigemCidade(d.origemCidade ?? "");
+    setDestinoCidade(d.destinoCidade ?? "");
+    setCustoPassagem(d.custoPassagem != null ? String(d.custoPassagem) : "");
+    setCustoHospedagem(d.custoHospedagem != null ? String(d.custoHospedagem) : "");
+    setCustoAlimentacao(d.custoAlimentacao != null ? String(d.custoAlimentacao) : "");
+    setDiasViagem(d.diasViagem != null ? String(d.diasViagem) : "");
+    setErroDeslocamento(null);
+    setModalDeslocamentoAberto(true);
+  }
+
+  async function handleSalvarDeslocamento(e: FormEvent) {
     e.preventDefault();
     setEnviandoDeslocamento(true);
+    setErroDeslocamento(null);
+
+    // Ao editar, um custo esvaziado deve ZERAR o valor (o Prisma ignora
+    // `undefined` num update, então mandamos 0 explícito). Ao criar, ausência
+    // de custo = sem custo (undefined → null no banco).
+    const custo = (valor: string) =>
+      valor !== "" ? Number(valor) : deslocamentoEditando ? 0 : undefined;
+
+    const corpo = {
+      modalTransporte,
+      origemCidade: origemCidade || undefined,
+      destinoCidade: destinoCidade || undefined,
+      custoPassagem: custo(custoPassagem),
+      custoHospedagem: custo(custoHospedagem),
+      custoAlimentacao: custo(custoAlimentacao),
+      diasViagem: diasViagem ? Number(diasViagem) : undefined,
+    };
+
     try {
-      await api.post(`/ordens-servico/${id}/deslocamentos`, {
-        funcionarioId: os?.funcionario?.id,
-        modalTransporte,
-        origemCidade: origemCidade || undefined,
-        destinoCidade: destinoCidade || undefined,
-        custoPassagem: custoPassagem ? Number(custoPassagem) : undefined,
-        custoHospedagem: custoHospedagem ? Number(custoHospedagem) : undefined,
-        custoAlimentacao: custoAlimentacao ? Number(custoAlimentacao) : undefined,
-        diasViagem: diasViagem ? Number(diasViagem) : undefined,
-      });
+      if (deslocamentoEditando) {
+        await api.patch(`/ordens-servico/${id}/deslocamentos/${deslocamentoEditando}`, corpo);
+      } else {
+        await api.post(`/ordens-servico/${id}/deslocamentos`, {
+          funcionarioId: os?.funcionario?.id,
+          ...corpo,
+        });
+      }
       setModalDeslocamentoAberto(false);
-      setModalTransporte("CARRO");
-      setOrigemCidade("");
-      setDestinoCidade("");
-      setCustoPassagem("");
-      setCustoHospedagem("");
-      setCustoAlimentacao("");
-      setDiasViagem("");
+      setDeslocamentoEditando(null);
+      limparFormDeslocamento();
       carregar();
+    } catch (err: any) {
+      setErroDeslocamento(
+        err?.response?.data?.erro ?? "Não foi possível salvar o deslocamento. Tente novamente."
+      );
     } finally {
       setEnviandoDeslocamento(false);
     }
@@ -653,7 +701,7 @@ export function OrdemServicoDetail() {
           <h2 className="text-sm font-medium text-grafite-900">Deslocamentos</h2>
           {podeVerFinanceiro && (
             <button
-              onClick={() => setModalDeslocamentoAberto(true)}
+              onClick={abrirNovoDeslocamento}
               disabled={semTecnico}
               className="text-xs font-medium text-teal-700 hover:text-teal-800 disabled:opacity-40 disabled:cursor-not-allowed"
               title={semTecnico ? "Atribua um técnico à OS primeiro" : ""}
@@ -713,13 +761,22 @@ export function OrdemServicoDetail() {
                     </span>
                   )}
                   {podeVerFinanceiro && (
-                    <button
-                      onClick={() => solicitarExclusaoDeslocamento(d.id)}
-                      className="text-xs text-red-500 hover:text-red-700"
-                      title="Excluir deslocamento"
-                    >
-                      ✕
-                    </button>
+                    <>
+                      <button
+                        onClick={() => abrirEdicaoDeslocamento(d)}
+                        className="p-1 text-grafite-400 hover:text-grafite-700"
+                        title="Editar deslocamento"
+                      >
+                        <Pencil size={13} />
+                      </button>
+                      <button
+                        onClick={() => solicitarExclusaoDeslocamento(d.id)}
+                        className="text-xs text-red-500 hover:text-red-700"
+                        title="Excluir deslocamento"
+                      >
+                        ✕
+                      </button>
+                    </>
                   )}
                 </div>
               </div>
@@ -901,11 +958,15 @@ export function OrdemServicoDetail() {
       </Modal>
 
       <Modal
-        titulo="Registrar deslocamento"
+        titulo={deslocamentoEditando ? "Editar deslocamento" : "Registrar deslocamento"}
         aberto={modalDeslocamentoAberto}
-        onFechar={() => setModalDeslocamentoAberto(false)}
+        onFechar={() => {
+          setModalDeslocamentoAberto(false);
+          setDeslocamentoEditando(null);
+          setErroDeslocamento(null);
+        }}
       >
-        <form onSubmit={handleRegistrarDeslocamento}>
+        <form onSubmit={handleSalvarDeslocamento}>
           <Campo rotulo="Meio de transporte">
             <div className="grid grid-cols-2 gap-2">
               {([
@@ -988,12 +1049,19 @@ export function OrdemServicoDetail() {
               />
             </Campo>
           </div>
+          {erroDeslocamento && (
+            <p className="text-xs text-red-500 mt-2">{erroDeslocamento}</p>
+          )}
           <button
             type="submit"
             disabled={enviandoDeslocamento}
             className="w-full mt-2 bg-teal-600 hover:bg-teal-700 text-white text-sm font-medium rounded-md py-2 transition-colors disabled:opacity-60"
           >
-            {enviandoDeslocamento ? "Salvando..." : "Registrar deslocamento"}
+            {enviandoDeslocamento
+              ? "Salvando..."
+              : deslocamentoEditando
+              ? "Salvar alterações"
+              : "Registrar deslocamento"}
           </button>
         </form>
       </Modal>
