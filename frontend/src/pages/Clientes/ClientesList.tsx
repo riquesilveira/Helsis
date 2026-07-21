@@ -1,6 +1,6 @@
 import { FormEvent, useEffect, useRef, useState } from "react";
-import { Link } from "react-router-dom";
-import { ChevronRight, Plus, Search } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
+import { Eye, MoreVertical, Pencil, Plus, Search, Trash2, Wrench } from "lucide-react";
 import { api } from "../../services/api";
 import { Cliente } from "../../types";
 import { Campo, classeInput, Modal } from "../../components/Modal";
@@ -38,6 +38,10 @@ export function ClientesList() {
   const [modalAberto, setModalAberto] = useState(false);
   const [form, setForm] = useState(CLIENTE_VAZIO);
   const [salvando, setSalvando] = useState(false);
+  const [editandoId, setEditandoId] = useState<string | null>(null);
+  const [clienteExcluir, setClienteExcluir] = useState<Cliente | null>(null);
+  const [excluindo, setExcluindo] = useState(false);
+  const [erroExcluir, setErroExcluir] = useState("");
 
   // Autocomplete de cidade (IBGE) — cacheia a lista na primeira busca
   const [sugestoesCidade, setSugestoesCidade] = useState<MunicipioIBGE[]>([]);
@@ -99,6 +103,32 @@ export function ClientesList() {
       )
     : clientes;
 
+  function abrirNovo() {
+    setEditandoId(null);
+    setForm(CLIENTE_VAZIO);
+    setModalAberto(true);
+  }
+
+  function abrirEdicao(c: Cliente) {
+    setEditandoId(c.id);
+    setForm({
+      nome: c.nome,
+      telefone: c.telefone ?? "",
+      email: c.email ?? "",
+      documento: c.documento ?? "",
+      cidade: c.cidade ?? "",
+      estado: c.estado ?? "",
+    });
+    setModalAberto(true);
+  }
+
+  function fecharModal() {
+    setModalAberto(false);
+    setEditandoId(null);
+    setForm(CLIENTE_VAZIO);
+    setSugestoesCidade([]);
+  }
+
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     setSalvando(true);
@@ -107,12 +137,33 @@ export function ClientesList() {
       const payload = Object.fromEntries(
         Object.entries(form).filter(([, v]) => v !== "")
       );
-      await api.post("/clientes", payload);
-      setModalAberto(false);
-      setForm(CLIENTE_VAZIO);
+      if (editandoId) {
+        await api.put(`/clientes/${editandoId}`, payload);
+      } else {
+        await api.post("/clientes", payload);
+      }
+      fecharModal();
       carregar();
     } finally {
       setSalvando(false);
+    }
+  }
+
+  async function excluirCliente() {
+    if (!clienteExcluir) return;
+    setExcluindo(true);
+    setErroExcluir("");
+    try {
+      await api.delete(`/clientes/${clienteExcluir.id}`);
+      setClienteExcluir(null);
+      carregar();
+    } catch (err: any) {
+      setErroExcluir(
+        err?.response?.data?.erro ??
+          "Não foi possível excluir o cliente. Tente novamente."
+      );
+    } finally {
+      setExcluindo(false);
     }
   }
 
@@ -122,7 +173,7 @@ export function ClientesList() {
         titulo="Clientes"
         subtitulo="Empresas e unidades atendidas."
         acoes={
-          <Button onClick={() => setModalAberto(true)}>
+          <Button onClick={abrirNovo}>
             <Plus size={16} />
             Novo cliente
           </Button>
@@ -145,12 +196,11 @@ export function ClientesList() {
           <p className="text-sm text-grafite-500 px-5 py-4">Carregando...</p>
         )}
         {!carregando && clientesFiltrados.map((c) => (
-          <Link
+          <div
             key={c.id}
-            to={`/clientes/${c.id}`}
             className="group flex items-center justify-between gap-4 px-5 py-4 transition-colors hover:bg-grafite-50"
           >
-            <div className="flex min-w-0 items-center gap-3">
+            <Link to={`/clientes/${c.id}`} className="flex min-w-0 flex-1 items-center gap-3">
               <HospitalLogo nome={c.nome} size={40} />
               <div className="min-w-0">
                 <p className="text-sm font-semibold text-grafite-900 truncate">{c.nome}</p>
@@ -159,12 +209,19 @@ export function ClientesList() {
                   {c.cidade ? ` — ${c.cidade}/${c.estado ?? ""}` : ""}
                 </p>
               </div>
-            </div>
-            <div className="flex flex-shrink-0 items-center gap-3">
+            </Link>
+            <div className="flex flex-shrink-0 items-center gap-2">
               <Chip>{c.equipamentos?.length ?? 0} equip.</Chip>
-              <ChevronRight size={16} className="text-grafite-300 transition-colors group-hover:text-grafite-500" />
+              <MenuAcoes
+                cliente={c}
+                onEditar={() => abrirEdicao(c)}
+                onExcluir={() => {
+                  setErroExcluir("");
+                  setClienteExcluir(c);
+                }}
+              />
             </div>
-          </Link>
+          </div>
         ))}
         {!carregando && clientesFiltrados.length === 0 && (
           <p className="text-sm text-grafite-500 px-5 py-4">
@@ -175,7 +232,11 @@ export function ClientesList() {
         )}
       </Card>
 
-      <Modal titulo="Novo cliente" aberto={modalAberto} onFechar={() => setModalAberto(false)}>
+      <Modal
+        titulo={editandoId ? "Editar cliente" : "Novo cliente"}
+        aberto={modalAberto}
+        onFechar={fecharModal}
+      >
         <form onSubmit={handleSubmit}>
           <Campo rotulo="Nome">
             <input
@@ -248,10 +309,131 @@ export function ClientesList() {
             </Campo>
           </div>
           <button type="submit" disabled={salvando} className={`${classeBotao("primary")} mt-2 w-full`}>
-            {salvando ? "Salvando..." : "Cadastrar cliente"}
+            {salvando ? "Salvando..." : editandoId ? "Salvar alterações" : "Cadastrar cliente"}
           </button>
         </form>
       </Modal>
+
+      <Modal
+        titulo="Excluir cliente"
+        aberto={!!clienteExcluir}
+        onFechar={() => setClienteExcluir(null)}
+      >
+        <p className="text-sm text-grafite-600">
+          Tem certeza que deseja excluir{" "}
+          <strong className="text-grafite-900">{clienteExcluir?.nome}</strong>? Essa ação
+          não pode ser desfeita.
+        </p>
+        {erroExcluir && (
+          <p className="mt-3 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">{erroExcluir}</p>
+        )}
+        <div className="mt-5 flex justify-end gap-2">
+          <button
+            type="button"
+            onClick={() => setClienteExcluir(null)}
+            className={classeBotao("secondary")}
+          >
+            Cancelar
+          </button>
+          <button
+            type="button"
+            disabled={excluindo}
+            onClick={excluirCliente}
+            className="inline-flex items-center gap-1.5 rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-red-700 disabled:opacity-60"
+          >
+            <Trash2 size={15} />
+            {excluindo ? "Excluindo..." : "Excluir cliente"}
+          </button>
+        </div>
+      </Modal>
+    </div>
+  );
+}
+
+function MenuAcoes({
+  cliente,
+  onEditar,
+  onExcluir,
+}: {
+  cliente: Cliente;
+  onEditar: () => void;
+  onExcluir: () => void;
+}) {
+  const [aberto, setAberto] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!aberto) return;
+    function onClickFora(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) setAberto(false);
+    }
+    document.addEventListener("mousedown", onClickFora);
+    return () => document.removeEventListener("mousedown", onClickFora);
+  }, [aberto]);
+
+  const itemBase =
+    "flex w-full items-center gap-2.5 px-3 py-2 text-sm transition-colors";
+
+  return (
+    <div className="relative" ref={ref}>
+      <button
+        type="button"
+        aria-label="Ações do cliente"
+        onClick={() => setAberto((v) => !v)}
+        className="flex h-8 w-8 items-center justify-center rounded-lg text-grafite-400 transition-colors hover:bg-grafite-100 hover:text-grafite-700"
+      >
+        <MoreVertical size={18} />
+      </button>
+      {aberto && (
+        <div className="absolute right-0 top-full z-20 mt-1 w-48 overflow-hidden rounded-xl border border-grafite-200 bg-white shadow-dropdown">
+          <button
+            type="button"
+            onClick={() => {
+              setAberto(false);
+              navigate(`/clientes/${cliente.id}`);
+            }}
+            className={`${itemBase} text-grafite-700 hover:bg-grafite-50`}
+          >
+            <Eye size={15} className="text-grafite-400" />
+            Ver detalhes
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              setAberto(false);
+              onEditar();
+            }}
+            className={`${itemBase} text-grafite-700 hover:bg-grafite-50`}
+          >
+            <Pencil size={15} className="text-grafite-400" />
+            Editar
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              setAberto(false);
+              navigate(`/ordens-servico/nova?clienteId=${cliente.id}`);
+            }}
+            className={`${itemBase} text-grafite-700 hover:bg-grafite-50`}
+          >
+            <Wrench size={15} className="text-grafite-400" />
+            Nova OS
+          </button>
+          <div className="border-t border-grafite-100" />
+          <button
+            type="button"
+            onClick={() => {
+              setAberto(false);
+              onExcluir();
+            }}
+            className={`${itemBase} text-red-600 hover:bg-red-50`}
+          >
+            <Trash2 size={15} />
+            Excluir
+          </button>
+        </div>
+      )}
     </div>
   );
 }

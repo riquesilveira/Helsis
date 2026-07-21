@@ -38,6 +38,22 @@ export async function atualizarCliente(id: string, dados: Partial<ClienteInput>)
 }
 
 export async function removerCliente(id: string) {
-  await buscarClientePorId(id);
+  const cliente = await buscarClientePorId(id);
+
+  // Não há cascade no schema: bloqueia com mensagem clara em vez de deixar
+  // estourar erro de FK quando o cliente ainda tem vínculos.
+  if (cliente.ordensServico.length > 0) {
+    throw new AppError(
+      "Não é possível excluir um cliente com ordens de serviço vinculadas.",
+      409
+    );
+  }
+  if (cliente.equipamentos.length > 0) {
+    throw new AppError(
+      "Não é possível excluir um cliente com equipamentos cadastrados. Remova os equipamentos antes.",
+      409
+    );
+  }
+
   return prisma.cliente.delete({ where: { id } });
 }
