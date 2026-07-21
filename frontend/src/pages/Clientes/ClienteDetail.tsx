@@ -190,7 +190,7 @@ export function ClienteDetail() {
             <p className="codigo mt-1 text-xs text-grafite-500">{cliente.documento}</p>
           )}
 
-          <div className="mx-auto mt-6 grid max-w-3xl gap-4 sm:grid-cols-3 sm:gap-0 sm:divide-x sm:divide-grafite-100">
+          <div className="mt-6 grid gap-4 sm:grid-cols-3 sm:gap-0 sm:divide-x sm:divide-grafite-100">
             <InfoItem icone={Phone} rotulo="Telefone" valor={cliente.telefone} />
             <InfoItem icone={Mail} rotulo="E-mail" valor={cliente.email} />
             <InfoItem icone={MapPin} rotulo="Endereço" valor={endereco} />
@@ -469,7 +469,7 @@ function InfoItem({
         <Icone size={16} />
       </div>
       <p className="text-[11px] font-medium uppercase tracking-wide text-grafite-400">{rotulo}</p>
-      <p className="break-words text-center text-sm text-grafite-800">{valor || "—"}</p>
+      <p className="max-w-full break-words text-center text-sm text-grafite-800">{valor || "—"}</p>
     </div>
   );
 }
