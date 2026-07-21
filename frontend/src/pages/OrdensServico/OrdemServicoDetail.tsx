@@ -1,6 +1,6 @@
 import { FormEvent, useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Car, Plane } from "lucide-react";
 import { api } from "../../services/api";
 import { NotificacaoItem, OrdemServico, OPCOES_STATUS, PecaCatalogo, StatusOS } from "../../types";
 import { StatusTimeline } from "../../components/StatusTimeline";
@@ -49,6 +49,7 @@ export function OrdemServicoDetail() {
 
   // formulário de deslocamento
   const [modalDeslocamentoAberto, setModalDeslocamentoAberto] = useState(false);
+  const [modalTransporte, setModalTransporte] = useState<"CARRO" | "AVIAO">("CARRO");
   const [origemCidade, setOrigemCidade] = useState("");
   const [destinoCidade, setDestinoCidade] = useState("");
   const [custoPassagem, setCustoPassagem] = useState("");
@@ -156,6 +157,7 @@ export function OrdemServicoDetail() {
     try {
       await api.post(`/ordens-servico/${id}/deslocamentos`, {
         funcionarioId: os?.funcionario?.id,
+        modalTransporte,
         origemCidade: origemCidade || undefined,
         destinoCidade: destinoCidade || undefined,
         custoPassagem: custoPassagem ? Number(custoPassagem) : undefined,
@@ -164,6 +166,7 @@ export function OrdemServicoDetail() {
         diasViagem: diasViagem ? Number(diasViagem) : undefined,
       });
       setModalDeslocamentoAberto(false);
+      setModalTransporte("CARRO");
       setOrigemCidade("");
       setDestinoCidade("");
       setCustoPassagem("");
@@ -471,9 +474,18 @@ export function OrdemServicoDetail() {
           {(os.deslocamentos ?? []).map((d) => {
             const custoTotal =
               (d.custoPassagem ?? 0) + (d.custoHospedagem ?? 0) + (d.custoAlimentacao ?? 0);
+            const foiAviao = d.modalTransporte === "AVIAO";
+            const IconeTransporte = foiAviao ? Plane : Car;
             return (
               <div key={d.id} className="py-3 flex items-start justify-between gap-3">
-                <div>
+                <div className="flex items-start gap-2.5">
+                  <span
+                    className="mt-0.5 flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-lg bg-grafite-100 text-grafite-500"
+                    title={foiAviao ? "Avião" : "Carro"}
+                  >
+                    <IconeTransporte size={15} />
+                  </span>
+                  <div>
                   <p className="text-sm text-grafite-900">
                     {d.origemCidade ?? "—"} → {d.destinoCidade ?? "—"}
                     {d.diasViagem != null && (
@@ -485,7 +497,7 @@ export function OrdemServicoDetail() {
                   <div className="flex gap-3 mt-0.5">
                     {d.custoPassagem != null && d.custoPassagem > 0 && (
                       <span className="text-xs text-grafite-500">
-                        Passagem: {formatarReais(d.custoPassagem)}
+                        {foiAviao ? "Passagem" : "Combustível"}: {formatarReais(d.custoPassagem)}
                       </span>
                     )}
                     {d.custoHospedagem != null && d.custoHospedagem > 0 && (
@@ -498,6 +510,7 @@ export function OrdemServicoDetail() {
                         Alimentação: {formatarReais(d.custoAlimentacao)}
                       </span>
                     )}
+                  </div>
                   </div>
                 </div>
                 <div className="flex items-center gap-2 flex-shrink-0">
@@ -700,6 +713,28 @@ export function OrdemServicoDetail() {
         onFechar={() => setModalDeslocamentoAberto(false)}
       >
         <form onSubmit={handleRegistrarDeslocamento}>
+          <Campo rotulo="Meio de transporte">
+            <div className="grid grid-cols-2 gap-2">
+              {([
+                { valor: "CARRO", rotulo: "Carro", Icone: Car },
+                { valor: "AVIAO", rotulo: "Avião", Icone: Plane },
+              ] as const).map(({ valor, rotulo, Icone }) => (
+                <button
+                  key={valor}
+                  type="button"
+                  onClick={() => setModalTransporte(valor)}
+                  className={`flex items-center justify-center gap-2 rounded-lg border px-3 py-2 text-sm font-medium transition-colors ${
+                    modalTransporte === valor
+                      ? "border-teal-600 bg-teal-50 text-teal-700"
+                      : "border-grafite-200 text-grafite-600 hover:border-grafite-300"
+                  }`}
+                >
+                  <Icone size={16} />
+                  {rotulo}
+                </button>
+              ))}
+            </div>
+          </Campo>
           <Campo rotulo="Cidade de origem">
             <input
               className={classeInput}
@@ -717,7 +752,7 @@ export function OrdemServicoDetail() {
             />
           </Campo>
           <div className="grid grid-cols-2 gap-3">
-            <Campo rotulo="Custo passagem (R$)">
+            <Campo rotulo={modalTransporte === "AVIAO" ? "Custo passagem (R$)" : "Custo combustível (R$)"}>
               <input
                 type="number"
                 min={0}

@@ -103,6 +103,7 @@ export interface PecaTrocadaItem {
 
 export interface DeslocamentoItem {
   id: string;
+  modalTransporte?: "CARRO" | "AVIAO" | null;
   origemCidade?: string | null;
   destinoCidade?: string | null;
   custoPassagem?: number | null;

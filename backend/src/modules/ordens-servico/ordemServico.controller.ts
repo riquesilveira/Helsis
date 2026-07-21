@@ -42,6 +42,7 @@ const atualizarFinanceiroSchema = z.object({
 
 const registrarDeslocamentoSchema = z.object({
   funcionarioId: z.string().uuid(),
+  modalTransporte: z.enum(["CARRO", "AVIAO"]).optional(),
   origemCidade: z.string().min(2).optional(),
   destinoCidade: z.string().min(2).optional(),
   custoPassagem: z.number().nonnegative().optional(),
@@ -51,6 +52,7 @@ const registrarDeslocamentoSchema = z.object({
 });
 
 const atualizarDeslocamentoSchema = z.object({
+  modalTransporte: z.enum(["CARRO", "AVIAO"]).optional(),
   origemCidade: z.string().min(2).optional(),
   destinoCidade: z.string().min(2).optional(),
   custoPassagem: z.number().nonnegative().optional(),

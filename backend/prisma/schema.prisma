@@ -261,19 +261,25 @@ model PecaTrocada {
 // DESLOCAMENTO (passagem, hospedagem — casos como o exemplo da ressonância)
 // ----------------------------------------------------------------------------
 
+enum ModalTransporte {
+  CARRO
+  AVIAO
+}
+
 model Deslocamento {
-  id               String        @id @default(uuid())
+  id               String          @id @default(uuid())
   funcionarioId    String
-  funcionario      Funcionario   @relation(fields: [funcionarioId], references: [id])
+  funcionario      Funcionario     @relation(fields: [funcionarioId], references: [id])
   ordemServicoId   String
-  ordemServico     OrdemServico  @relation(fields: [ordemServicoId], references: [id])
+  ordemServico     OrdemServico    @relation(fields: [ordemServicoId], references: [id])
+  modalTransporte  ModalTransporte @default(CARRO)
   origemCidade     String?
   destinoCidade    String?
-  custoPassagem    Decimal?      @db.Decimal(10, 2)
-  custoHospedagem  Decimal?      @db.Decimal(10, 2)
-  custoAlimentacao Decimal?      @db.Decimal(10, 2)
+  custoPassagem    Decimal?        @db.Decimal(10, 2)
+  custoHospedagem  Decimal?        @db.Decimal(10, 2)
+  custoAlimentacao Decimal?        @db.Decimal(10, 2)
   diasViagem       Int?
-  criadoEm         DateTime      @default(now())
+  criadoEm         DateTime        @default(now())
 
   @@map("deslocamentos")
 }

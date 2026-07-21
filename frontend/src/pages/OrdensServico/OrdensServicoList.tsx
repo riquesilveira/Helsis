@@ -60,6 +60,7 @@ export function OrdensServicoList() {
   const [dataInicio, setDataInicio] = useState("");
   const [dataFim, setDataFim] = useState("");
   const [busca, setBusca] = useState("");
+  const [funcionarioFiltro, setFuncionarioFiltro] = useState("");
 
   useEffect(() => {
     setCarregando(true);
@@ -75,8 +76,21 @@ export function OrdensServicoList() {
     return contagem;
   }, [ordens]);
 
+  const tecnicos = useMemo(() => {
+    const mapa = new Map<string, string>();
+    ordens.forEach((o) => {
+      if (o.funcionario?.id && o.funcionario.usuario?.nome) {
+        mapa.set(o.funcionario.id, o.funcionario.usuario.nome);
+      }
+    });
+    return [...mapa.entries()]
+      .map(([id, nome]) => ({ id, nome }))
+      .sort((a, b) => a.nome.localeCompare(b.nome));
+  }, [ordens]);
+
   const ordensFiltradas = ordens
     .filter((o) => statusFiltro === "todos" || o.statusAtual === statusFiltro)
+    .filter((o) => !funcionarioFiltro || o.funcionario?.id === funcionarioFiltro)
     .filter((o) => dentroDoPeriodo(o, periodo, dataInicio, dataFim))
     .filter((o) => {
       const termo = normalizar(busca.trim());
@@ -173,6 +187,18 @@ export function OrdensServicoList() {
           onChange={(e) => setBusca(e.target.value)}
           className="input-base flex-1"
         />
+        <select
+          value={funcionarioFiltro}
+          onChange={(e) => setFuncionarioFiltro(e.target.value)}
+          className="input-base w-auto min-w-[180px]"
+        >
+          <option value="">Todos os técnicos</option>
+          {tecnicos.map((t) => (
+            <option key={t.id} value={t.id}>
+              {t.nome}
+            </option>
+          ))}
+        </select>
         <select
           value={periodo}
           onChange={(e) => setPeriodo(e.target.value as Periodo)}

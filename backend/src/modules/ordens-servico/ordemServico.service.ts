@@ -44,6 +44,7 @@ export interface AtualizarFinanceiroInput {
 
 export interface RegistrarDeslocamentoInput {
   funcionarioId: string;
+  modalTransporte?: "CARRO" | "AVIAO";
   origemCidade?: string;
   destinoCidade?: string;
   custoPassagem?: number;
@@ -53,6 +54,7 @@ export interface RegistrarDeslocamentoInput {
 }
 
 export interface AtualizarDeslocamentoInput {
+  modalTransporte?: "CARRO" | "AVIAO";
   origemCidade?: string;
   destinoCidade?: string;
   custoPassagem?: number;
@@ -288,6 +290,7 @@ export async function registrarDeslocamento(osId: string, dados: RegistrarDesloc
     data: {
       ordemServicoId: osId,
       funcionarioId: dados.funcionarioId,
+      modalTransporte: dados.modalTransporte,
       origemCidade: dados.origemCidade,
       destinoCidade: dados.destinoCidade,
       custoPassagem: dados.custoPassagem,
@@ -311,6 +314,7 @@ export async function atualizarDeslocamento(
   return prisma.deslocamento.update({
     where: { id: deslocamentoId },
     data: {
+      modalTransporte: dados.modalTransporte,
       origemCidade: dados.origemCidade,
       destinoCidade: dados.destinoCidade,
       custoPassagem: dados.custoPassagem,

@@ -1,19 +1,8 @@
-import {
-  Activity,
-  Building2,
-  Cross,
-  HeartPulse,
-  Microscope,
-  ScanLine,
-  Stethoscope,
-  type LucideIcon,
-} from "lucide-react";
-
 /**
  * Logotipo determinístico por hospital/clínica. Como os clientes são
  * fictícios (sem logo real), geramos uma identidade estável a partir do nome:
- * um gradiente fixo + monograma + ícone médico coerente com o tipo de unidade.
- * Mesmo nome ⇒ mesmo logo, sempre. Funciona offline e cobre qualquer nome novo.
+ * um gradiente fixo + monograma com as iniciais. Mesmo nome ⇒ mesmo logo,
+ * sempre. Funciona offline e cobre qualquer nome novo.
  */
 
 const CONECTORES = new Set(["de", "do", "da", "dos", "das", "e", "por", "em", "—", "-", "&"]);
@@ -55,17 +44,6 @@ function iniciais(nome: string): string {
   return (palavras[0][0] + palavras[1][0]).toUpperCase();
 }
 
-function iconePara(nome: string): LucideIcon {
-  const n = nome.toLowerCase();
-  if (/cora[çc]/.test(n)) return HeartPulse;
-  if (/radiolog|imagem|diagn[óo]st|raio|tomograf|resson|scan/.test(n)) return ScanLine;
-  if (/instituto|lab|m[ée]d\b|center/.test(n)) return Microscope;
-  if (/cl[íi]nic/.test(n)) return Stethoscope;
-  if (/hospital/.test(n)) return Cross;
-  if (/centro|unidade/.test(n)) return Building2;
-  return Activity;
-}
-
 export function HospitalLogo({
   nome,
   size = 40,
@@ -76,12 +54,11 @@ export function HospitalLogo({
   className?: string;
 }) {
   const [c1, c2] = GRADIENTES[hash(nome) % GRADIENTES.length];
-  const Icone = iconePara(nome);
   const raio = Math.round(size * 0.28);
 
   return (
     <div
-      className={`relative flex flex-shrink-0 items-center justify-center overflow-hidden text-white shadow-sm ${className}`}
+      className={`flex flex-shrink-0 items-center justify-center overflow-hidden text-white shadow-sm ${className}`}
       style={{
         width: size,
         height: size,
@@ -91,13 +68,8 @@ export function HospitalLogo({
       aria-hidden
       title={nome}
     >
-      <Icone
-        size={size * 0.62}
-        className="absolute -bottom-1 -right-1 text-white/20"
-        strokeWidth={2.2}
-      />
       <span
-        className="relative font-semibold leading-none tracking-tight"
+        className="font-semibold leading-none tracking-tight"
         style={{ fontSize: size * 0.36 }}
       >
         {iniciais(nome)}
