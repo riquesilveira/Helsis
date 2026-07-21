@@ -11,13 +11,11 @@ const GRADIENTES: [string, string][] = [
   ["#0F8B8D", "#0B6E70"], // teal
   ["#4F46E5", "#4338CA"], // indigo
   ["#2563EB", "#1D4ED8"], // blue
-  ["#7C3AED", "#6D28D9"], // violet
-  ["#E11D48", "#BE123C"], // rose
-  ["#D97706", "#B45309"], // amber
-  ["#059669", "#047857"], // emerald
   ["#0891B2", "#0E7490"], // cyan
-  ["#C026D3", "#A21CAF"], // fuchsia
+  ["#059669", "#047857"], // emerald
+  ["#0D9488", "#0F766E"], // teal escuro
   ["#475569", "#334155"], // slate
+  ["#1E3A8A", "#1E40AF"], // navy
 ];
 
 /** Par de cores do gradiente estável para um nome — usado no logo e no header. */
