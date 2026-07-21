@@ -2,7 +2,17 @@ import { FormEvent, useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { ArrowLeft, Car, Plane } from "lucide-react";
 import { api } from "../../services/api";
-import { Funcionario, NotificacaoItem, OrdemServico, OPCOES_STATUS, PecaCatalogo, StatusOS } from "../../types";
+import {
+  Causa,
+  Defeito,
+  Funcionario,
+  NotificacaoItem,
+  OrdemServico,
+  OPCOES_STATUS,
+  PecaCatalogo,
+  Solucao,
+  StatusOS,
+} from "../../types";
 import { StatusTimeline } from "../../components/StatusTimeline";
 import { Campo, classeInput, Modal } from "../../components/Modal";
 import { usuarioLogado } from "../../services/auth";
@@ -44,6 +54,14 @@ export function OrdemServicoDetail() {
   const [novaTentativa, setNovaTentativa] = useState(false);
   const [enviandoStatus, setEnviandoStatus] = useState(false);
   const [erroStatus, setErroStatus] = useState<string | null>(null);
+
+  // diagnóstico codificado (Causa / Defeito / Solução) — escolhido no fechamento
+  const [causas, setCausas] = useState<Causa[]>([]);
+  const [defeitos, setDefeitos] = useState<Defeito[]>([]);
+  const [solucoes, setSolucoes] = useState<Solucao[]>([]);
+  const [causaId, setCausaId] = useState("");
+  const [defeitoId, setDefeitoId] = useState("");
+  const [solucaoId, setSolucaoId] = useState("");
 
   // formulário de peça trocada
   const [modalPecaAberto, setModalPecaAberto] = useState(false);
@@ -109,6 +127,13 @@ export function OrdemServicoDetail() {
     api.get("/pecas").then((r) => setPecas(r.data)).catch(() => {});
   }, []);
 
+  // catálogo de diagnóstico codificado (alimenta os dropdowns do fechamento)
+  useEffect(() => {
+    api.get("/diagnostico/causas").then((r) => setCausas(r.data)).catch(() => {});
+    api.get("/diagnostico/defeitos").then((r) => setDefeitos(r.data)).catch(() => {});
+    api.get("/diagnostico/solucoes").then((r) => setSolucoes(r.data)).catch(() => {});
+  }, []);
+
   // lista de técnicos para o seletor de designação (só quem pode designar)
   useEffect(() => {
     if (podeDesignar) {
@@ -140,6 +165,9 @@ export function OrdemServicoDetail() {
     if (os) {
       setValorMaoDeObra(os.valorMaoDeObra != null ? String(os.valorMaoDeObra) : "");
       setValorComissao(os.valorComissao != null ? String(os.valorComissao) : "");
+      setCausaId(os.causaId ?? "");
+      setDefeitoId(os.defeitoId ?? "");
+      setSolucaoId(os.solucaoId ?? "");
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [os?.id]);
@@ -154,6 +182,9 @@ export function OrdemServicoDetail() {
         observacao: observacao || undefined,
         novaTentativa,
         funcionarioId: os?.funcionario?.id,
+        causaId: causaId || undefined,
+        defeitoId: defeitoId || undefined,
+        solucaoId: solucaoId || undefined,
       });
       setObservacao("");
       setNovaTentativa(false);
@@ -338,6 +369,51 @@ export function OrdemServicoDetail() {
         <p className="text-sm text-grafite-900">{os.descricaoProblema}</p>
       </div>
 
+      {/* Diagnóstico codificado — só aparece depois de preenchido no fechamento */}
+      {(os.causa || os.defeito || os.solucao) && (
+        <div className="bg-white border border-grafite-200 rounded-lg p-5">
+          <p className="text-xs text-grafite-500 mb-3">Diagnóstico</p>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div>
+              <p className="text-[11px] uppercase tracking-wide text-grafite-400">Causa</p>
+              <p className="text-sm text-grafite-900 mt-0.5">
+                {os.causa ? (
+                  <>
+                    <span className="codigo">{os.causa.codigo}</span> — {os.causa.descricao}
+                  </>
+                ) : (
+                  <span className="text-grafite-400">—</span>
+                )}
+              </p>
+            </div>
+            <div>
+              <p className="text-[11px] uppercase tracking-wide text-grafite-400">Defeito</p>
+              <p className="text-sm text-grafite-900 mt-0.5">
+                {os.defeito ? (
+                  <>
+                    <span className="codigo">{os.defeito.codigo}</span> — {os.defeito.descricao}
+                  </>
+                ) : (
+                  <span className="text-grafite-400">—</span>
+                )}
+              </p>
+            </div>
+            <div>
+              <p className="text-[11px] uppercase tracking-wide text-grafite-400">Solução</p>
+              <p className="text-sm text-grafite-900 mt-0.5">
+                {os.solucao ? (
+                  <>
+                    <span className="codigo">{os.solucao.codigo}</span> — {os.solucao.descricao}
+                  </>
+                ) : (
+                  <span className="text-grafite-400">—</span>
+                )}
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div>
         <h2 className="text-sm font-medium text-grafite-900 mb-3">Acompanhamento</h2>
         <StatusTimeline historico={os.statusHistoricos} statusAtual={os.statusAtual} />
@@ -444,6 +520,57 @@ export function OrdemServicoDetail() {
                 onChange={(e) => setObservacao(e.target.value)}
               />
             </Campo>
+            {/* Diagnóstico codificado — aparece no fechamento (parcial ou total),
+                onde o técnico padroniza causa/defeito/solução por dropdown. */}
+            {(novoStatus === "AGUARDANDO_VALIDACAO" || novoStatus === "CONCLUIDO") && (
+              <div className="mb-1 rounded-md border border-status-validacao/30 bg-status-validacao/5 p-3">
+                <p className="text-xs font-medium text-grafite-700 mb-2">
+                  Diagnóstico (padronizado)
+                </p>
+                <Campo rotulo="Causa">
+                  <select
+                    className={classeInput}
+                    value={causaId}
+                    onChange={(e) => setCausaId(e.target.value)}
+                  >
+                    <option value="">Selecione…</option>
+                    {causas.map((c) => (
+                      <option key={c.id} value={c.id}>
+                        {c.codigo} — {c.descricao}
+                      </option>
+                    ))}
+                  </select>
+                </Campo>
+                <Campo rotulo="Defeito">
+                  <select
+                    className={classeInput}
+                    value={defeitoId}
+                    onChange={(e) => setDefeitoId(e.target.value)}
+                  >
+                    <option value="">Selecione…</option>
+                    {defeitos.map((d) => (
+                      <option key={d.id} value={d.id}>
+                        {d.codigo} — {d.descricao}
+                      </option>
+                    ))}
+                  </select>
+                </Campo>
+                <Campo rotulo="Solução">
+                  <select
+                    className={classeInput}
+                    value={solucaoId}
+                    onChange={(e) => setSolucaoId(e.target.value)}
+                  >
+                    <option value="">Selecione…</option>
+                    {solucoes.map((s) => (
+                      <option key={s.id} value={s.id}>
+                        {s.codigo} — {s.descricao}
+                      </option>
+                    ))}
+                  </select>
+                </Campo>
+              </div>
+            )}
             <label className="flex items-center gap-2 mb-4 text-sm text-grafite-700">
               <input
                 type="checkbox"

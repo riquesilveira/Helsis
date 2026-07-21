@@ -6,6 +6,7 @@ import funcionarioRoutes from "../modules/funcionarios/funcionario.routes";
 import ordemServicoRoutes from "../modules/ordens-servico/ordemServico.routes";
 import pecaRoutes from "../modules/pecas/peca.routes";
 import desempenhoRoutes from "../modules/desempenho/desempenho.routes";
+import diagnosticoRoutes from "../modules/diagnostico/diagnostico.routes";
 
 const router = Router();
 
@@ -16,5 +17,6 @@ router.use("/funcionarios", funcionarioRoutes);
 router.use("/ordens-servico", ordemServicoRoutes);
 router.use("/pecas", pecaRoutes);
 router.use("/desempenho", desempenhoRoutes);
+router.use("/diagnostico", diagnosticoRoutes);
 
 export default router;

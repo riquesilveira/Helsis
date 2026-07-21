@@ -24,6 +24,14 @@ export interface AtualizarStatusInput {
    * não resolveu). Isso é o que alimenta a métrica de "resolveu na primeira?".
    */
   novaTentativa?: boolean;
+  /**
+   * Diagnóstico codificado, preenchido no fechamento por dropdowns. São
+   * opcionais aqui porque só fazem sentido no fechamento (parcial ou total),
+   * não em toda mudança de status.
+   */
+  causaId?: string;
+  defeitoId?: string;
+  solucaoId?: string;
 }
 
 export interface RegistrarPecaInput {
@@ -106,6 +114,9 @@ export async function buscarOrdemServicoPorId(id: string) {
       statusHistoricos: { orderBy: { criadoEm: "asc" } },
       pecasTrocadas: { include: { pecaCatalogo: true } },
       deslocamentos: true,
+      causa: true,
+      defeito: true,
+      solucao: true,
     },
   });
 
@@ -223,6 +234,13 @@ export async function atualizarStatus(osId: string, dados: AtualizarStatusInput)
       },
     },
   };
+
+  // Diagnóstico codificado (Causa / Defeito / Solução) — preenchido no
+  // fechamento. Só grava os campos que vieram, pra não apagar um diagnóstico
+  // já registrado quando o status muda por outro motivo.
+  if (dados.causaId !== undefined) dadosAtualizacao.causaId = dados.causaId;
+  if (dados.defeitoId !== undefined) dadosAtualizacao.defeitoId = dados.defeitoId;
+  if (dados.solucaoId !== undefined) dadosAtualizacao.solucaoId = dados.solucaoId;
 
   // Quando a OS é concluída, fixamos se foi resolvida já na primeira tentativa.
   // Usa os.numeroTentativas (antes do incremento) para refletir o estado REAL:

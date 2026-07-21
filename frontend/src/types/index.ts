@@ -114,6 +114,28 @@ export interface DeslocamentoItem {
   diasViagem?: number | null;
 }
 
+// Diagnóstico codificado (Causa / Defeito / Solução) — catálogo padronizado
+// escolhido por dropdown no fechamento do chamado.
+export interface Causa {
+  id: string;
+  codigo: string;
+  descricao: string;
+}
+
+export interface Defeito {
+  id: string;
+  codigo: string;
+  descricao: string;
+  tempoEstimadoMin?: number | null;
+}
+
+export interface Solucao {
+  id: string;
+  codigo: string;
+  descricao: string;
+  tempoEstimadoMin?: number | null;
+}
+
 export interface OrdemServico {
   id: string;
   numero: number;
@@ -129,6 +151,12 @@ export interface OrdemServico {
   atualizadoEm: string;
   valorMaoDeObra?: number | null;
   valorComissao?: number | null;
+  causaId?: string | null;
+  causa?: Causa | null;
+  defeitoId?: string | null;
+  defeito?: Defeito | null;
+  solucaoId?: string | null;
+  solucao?: Solucao | null;
   cliente: Cliente;
   equipamento: Equipamento;
   funcionario?: Funcionario | null;

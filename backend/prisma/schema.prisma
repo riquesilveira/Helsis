@@ -179,6 +179,16 @@ model OrdemServico {
   modalidade          ModalidadeAtendimento
   statusAtual         StatusOS               @default(RECEBIDO)
   descricaoProblema   String
+  // Diagnóstico codificado — preenchido no fechamento por dropdowns
+  // padronizados (Causa / Defeito / Solução). Complementa a descrição em
+  // texto livre com códigos que permitem padronizar e medir tempo por
+  // defeito/solução, além de detectar recorrências.
+  causaId             String?
+  causa               Causa?                 @relation(fields: [causaId], references: [id])
+  defeitoId           String?
+  defeito             Defeito?               @relation(fields: [defeitoId], references: [id])
+  solucaoId           String?
+  solucao             Solucao?               @relation(fields: [solucaoId], references: [id])
   numeroTentativas    Int                    @default(0) // quantas vezes tentou resolver sem sucesso antes de concluir
   resolvidoNaPrimeira Boolean?               // preenchido quando a OS é concluída
   dataAgendada        DateTime?              // dia previsto da visita — alimenta a "rota do dia" do técnico
@@ -218,6 +228,49 @@ model StatusHistorico {
   criadoEm       DateTime     @default(now())
 
   @@map("status_historico")
+}
+
+// ----------------------------------------------------------------------------
+// DIAGNÓSTICO CODIFICADO (Causa / Defeito / Solução)
+// ----------------------------------------------------------------------------
+// Padroniza o fechamento do chamado em tabelas de códigos, em vez de texto
+// livre. Isso permite parametrizar o TEMPO estimado por defeito/solução e
+// medir recorrência (qual defeito mais aparece, qual solução resolve mais
+// rápido). O código é o identificador legível pelo técnico (ex: "D-01").
+
+model Causa {
+  id            String         @id @default(uuid())
+  codigo        String         @unique
+  descricao     String
+  ativo         Boolean        @default(true)
+  criadoEm      DateTime       @default(now())
+  ordensServico OrdemServico[]
+
+  @@map("causas")
+}
+
+model Defeito {
+  id               String         @id @default(uuid())
+  codigo           String         @unique
+  descricao        String
+  tempoEstimadoMin Int? // tempo estimado de resolução, em minutos
+  ativo            Boolean        @default(true)
+  criadoEm         DateTime       @default(now())
+  ordensServico    OrdemServico[]
+
+  @@map("defeitos")
+}
+
+model Solucao {
+  id               String         @id @default(uuid())
+  codigo           String         @unique
+  descricao        String
+  tempoEstimadoMin Int? // tempo estimado de execução, em minutos
+  ativo            Boolean        @default(true)
+  criadoEm         DateTime       @default(now())
+  ordensServico    OrdemServico[]
+
+  @@map("solucoes")
 }
 
 // ----------------------------------------------------------------------------

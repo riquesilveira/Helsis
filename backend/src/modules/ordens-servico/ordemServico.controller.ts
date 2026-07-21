@@ -21,6 +21,10 @@ const atualizarStatusSchema = z.object({
   observacao: z.string().optional(),
   funcionarioId: z.string().uuid().optional(),
   novaTentativa: z.boolean().optional(),
+  // Diagnóstico codificado preenchido no fechamento (dropdowns padronizados).
+  causaId: z.string().uuid().optional(),
+  defeitoId: z.string().uuid().optional(),
+  solucaoId: z.string().uuid().optional(),
 });
 
 // Para TECNICO, funcionarioId é derivado do token — não aceitar do body.
