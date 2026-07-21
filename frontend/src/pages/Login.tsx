@@ -1,6 +1,8 @@
 import { FormEvent, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { Activity } from "lucide-react";
 import { api } from "../services/api";
+import { Button } from "../components/ui/Button";
 
 export function Login() {
   const [email, setEmail] = useState("");
@@ -26,41 +28,54 @@ export function Login() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-grafite-950 px-4">
-      <form
-        onSubmit={handleSubmit}
-        className="w-full max-w-sm bg-white rounded-lg p-8 border border-grafite-800"
-      >
-        <h1 className="font-semibold text-lg text-grafite-900 text-center mb-6">Sistema Inteligente de<br />Gestão de Serviços</h1>
+    <div className="relative min-h-screen flex items-center justify-center overflow-hidden bg-gradient-to-b from-grafite-950 to-grafite-900 px-4">
+      {/* brilho de fundo */}
+      <div className="pointer-events-none absolute -top-40 left-1/2 h-96 w-96 -translate-x-1/2 rounded-full bg-teal-600/20 blur-3xl" />
+      <div className="pointer-events-none absolute bottom-0 right-0 h-80 w-80 rounded-full bg-teal-500/10 blur-3xl" />
 
-        <label className="block text-sm text-grafite-700 mb-1">E-mail</label>
-        <input
-          type="email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          required
-          className="w-full border border-grafite-200 rounded-md px-3 py-2 text-sm mb-4 focus:outline-none focus:ring-2 focus:ring-teal-500"
-        />
+      <div className="relative w-full max-w-sm animate-fade-in">
+        <div className="mb-6 flex flex-col items-center text-center">
+          <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-teal-600 shadow-[0_0_30px_rgba(15,139,141,0.5)]">
+            <Activity size={24} className="text-white" />
+          </div>
+          <p className="text-lg font-semibold tracking-tight text-white">Resso</p>
+        </div>
 
-        <label className="block text-sm text-grafite-700 mb-1">Senha</label>
-        <input
-          type="password"
-          value={senha}
-          onChange={(e) => setSenha(e.target.value)}
-          required
-          className="w-full border border-grafite-200 rounded-md px-3 py-2 text-sm mb-4 focus:outline-none focus:ring-2 focus:ring-teal-500"
-        />
-
-        {erro && <p className="text-sm text-status-cancelado mb-4">{erro}</p>}
-
-        <button
-          type="submit"
-          disabled={carregando}
-          className="w-full bg-teal-600 hover:bg-teal-700 text-white text-sm font-medium rounded-md py-2 transition-colors disabled:opacity-60"
+        <form
+          onSubmit={handleSubmit}
+          className="rounded-2xl border border-white/10 bg-white/95 p-8 shadow-dropdown backdrop-blur"
         >
-          {carregando ? "Entrando..." : "Entrar"}
-        </button>
-      </form>
+          <h1 className="mb-6 text-center text-base font-semibold text-grafite-900">
+            Sistema Inteligente de
+            <br />
+            Gestão de Serviços
+          </h1>
+
+          <label className="block text-xs font-medium text-grafite-600 mb-1.5">E-mail</label>
+          <input
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+            className="input-base mb-4"
+          />
+
+          <label className="block text-xs font-medium text-grafite-600 mb-1.5">Senha</label>
+          <input
+            type="password"
+            value={senha}
+            onChange={(e) => setSenha(e.target.value)}
+            required
+            className="input-base mb-4"
+          />
+
+          {erro && <p className="mb-4 text-sm text-status-cancelado">{erro}</p>}
+
+          <Button type="submit" disabled={carregando} className="w-full">
+            {carregando ? "Entrando..." : "Entrar"}
+          </Button>
+        </form>
+      </div>
     </div>
   );
 }

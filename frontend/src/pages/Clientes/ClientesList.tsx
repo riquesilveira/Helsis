@@ -1,8 +1,13 @@
 import { FormEvent, useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
+import { ChevronRight, Plus } from "lucide-react";
 import { api } from "../../services/api";
 import { Cliente } from "../../types";
 import { Campo, classeInput, Modal } from "../../components/Modal";
+import { PageHeader } from "../../components/ui/PageHeader";
+import { Card } from "../../components/ui/Card";
+import { Button, classeBotao } from "../../components/ui/Button";
+import { Chip } from "../../components/ui/Badge";
 
 interface MunicipioIBGE {
   nome: string;
@@ -102,17 +107,18 @@ export function ClientesList() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-xl font-semibold text-grafite-900">Clientes</h1>
-        <button
-          onClick={() => setModalAberto(true)}
-          className="bg-teal-600 hover:bg-teal-700 text-white text-sm font-medium rounded-md px-4 py-2 transition-colors"
-        >
-          + Novo cliente
-        </button>
-      </div>
+      <PageHeader
+        titulo="Clientes"
+        subtitulo="Empresas e unidades atendidas."
+        acoes={
+          <Button onClick={() => setModalAberto(true)}>
+            <Plus size={16} />
+            Novo cliente
+          </Button>
+        }
+      />
 
-      <div className="bg-white border border-grafite-200 rounded-lg divide-y divide-grafite-100">
+      <Card className="divide-y divide-grafite-100 overflow-hidden p-0">
         {carregando && (
           <p className="text-sm text-grafite-500 px-5 py-4">Carregando...</p>
         )}
@@ -120,24 +126,30 @@ export function ClientesList() {
           <Link
             key={c.id}
             to={`/clientes/${c.id}`}
-            className="flex items-center justify-between px-5 py-4 hover:bg-grafite-50"
+            className="group flex items-center justify-between gap-4 px-5 py-4 transition-colors hover:bg-grafite-50"
           >
-            <div>
-              <p className="text-sm text-grafite-900">{c.nome}</p>
-              <p className="text-xs text-grafite-500 mt-0.5">
-                {c.telefone}
-                {c.cidade ? ` — ${c.cidade}/${c.estado ?? ""}` : ""}
-              </p>
+            <div className="flex min-w-0 items-center gap-3">
+              <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-teal-50 text-sm font-semibold text-teal-700">
+                {c.nome.charAt(0).toUpperCase()}
+              </div>
+              <div className="min-w-0">
+                <p className="text-sm text-grafite-900 truncate">{c.nome}</p>
+                <p className="text-xs text-grafite-500 mt-0.5 truncate">
+                  {c.telefone}
+                  {c.cidade ? ` — ${c.cidade}/${c.estado ?? ""}` : ""}
+                </p>
+              </div>
             </div>
-            <span className="codigo text-xs text-grafite-400">
-              {c.equipamentos?.length ?? 0} equipamento(s)
-            </span>
+            <div className="flex flex-shrink-0 items-center gap-3">
+              <Chip>{c.equipamentos?.length ?? 0} equip.</Chip>
+              <ChevronRight size={16} className="text-grafite-300 transition-colors group-hover:text-grafite-500" />
+            </div>
           </Link>
         ))}
         {!carregando && clientes.length === 0 && (
           <p className="text-sm text-grafite-500 px-5 py-4">Nenhum cliente cadastrado ainda.</p>
         )}
-      </div>
+      </Card>
 
       <Modal titulo="Novo cliente" aberto={modalAberto} onFechar={() => setModalAberto(false)}>
         <form onSubmit={handleSubmit}>
@@ -185,7 +197,7 @@ export function ClientesList() {
                   autoComplete="off"
                 />
                 {cidadeFocada && sugestoesCidade.length > 0 && (
-                  <ul className="absolute z-10 left-0 right-0 top-full mt-1 bg-white border border-grafite-200 rounded-md shadow-lg max-h-48 overflow-y-auto">
+                  <ul className="absolute z-10 left-0 right-0 top-full mt-1 bg-white border border-grafite-100 rounded-xl shadow-dropdown max-h-48 overflow-y-auto">
                     {sugestoesCidade.map((m) => (
                       <li
                         key={`${m.nome}-${m.microrregiao.mesorregiao.UF.sigla}`}
@@ -211,11 +223,7 @@ export function ClientesList() {
               />
             </Campo>
           </div>
-          <button
-            type="submit"
-            disabled={salvando}
-            className="w-full mt-2 bg-teal-600 hover:bg-teal-700 text-white text-sm font-medium rounded-md py-2 transition-colors disabled:opacity-60"
-          >
+          <button type="submit" disabled={salvando} className={`${classeBotao("primary")} mt-2 w-full`}>
             {salvando ? "Salvando..." : "Cadastrar cliente"}
           </button>
         </form>

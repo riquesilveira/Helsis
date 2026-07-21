@@ -1,8 +1,13 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
+import { ChevronRight, Plus } from "lucide-react";
 import { api } from "../../services/api";
 import { OPCOES_STATUS, OrdemServico, StatusOS } from "../../types";
 import { tempoRelativo } from "../../utils/formatters";
+import { PageHeader } from "../../components/ui/PageHeader";
+import { Card } from "../../components/ui/Card";
+import { StatusBadge } from "../../components/ui/Badge";
+import { classeBotao } from "../../components/ui/Button";
 
 type Periodo = "todas" | "24h" | "7dias" | "15dias" | "30dias" | "personalizado";
 
@@ -36,15 +41,6 @@ function dentroDoPeriodo(os: OrdemServico, periodo: Periodo, dataInicio: string,
   const limiteMs = DIAS_POR_PERIODO[periodo] * 24 * 60 * 60 * 1000;
   return Date.now() - new Date(os.dataAbertura).getTime() <= limiteMs;
 }
-
-const ROTULO_STATUS: Record<string, string> = {
-  RECEBIDO: "Recebido",
-  DIAGNOSTICO: "Em diagnóstico",
-  AGUARDANDO_PECA: "Aguardando peça",
-  EM_REPARO: "Em reparo",
-  CONCLUIDO: "Concluído",
-  CANCELADO: "Cancelado",
-};
 
 const ABAS_STATUS: { chave: StatusOS | "todos"; rotulo: string }[] = [
   { chave: "todos", rotulo: "Todos" },
@@ -89,15 +85,16 @@ export function OrdensServicoList() {
 
   return (
     <div className="space-y-5">
-      <div className="flex items-center justify-between">
-        <h1 className="text-xl font-semibold text-grafite-900">Ordens de serviço</h1>
-        <Link
-          to="/ordens-servico/nova"
-          className="bg-teal-600 hover:bg-teal-700 text-white text-sm font-medium rounded-md px-4 py-2 transition-colors"
-        >
-          + Nova OS
-        </Link>
-      </div>
+      <PageHeader
+        titulo="Ordens de serviço"
+        subtitulo="Acompanhe e gerencie os chamados técnicos."
+        acoes={
+          <Link to="/ordens-servico/nova" className={classeBotao("primary")}>
+            <Plus size={16} />
+            Nova OS
+          </Link>
+        }
+      />
 
       <div className="flex items-center gap-1 border-b border-grafite-200 overflow-x-auto">
         {ABAS_STATUS.map((aba) => (
@@ -123,14 +120,14 @@ export function OrdensServicoList() {
       </div>
 
       {periodo === "personalizado" && (
-        <div className="flex items-center gap-3 bg-grafite-50 border border-grafite-200 rounded-md px-4 py-3">
+        <div className="flex items-center gap-3 bg-grafite-50 border border-grafite-100 rounded-xl px-4 py-3">
           <label className="text-xs text-grafite-600 flex items-center gap-2">
             De
             <input
               type="date"
               value={dataInicio}
               onChange={(e) => setDataInicio(e.target.value)}
-              className="border border-grafite-200 rounded-md px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
+              className="input-base w-auto py-1.5"
             />
           </label>
           <label className="text-xs text-grafite-600 flex items-center gap-2">
@@ -139,7 +136,7 @@ export function OrdensServicoList() {
               type="date"
               value={dataFim}
               onChange={(e) => setDataFim(e.target.value)}
-              className="border border-grafite-200 rounded-md px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
+              className="input-base w-auto py-1.5"
             />
           </label>
           {(dataInicio || dataFim) && (
@@ -165,12 +162,12 @@ export function OrdensServicoList() {
           placeholder="Buscar por cliente, nº da OS ou equipamento..."
           value={busca}
           onChange={(e) => setBusca(e.target.value)}
-          className="flex-1 border border-grafite-200 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
+          className="input-base flex-1"
         />
         <select
           value={periodo}
           onChange={(e) => setPeriodo(e.target.value as Periodo)}
-          className="border border-grafite-200 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 min-w-[180px]"
+          className="input-base w-auto min-w-[180px]"
         >
           {OPCOES_PERIODO.map((op) => (
             <option key={op.chave} value={op.chave}>
@@ -180,7 +177,7 @@ export function OrdensServicoList() {
         </select>
       </div>
 
-      <div className="bg-white border border-grafite-200 rounded-lg divide-y divide-grafite-100">
+      <Card className="divide-y divide-grafite-100 overflow-hidden p-0">
         {carregando && (
           <p className="text-sm text-grafite-500 px-5 py-4">Carregando...</p>
         )}
@@ -188,21 +185,24 @@ export function OrdensServicoList() {
           <Link
             key={os.id}
             to={`/ordens-servico/${os.id}`}
-            className="flex items-center justify-between px-5 py-4 hover:bg-grafite-50"
+            className="group flex items-center justify-between gap-4 px-5 py-4 transition-colors hover:bg-grafite-50"
           >
-            <div>
+            <div className="min-w-0">
               <p className="text-sm text-grafite-900">
                 <span className="codigo text-grafite-500">#{os.numero}</span> {os.cliente.nome}
               </p>
-              <p className="text-xs text-grafite-500 mt-0.5">
+              <p className="text-xs text-grafite-500 mt-0.5 truncate">
                 {os.equipamento.tipo} — {os.descricaoProblema}
               </p>
             </div>
-            <div className="text-right flex-shrink-0 ml-4">
-              <span className="text-xs codigo text-teal-700">{ROTULO_STATUS[os.statusAtual] ?? os.statusAtual}</span>
-              <p className="text-[11px] text-grafite-400 mt-0.5" title={new Date(os.dataAbertura).toLocaleString("pt-BR")}>
-                {tempoRelativo(os.dataAbertura)}
-              </p>
+            <div className="flex flex-shrink-0 items-center gap-3">
+              <div className="text-right">
+                <StatusBadge status={os.statusAtual} />
+                <p className="text-[11px] text-grafite-400 mt-1" title={new Date(os.dataAbertura).toLocaleString("pt-BR")}>
+                  {tempoRelativo(os.dataAbertura)}
+                </p>
+              </div>
+              <ChevronRight size={16} className="text-grafite-300 transition-colors group-hover:text-grafite-500" />
             </div>
           </Link>
         ))}
@@ -213,7 +213,7 @@ export function OrdensServicoList() {
               : "Nenhuma OS encontrada com esses filtros."}
           </p>
         )}
-      </div>
+      </Card>
     </div>
   );
 }

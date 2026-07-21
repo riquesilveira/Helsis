@@ -1,19 +1,12 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from "recharts";
-import { ClipboardList, DollarSign, Receipt, Wallet, ArrowUpRight, ArrowDownRight, LucideIcon } from "lucide-react";
+import { ClipboardList, DollarSign, Receipt, Wallet, ArrowUpRight, ArrowDownRight, ChevronRight, LucideIcon } from "lucide-react";
 import { api } from "../services/api";
 import { Funcionario, OrdemServico } from "../types";
 import { formatarReais, tempoRelativo } from "../utils/formatters";
-
-const ROTULO_STATUS: Record<string, string> = {
-  RECEBIDO: "Recebido",
-  DIAGNOSTICO: "Em diagnóstico",
-  AGUARDANDO_PECA: "Aguardando peça",
-  EM_REPARO: "Em reparo",
-  CONCLUIDO: "Concluído",
-  CANCELADO: "Cancelado",
-};
+import { Card } from "../components/ui/Card";
+import { StatusBadge } from "../components/ui/Badge";
 
 function mesmoMes(iso: string | null, data: Date) {
   if (!iso) return false;
@@ -63,33 +56,38 @@ function CartaoMetrica({
   to?: string;
 }) {
   const conteudo = (
-    <div className="bg-white border border-grafite-200 rounded-lg p-5 hover:border-grafite-400 transition-colors h-full">
-      <div className="flex items-center gap-2.5 mb-3">
-        <div className="w-9 h-9 rounded-lg bg-teal-100 flex items-center justify-center flex-shrink-0">
-          <Icone size={18} className="text-teal-700" />
+    <Card interativo={!!to} className="h-full p-5">
+      <div className="flex items-start justify-between">
+        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-teal-50 flex-shrink-0">
+          <Icone size={19} className="text-teal-600" />
         </div>
-        <p className="text-xs text-grafite-600">{rotulo}</p>
+        {tendencia !== null && tendencia !== undefined && (
+          <span
+            className={`inline-flex items-center gap-0.5 rounded-full px-2 py-0.5 text-xs font-medium ${
+              tendencia >= 0
+                ? "bg-status-concluido/10 text-status-concluido"
+                : "bg-status-cancelado/10 text-status-cancelado"
+            }`}
+          >
+            {tendencia >= 0 ? <ArrowUpRight size={13} /> : <ArrowDownRight size={13} />}
+            {Math.abs(tendencia).toFixed(1)}%
+          </span>
+        )}
       </div>
-      <p className="codigo text-2xl font-semibold text-grafite-900 mt-1">{valor}</p>
+      <p className="mt-4 text-xs font-medium uppercase tracking-wide text-grafite-400">{rotulo}</p>
+      <p className="codigo mt-1 text-[26px] font-semibold leading-tight text-grafite-900">{valor}</p>
       {tendencia !== null && tendencia !== undefined && (
-        <p
-          className={`text-xs mt-2 flex items-center gap-1 ${
-            tendencia >= 0 ? "text-status-concluido" : "text-status-cancelado"
-          }`}
-        >
-          {tendencia >= 0 ? <ArrowUpRight size={13} /> : <ArrowDownRight size={13} />}
-          {Math.abs(tendencia).toFixed(1)}% vs mês passado
-        </p>
+        <p className="mt-1 text-[11px] text-grafite-400">vs. mês passado</p>
       )}
-    </div>
+    </Card>
   );
-  return to ? <Link to={to}>{conteudo}</Link> : conteudo;
+  return to ? <Link to={to} className="block h-full">{conteudo}</Link> : conteudo;
 }
 
 function GraficoFaturamento({ dados }: { dados: { dia: string; valor: number }[] }) {
   return (
-    <div className="bg-white border border-grafite-200 rounded-lg p-5">
-      <h2 className="text-sm font-medium text-grafite-900 mb-4">Faturamento nos últimos 30 dias</h2>
+    <Card className="p-5">
+      <h2 className="text-base font-semibold text-grafite-900 mb-4">Faturamento nos últimos 30 dias</h2>
       <ResponsiveContainer width="100%" height={240}>
         <AreaChart data={dados} margin={{ top: 5, right: 8, left: 0, bottom: 0 }}>
           <defs>
@@ -115,31 +113,39 @@ function GraficoFaturamento({ dados }: { dados: { dia: string; valor: number }[]
           />
           <Tooltip
             formatter={(value: number) => [formatarReais(value), "Faturamento"]}
-            contentStyle={{ borderRadius: 8, border: "1px solid #D3DAE0", fontSize: 12 }}
+            contentStyle={{
+              borderRadius: 12,
+              border: "1px solid #EDF1F4",
+              boxShadow: "0 8px 24px rgba(18,24,31,0.12)",
+              fontSize: 12,
+            }}
           />
-          <Area type="monotone" dataKey="valor" stroke="#0F8B8D" strokeWidth={2} fill="url(#corFaturamento)" />
+          <Area type="monotone" dataKey="valor" stroke="#0F8B8D" strokeWidth={2.5} fill="url(#corFaturamento)" />
         </AreaChart>
       </ResponsiveContainer>
-    </div>
+    </Card>
   );
 }
 
 function DespesasPorTipo({ dados }: { dados: { tipo: string; valor: number }[] }) {
   const total = dados.reduce((soma, d) => soma + d.valor, 0);
   return (
-    <div className="bg-white border border-grafite-200 rounded-lg p-5">
-      <h2 className="text-sm font-medium text-grafite-900 mb-4">Despesas por tipo no mês</h2>
-      <div className="space-y-3.5">
+    <Card className="p-5">
+      <h2 className="text-base font-semibold text-grafite-900 mb-4">Despesas por tipo no mês</h2>
+      <div className="space-y-4">
         {dados.map((d) => {
           const pct = total > 0 ? (d.valor / total) * 100 : 0;
           return (
             <div key={d.tipo}>
-              <div className="flex justify-between text-sm mb-1">
-                <span className="text-grafite-900">{d.tipo}</span>
-                <span className="codigo text-grafite-600">{formatarReais(d.valor)}</span>
+              <div className="flex justify-between text-sm mb-1.5">
+                <span className="text-grafite-700">{d.tipo}</span>
+                <span className="codigo font-medium text-grafite-900">{formatarReais(d.valor)}</span>
               </div>
-              <div className="h-1.5 bg-grafite-100 rounded-full overflow-hidden">
-                <div className="h-full bg-teal-600 rounded-full" style={{ width: `${pct}%` }} />
+              <div className="h-2 bg-grafite-100 rounded-full overflow-hidden">
+                <div
+                  className="h-full rounded-full bg-gradient-to-r from-teal-500 to-teal-600 transition-all"
+                  style={{ width: `${pct}%` }}
+                />
               </div>
             </div>
           );
@@ -148,7 +154,7 @@ function DespesasPorTipo({ dados }: { dados: { tipo: string; valor: number }[] }
           <p className="text-sm text-grafite-500">Nenhuma despesa registrada este mês.</p>
         )}
       </div>
-    </div>
+    </Card>
   );
 }
 
@@ -217,7 +223,12 @@ export function Dashboard() {
 
   return (
     <div className="space-y-8">
-      <div className="grid grid-cols-4 gap-4">
+      <div>
+        <h1 className="text-2xl font-semibold tracking-tight text-grafite-900">Painel</h1>
+        <p className="mt-1 text-sm text-grafite-500">Visão geral da operação neste mês.</p>
+      </div>
+
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <CartaoMetrica rotulo="Tickets abertos" valor={abertas.length} icone={ClipboardList} to="/ordens-servico" />
         <CartaoMetrica
           rotulo="Faturamento do mês"
@@ -239,72 +250,84 @@ export function Dashboard() {
         />
       </div>
 
-      <div className="grid grid-cols-3 gap-4">
-        <div className="col-span-2">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        <div className="lg:col-span-2">
           <GraficoFaturamento dados={serieDiaria} />
         </div>
         <DespesasPorTipo dados={despesasPorTipo} />
       </div>
 
       <div>
-        <h2 className="text-sm font-medium text-grafite-900 mb-3">Agenda de hoje, por técnico</h2>
-        <div className="bg-white border border-grafite-200 rounded-lg divide-y divide-grafite-100">
+        <h2 className="text-base font-semibold text-grafite-900 mb-3">Agenda de hoje, por técnico</h2>
+        <Card className="divide-y divide-grafite-100 overflow-hidden">
           {agendaDoDia.map(({ funcionario, quantidade, proxima }) => (
             <Link
               key={funcionario.id}
               to={`/funcionarios/${funcionario.id}/rota`}
-              className="flex items-center justify-between px-5 py-3 hover:bg-grafite-50"
+              className="group flex items-center justify-between px-5 py-3.5 hover:bg-grafite-50 transition-colors"
             >
-              <div>
-                <p className="text-sm text-grafite-900">{funcionario.usuario.nome}</p>
-                <p className="text-xs text-grafite-500">{funcionario.cargo}</p>
+              <div className="flex items-center gap-3">
+                <div className="flex h-9 w-9 items-center justify-center rounded-full bg-grafite-100 text-sm font-semibold text-grafite-600">
+                  {funcionario.usuario.nome.charAt(0).toUpperCase()}
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-grafite-900">{funcionario.usuario.nome}</p>
+                  <p className="text-xs text-grafite-500">{funcionario.cargo}</p>
+                </div>
               </div>
-              <div className="text-right">
-                <p className="codigo text-sm text-teal-700">
-                  {quantidade === 0 ? "Nenhum atendimento hoje" : `${quantidade} atendimento(s) hoje`}
-                </p>
-                {proxima && (
-                  <p className="text-xs text-grafite-500 mt-0.5">
-                    Próximo: {proxima.cliente.nome} — {proxima.equipamento.tipo}
+              <div className="flex items-center gap-3">
+                <div className="text-right">
+                  <p className={`text-sm font-medium ${quantidade === 0 ? "text-grafite-400" : "text-teal-700"}`}>
+                    {quantidade === 0 ? "Livre hoje" : `${quantidade} atendimento(s)`}
                   </p>
-                )}
+                  {proxima && (
+                    <p className="text-xs text-grafite-500 mt-0.5">
+                      Próximo: {proxima.cliente.nome} — {proxima.equipamento.tipo}
+                    </p>
+                  )}
+                </div>
+                <ChevronRight size={16} className="text-grafite-300 group-hover:text-grafite-500 transition-colors" />
               </div>
             </Link>
           ))}
           {agendaDoDia.length === 0 && (
             <p className="text-sm text-grafite-500 px-5 py-4">Nenhum técnico cadastrado ainda.</p>
           )}
-        </div>
+        </Card>
       </div>
 
       <div>
-        <h2 className="text-sm font-medium text-grafite-900 mb-3">Ordens de serviço em aberto</h2>
-        <div className="bg-white border border-grafite-200 rounded-lg divide-y divide-grafite-100">
+        <h2 className="text-base font-semibold text-grafite-900 mb-3">Ordens de serviço em aberto</h2>
+        <Card className="divide-y divide-grafite-100 overflow-hidden">
           {abertas.map((os) => (
             <Link
               key={os.id}
               to={`/ordens-servico/${os.id}`}
-              className="flex items-center justify-between px-5 py-3 hover:bg-grafite-50"
+              className="group flex items-center justify-between gap-4 px-5 py-3.5 hover:bg-grafite-50 transition-colors"
             >
-              <div>
+              <div className="min-w-0">
                 <p className="text-sm text-grafite-900">
-                  <span className="codigo text-grafite-500">#{os.numero}</span>{" "}
-                  {os.cliente.nome} — {os.equipamento.tipo}
+                  <span className="codigo text-grafite-400">#{os.numero}</span>{" "}
+                  <span className="font-medium">{os.cliente.nome}</span>
+                  <span className="text-grafite-500"> — {os.equipamento.tipo}</span>
                 </p>
-                <p className="text-xs text-grafite-500 mt-0.5">{os.descricaoProblema}</p>
+                <p className="text-xs text-grafite-500 mt-0.5 truncate">{os.descricaoProblema}</p>
               </div>
-              <div className="text-right flex-shrink-0 ml-4">
-                <span className="text-xs codigo text-teal-700">{ROTULO_STATUS[os.statusAtual] ?? os.statusAtual}</span>
-                <p className="text-[11px] text-grafite-400 mt-0.5" title={new Date(os.dataAbertura).toLocaleString("pt-BR")}>
-                  {tempoRelativo(os.dataAbertura)}
-                </p>
+              <div className="flex flex-shrink-0 items-center gap-3">
+                <div className="text-right">
+                  <StatusBadge status={os.statusAtual} />
+                  <p className="text-[11px] text-grafite-400 mt-1" title={new Date(os.dataAbertura).toLocaleString("pt-BR")}>
+                    {tempoRelativo(os.dataAbertura)}
+                  </p>
+                </div>
+                <ChevronRight size={16} className="text-grafite-300 group-hover:text-grafite-500 transition-colors" />
               </div>
             </Link>
           ))}
           {abertas.length === 0 && (
             <p className="text-sm text-grafite-500 px-5 py-4">Nenhuma OS em aberto no momento.</p>
           )}
-        </div>
+        </Card>
       </div>
     </div>
   );

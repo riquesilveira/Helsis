@@ -3,12 +3,33 @@
 @tailwind utilities;
 
 body {
-  @apply bg-grafite-50 text-grafite-900 font-sans antialiased;
+  @apply text-grafite-900 font-sans antialiased;
+  /* Fundo levemente dimensional: base grafite-50 com um brilho teal muito
+     sutil no topo — dá "ambiente" sem competir com os cards brancos. */
+  background-color: #F4F7F8;
+  background-image:
+    radial-gradient(60rem 40rem at 100% -10%, rgba(15, 139, 141, 0.05), transparent 60%),
+    radial-gradient(50rem 40rem at -10% 0%, rgba(43, 60, 76, 0.04), transparent 55%);
+  background-attachment: fixed;
 }
 
-/* Rótulos de código/identificadores (nº da OS, datas) — mantém a classe
-   "codigo" nos componentes por consistência, mas agora usa a mesma fonte
-   (Inter) do resto da interface, só com tracking mais apertado. */
+/* Rótulos de código/identificadores (nº da OS, datas) — tabular pra alinhar
+   dígitos, tracking apertado. Mesma fonte (Inter) do resto. */
 .codigo {
   @apply font-mono tracking-tight;
+  font-variant-numeric: tabular-nums;
+}
+
+@layer components {
+  /* Superfície padrão de conteúdo — branca, cantos generosos, borda quase
+     imperceptível e sombra suave. Base de quase toda a UI. */
+  .card {
+    @apply bg-white rounded-2xl border border-grafite-100 shadow-card;
+  }
+
+  .input-base {
+    @apply w-full bg-white border border-grafite-200 rounded-lg px-3 py-2.5 text-sm
+           text-grafite-900 placeholder:text-grafite-400 transition
+           focus:outline-none focus:border-teal-500 focus:shadow-focus-teal;
+  }
 }

@@ -1,8 +1,12 @@
 import { FormEvent, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import { Plus } from "lucide-react";
 import { api } from "../../services/api";
 import { Funcionario } from "../../types";
 import { Campo, classeInput, Modal } from "../../components/Modal";
+import { PageHeader } from "../../components/ui/PageHeader";
+import { Card } from "../../components/ui/Card";
+import { Button, classeBotao } from "../../components/ui/Button";
 
 /** Formata centavos como moeda brasileira: 350000 → "3.500,00" */
 function formatarMoeda(valor: string): string {
@@ -133,38 +137,44 @@ export function FuncionariosList() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-xl font-semibold text-grafite-900">Equipe & desempenho</h1>
-        <button
-          onClick={() => setModalAberto(true)}
-          className="bg-teal-600 hover:bg-teal-700 text-white text-sm font-medium rounded-md px-4 py-2 transition-colors"
-        >
-          + Novo funcionário
-        </button>
-      </div>
+      <PageHeader
+        titulo="Equipe & desempenho"
+        subtitulo="Técnicos e colaboradores da operação."
+        acoes={
+          <Button onClick={() => setModalAberto(true)}>
+            <Plus size={16} />
+            Novo funcionário
+          </Button>
+        }
+      />
 
-      <div className="bg-white border border-grafite-200 rounded-lg divide-y divide-grafite-100">
+      <Card className="divide-y divide-grafite-100 overflow-hidden p-0">
         {carregando && (
           <p className="text-sm text-grafite-500 px-5 py-4">Carregando...</p>
         )}
         {!carregando && funcionarios.map((f) => (
-          <div key={f.id} className="flex items-center justify-between px-5 py-4 hover:bg-grafite-50">
-            <Link to={`/funcionarios/${f.id}`} className="flex-1">
-              <div className="flex items-center gap-2">
-                <p className="text-sm text-grafite-900">{f.usuario.nome}</p>
-                <button
-                  onClick={(e) => {
-                    e.preventDefault();
-                    abrirModalEditar(f);
-                  }}
-                  className="text-xs font-medium text-teal-700 hover:text-teal-800"
-                >
-                  Editar
-                </button>
+          <div key={f.id} className="flex items-center justify-between gap-4 px-5 py-4 transition-colors hover:bg-grafite-50">
+            <Link to={`/funcionarios/${f.id}`} className="flex min-w-0 flex-1 items-center gap-3">
+              <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-teal-500 to-teal-700 text-sm font-semibold text-white">
+                {f.usuario.nome.charAt(0).toUpperCase()}
               </div>
-              <p className="text-xs text-grafite-500 mt-0.5">{f.cargo}</p>
+              <div className="min-w-0">
+                <div className="flex items-center gap-2">
+                  <p className="text-sm text-grafite-900 truncate">{f.usuario.nome}</p>
+                  <button
+                    onClick={(e) => {
+                      e.preventDefault();
+                      abrirModalEditar(f);
+                    }}
+                    className="flex-shrink-0 text-xs font-medium text-teal-700 hover:text-teal-800"
+                  >
+                    Editar
+                  </button>
+                </div>
+                <p className="text-xs text-grafite-500 mt-0.5 truncate">{f.cargo}</p>
+              </div>
             </Link>
-            <span className="codigo text-sm text-grafite-600">
+            <span className="codigo text-sm text-grafite-700 flex-shrink-0">
               R$ {Number(f.salarioAtual).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
             </span>
           </div>
@@ -172,7 +182,7 @@ export function FuncionariosList() {
         {!carregando && funcionarios.length === 0 && (
           <p className="text-sm text-grafite-500 px-5 py-4">Nenhum funcionário cadastrado.</p>
         )}
-      </div>
+      </Card>
 
       <Modal titulo="Novo funcionário" aberto={modalAberto} onFechar={() => { setModalAberto(false); setErroSubmit(null); }}>
         <form onSubmit={handleSubmit}>
@@ -287,11 +297,7 @@ export function FuncionariosList() {
           {erroSubmit && (
             <p className="text-xs text-red-500 mb-3">{erroSubmit}</p>
           )}
-          <button
-            type="submit"
-            disabled={salvando}
-            className="w-full mt-2 bg-teal-600 hover:bg-teal-700 text-white text-sm font-medium rounded-md py-2 transition-colors disabled:opacity-60"
-          >
+          <button type="submit" disabled={salvando} className={`${classeBotao("primary")} mt-2 w-full`}>
             {salvando ? "Salvando..." : "Cadastrar funcionário"}
           </button>
         </form>
@@ -384,11 +390,7 @@ export function FuncionariosList() {
           {erroEdit && (
             <p className="text-xs text-red-500 mb-3">{erroEdit}</p>
           )}
-          <button
-            type="submit"
-            disabled={salvandoEdit}
-            className="w-full mt-2 bg-teal-600 hover:bg-teal-700 text-white text-sm font-medium rounded-md py-2 transition-colors disabled:opacity-60"
-          >
+          <button type="submit" disabled={salvandoEdit} className={`${classeBotao("primary")} mt-2 w-full`}>
             {salvandoEdit ? "Salvando..." : "Salvar alterações"}
           </button>
         </form>

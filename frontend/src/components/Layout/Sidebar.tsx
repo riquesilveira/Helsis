@@ -11,6 +11,7 @@ import {
   Settings,
   LogOut,
   ChevronUp,
+  Activity,
   type LucideIcon,
 } from "lucide-react";
 
@@ -66,10 +67,15 @@ export function Sidebar() {
   }
 
   return (
-    <aside className="w-60 flex-shrink-0 bg-grafite-950 text-grafite-100 min-h-screen flex flex-col print:hidden">
-      <div className="px-5 py-5 border-b border-grafite-800">
-        <p className="font-semibold tracking-tight text-lg">Resso</p>
-        <p className="text-xs text-grafite-400 mt-0.5">Gestão de serviços</p>
+    <aside className="w-64 flex-shrink-0 bg-gradient-to-b from-grafite-950 to-grafite-900 text-grafite-100 min-h-screen flex flex-col border-r border-grafite-800 print:hidden">
+      <div className="flex items-center gap-3 px-5 py-5 border-b border-grafite-800/70">
+        <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-teal-600 shadow-[0_0_20px_rgba(15,139,141,0.35)]">
+          <Activity size={18} className="text-white" />
+        </div>
+        <div className="leading-tight">
+          <p className="font-semibold tracking-tight text-[15px]">Resso</p>
+          <p className="text-[11px] text-grafite-400">Gestão de serviços</p>
+        </div>
       </div>
 
       <nav className="flex-1 px-3 py-4 space-y-1">
@@ -81,25 +87,32 @@ export function Sidebar() {
               to={link.to}
               end={link.fim}
               className={({ isActive }) =>
-                `flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors ${
+                `group relative flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition-all ${
                   isActive
-                    ? "bg-teal-600 text-white"
-                    : "text-grafite-200 hover:bg-grafite-800"
+                    ? "bg-teal-600 text-white font-medium shadow-[0_2px_10px_rgba(15,139,141,0.35)]"
+                    : "text-grafite-300 hover:bg-grafite-800/70 hover:text-white"
                 }`
               }
             >
-              <Icone size={18} className="flex-shrink-0" />
-              {link.rotulo}
+              {({ isActive }) => (
+                <>
+                  {isActive && (
+                    <span className="absolute -left-3 top-1/2 h-5 w-1 -translate-y-1/2 rounded-r-full bg-teal-400" />
+                  )}
+                  <Icone size={18} className="flex-shrink-0" />
+                  {link.rotulo}
+                </>
+              )}
             </NavLink>
           );
         })}
       </nav>
 
       {usuario && (
-        <div ref={menuRef} className="relative border-t border-grafite-800">
+        <div ref={menuRef} className="relative border-t border-grafite-800/70 p-2">
           {/* Dropdown — abre pra cima */}
           {menuAberto && (
-            <div className="absolute bottom-full left-2 right-2 mb-1 bg-grafite-900 border border-grafite-700 rounded-lg shadow-lg py-1 z-50">
+            <div className="absolute bottom-full left-2 right-2 mb-1 bg-grafite-900 border border-grafite-700 rounded-xl shadow-dropdown py-1 z-50 animate-fade-in">
               <NavLink
                 to="/configuracoes"
                 onClick={() => setMenuAberto(false)}
@@ -128,9 +141,9 @@ export function Sidebar() {
           {/* Botão do perfil */}
           <button
             onClick={() => setMenuAberto(!menuAberto)}
-            className="w-full flex items-center gap-3 px-4 py-4 hover:bg-grafite-900 transition-colors"
+            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-grafite-800/70 transition-colors"
           >
-            <div className="w-9 h-9 rounded-full bg-teal-600 flex items-center justify-center text-white text-sm font-semibold flex-shrink-0">
+            <div className="w-9 h-9 rounded-full bg-gradient-to-br from-teal-500 to-teal-700 flex items-center justify-center text-white text-sm font-semibold flex-shrink-0 shadow-[0_0_16px_rgba(15,139,141,0.3)]">
               {usuario.nome.charAt(0).toUpperCase()}
             </div>
             <div className="min-w-0 flex-1 text-left">

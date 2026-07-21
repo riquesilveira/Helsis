@@ -33,7 +33,7 @@ export function StatusTimeline({
   const indiceAtual = ETAPAS_STATUS.findIndex((e) => e.status === statusAtual);
 
   return (
-    <div className="border border-grafite-200 rounded-lg bg-white">
+    <div className="card">
       {/* Trilho de etapas padrão (o "quanto falta") */}
       <div className="flex items-center px-5 pt-5 pb-4 overflow-x-auto">
         {ETAPAS_STATUS.map((etapa, i) => {
