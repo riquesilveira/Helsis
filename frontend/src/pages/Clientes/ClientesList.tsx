@@ -8,6 +8,7 @@ import { PageHeader } from "../../components/ui/PageHeader";
 import { Card } from "../../components/ui/Card";
 import { Button, classeBotao } from "../../components/ui/Button";
 import { Chip } from "../../components/ui/Badge";
+import { HospitalLogo } from "../../components/ui/HospitalLogo";
 
 interface MunicipioIBGE {
   nome: string;
@@ -129,11 +130,9 @@ export function ClientesList() {
             className="group flex items-center justify-between gap-4 px-5 py-4 transition-colors hover:bg-grafite-50"
           >
             <div className="flex min-w-0 items-center gap-3">
-              <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-teal-50 text-sm font-semibold text-teal-700">
-                {c.nome.charAt(0).toUpperCase()}
-              </div>
+              <HospitalLogo nome={c.nome} size={40} />
               <div className="min-w-0">
-                <p className="text-sm text-grafite-900 truncate">{c.nome}</p>
+                <p className="text-sm font-semibold text-grafite-900 truncate">{c.nome}</p>
                 <p className="text-xs text-grafite-500 mt-0.5 truncate">
                   {c.telefone}
                   {c.cidade ? ` — ${c.cidade}/${c.estado ?? ""}` : ""}

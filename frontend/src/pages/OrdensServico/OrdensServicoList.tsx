@@ -8,6 +8,7 @@ import { PageHeader } from "../../components/ui/PageHeader";
 import { Card } from "../../components/ui/Card";
 import { StatusBadge } from "../../components/ui/Badge";
 import { classeBotao } from "../../components/ui/Button";
+import { HospitalLogo } from "../../components/ui/HospitalLogo";
 
 type Periodo = "todas" | "24h" | "7dias" | "15dias" | "30dias" | "personalizado";
 
@@ -187,13 +188,19 @@ export function OrdensServicoList() {
             to={`/ordens-servico/${os.id}`}
             className="group flex items-center justify-between gap-4 px-5 py-4 transition-colors hover:bg-grafite-50"
           >
-            <div className="min-w-0">
-              <p className="text-sm text-grafite-900">
-                <span className="codigo text-grafite-500">#{os.numero}</span> {os.cliente.nome}
-              </p>
-              <p className="text-xs text-grafite-500 mt-0.5 truncate">
-                {os.equipamento.tipo} — {os.descricaoProblema}
-              </p>
+            <div className="flex min-w-0 items-center gap-3">
+              <HospitalLogo nome={os.cliente.nome} size={40} />
+              <div className="min-w-0">
+                <div className="flex items-center gap-2">
+                  <span className="codigo flex-shrink-0 rounded-full bg-grafite-100 px-2 py-0.5 text-[11px] font-medium text-grafite-600">
+                    #{os.numero}
+                  </span>
+                  <p className="truncate text-sm font-semibold text-grafite-900">{os.cliente.nome}</p>
+                </div>
+                <p className="text-xs text-grafite-500 mt-0.5 truncate">
+                  {os.equipamento.tipo} — {os.descricaoProblema}
+                </p>
+              </div>
             </div>
             <div className="flex flex-shrink-0 items-center gap-3">
               <div className="text-right">

@@ -7,6 +7,7 @@ import { Funcionario, OrdemServico } from "../types";
 import { formatarReais, tempoRelativo } from "../utils/formatters";
 import { Card } from "../components/ui/Card";
 import { StatusBadge } from "../components/ui/Badge";
+import { HospitalLogo } from "../components/ui/HospitalLogo";
 
 function mesmoMes(iso: string | null, data: Date) {
   if (!iso) return false;
@@ -305,13 +306,19 @@ export function Dashboard() {
               to={`/ordens-servico/${os.id}`}
               className="group flex items-center justify-between gap-4 px-5 py-3.5 hover:bg-grafite-50 transition-colors"
             >
-              <div className="min-w-0">
-                <p className="text-sm text-grafite-900">
-                  <span className="codigo text-grafite-400">#{os.numero}</span>{" "}
-                  <span className="font-medium">{os.cliente.nome}</span>
-                  <span className="text-grafite-500"> — {os.equipamento.tipo}</span>
-                </p>
-                <p className="text-xs text-grafite-500 mt-0.5 truncate">{os.descricaoProblema}</p>
+              <div className="flex min-w-0 items-center gap-3">
+                <HospitalLogo nome={os.cliente.nome} size={40} />
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2">
+                    <span className="codigo flex-shrink-0 rounded-full bg-grafite-100 px-2 py-0.5 text-[11px] font-medium text-grafite-600">
+                      #{os.numero}
+                    </span>
+                    <p className="truncate text-sm font-semibold text-grafite-900">{os.cliente.nome}</p>
+                  </div>
+                  <p className="text-xs text-grafite-500 mt-0.5 truncate">
+                    {os.equipamento.tipo} — {os.descricaoProblema}
+                  </p>
+                </div>
               </div>
               <div className="flex flex-shrink-0 items-center gap-3">
                 <div className="text-right">
