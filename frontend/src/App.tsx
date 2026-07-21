@@ -61,7 +61,14 @@ export default function App() {
           }
         />
         <Route path="/ordens-servico" element={<OrdensServicoList />} />
-        <Route path="/ordens-servico/nova" element={<NovaOS />} />
+        <Route
+          path="/ordens-servico/nova"
+          element={
+            <RotaProtegidaPorPapel papeis={["DONO", "GESTOR", "SUPORTE"]}>
+              <NovaOS />
+            </RotaProtegidaPorPapel>
+          }
+        />
         <Route path="/ordens-servico/:id" element={<OrdemServicoDetail />} />
         <Route path="/manutencoes-preventivas" element={<ManutencoesPreventivas />} />
         <Route path="/clientes" element={<ClientesList />} />

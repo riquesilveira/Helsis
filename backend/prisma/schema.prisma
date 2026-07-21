@@ -20,9 +20,10 @@ datasource db {
 // ----------------------------------------------------------------------------
 
 enum PapelUsuario {
-  DONO
-  GESTOR
-  TECNICO
+  DONO      // dono da empresa — acesso total
+  GESTOR    // gerente técnico (nível 3) — todas as funções + medir eficiência
+  SUPORTE   // suporte técnico (nível 2) — abre chamados/clientes, designa e fecha
+  TECNICO   // técnico (nível 1) — preenche e fecha parcialmente os chamados
   CLIENTE
 }
 

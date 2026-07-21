@@ -11,9 +11,9 @@ router.use(autenticar);
 router.get("/manutencoes-preventivas", asyncHandler(equipamentoController.manutencoesPreventivas));
 router.get("/catalogo", asyncHandler(equipamentoController.catalogo));
 
-router.get("/", autorizar("DONO", "GESTOR", "TECNICO"), asyncHandler(equipamentoController.listar));
-router.get("/:id", autorizar("DONO", "GESTOR", "TECNICO"), asyncHandler(equipamentoController.buscarPorId));
-router.post("/", autorizar("DONO", "GESTOR", "TECNICO"), asyncHandler(equipamentoController.criar));
-router.put("/:id", autorizar("DONO", "GESTOR", "TECNICO"), asyncHandler(equipamentoController.atualizar));
+router.get("/", autorizar("DONO", "GESTOR", "SUPORTE", "TECNICO"), asyncHandler(equipamentoController.listar));
+router.get("/:id", autorizar("DONO", "GESTOR", "SUPORTE", "TECNICO"), asyncHandler(equipamentoController.buscarPorId));
+router.post("/", autorizar("DONO", "GESTOR", "SUPORTE", "TECNICO"), asyncHandler(equipamentoController.criar));
+router.put("/:id", autorizar("DONO", "GESTOR", "SUPORTE", "TECNICO"), asyncHandler(equipamentoController.atualizar));
 
 export default router;

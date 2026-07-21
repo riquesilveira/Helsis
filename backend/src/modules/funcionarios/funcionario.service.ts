@@ -3,6 +3,10 @@ import { PapelUsuario } from "@prisma/client";
 import { prisma } from "../../lib/prisma";
 import { AppError } from "../../utils/AppError";
 
+// Papéis que um funcionário interno pode ter. DONO/CLIENTE ficam de fora:
+// o dono é definido no seed e cliente não é funcionário.
+export type PapelFuncionario = "GESTOR" | "SUPORTE" | "TECNICO";
+
 export interface CriarFuncionarioInput {
   nome: string;
   email: string;
@@ -11,12 +15,13 @@ export interface CriarFuncionarioInput {
   salarioAtual: number;
   dataAdmissao: string; // ISO date
   especialidades?: string[];
+  papel?: PapelFuncionario;
 }
 
 export function listarFuncionarios() {
   return prisma.funcionario.findMany({
     where: { ativo: true },
-    include: { usuario: { select: { nome: true, email: true } } },
+    include: { usuario: { select: { nome: true, email: true, papel: true } } },
     orderBy: { criadoEm: "desc" },
   });
 }
@@ -24,7 +29,7 @@ export function listarFuncionarios() {
 export async function buscarFuncionarioPorId(id: string) {
   const funcionario = await prisma.funcionario.findUnique({
     where: { id },
-    include: { usuario: { select: { nome: true, email: true } } },
+    include: { usuario: { select: { nome: true, email: true, papel: true } } },
   });
   if (!funcionario) throw new AppError("Funcionário não encontrado.", 404);
   return funcionario;
@@ -40,7 +45,7 @@ export async function buscarFuncionarioPorId(id: string) {
 export async function buscarFuncionarioPorUsuarioId(usuarioId: string) {
   const funcionario = await prisma.funcionario.findUnique({
     where: { usuarioId },
-    include: { usuario: { select: { nome: true, email: true } } },
+    include: { usuario: { select: { nome: true, email: true, papel: true } } },
   });
   if (!funcionario) {
     throw new AppError("Nenhum perfil de técnico associado a este usuário.", 404);
@@ -56,7 +61,7 @@ export async function criarFuncionario(dados: CriarFuncionarioInput) {
       nome: dados.nome,
       email: dados.email,
       senhaHash,
-      papel: PapelUsuario.TECNICO,
+      papel: (dados.papel as PapelUsuario) ?? PapelUsuario.TECNICO,
       funcionario: {
         create: {
           cargo: dados.cargo,
@@ -76,6 +81,7 @@ export interface AtualizarFuncionarioInput {
   cargo?: string;
   salarioAtual?: number;
   especialidades?: string[];
+  papel?: PapelFuncionario;
 }
 
 export async function atualizarFuncionario(id: string, dados: AtualizarFuncionarioInput) {
@@ -88,6 +94,7 @@ export async function atualizarFuncionario(id: string, dados: AtualizarFuncionar
 
   const updateUsuario: Record<string, unknown> = {};
   if (dados.nome !== undefined) updateUsuario.nome = dados.nome;
+  if (dados.papel !== undefined) updateUsuario.papel = dados.papel as PapelUsuario;
   if (dados.email !== undefined) {
     const existente = await prisma.usuario.findUnique({ where: { email: dados.email } });
     if (existente && existente.id !== funcionario.usuarioId) {
@@ -103,7 +110,7 @@ export async function atualizarFuncionario(id: string, dados: AtualizarFuncionar
   return prisma.funcionario.update({
     where: { id },
     data: updateFuncionario,
-    include: { usuario: { select: { nome: true, email: true } } },
+    include: { usuario: { select: { nome: true, email: true, papel: true } } },
   });
 }
 

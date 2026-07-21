@@ -10,7 +10,8 @@ router.use(autenticar);
 // Precisa vir antes de "/:id" para não ser interpretado como um id.
 router.get("/me/rota", autorizar("TECNICO"), asyncHandler(funcionarioController.minhaRota));
 
-router.get("/", autorizar("DONO", "GESTOR"), asyncHandler(funcionarioController.listar));
+// Suporte (nível 2) precisa da lista de técnicos para designar chamados.
+router.get("/", autorizar("DONO", "GESTOR", "SUPORTE"), asyncHandler(funcionarioController.listar));
 router.get("/:id", autorizar("DONO", "GESTOR"), asyncHandler(funcionarioController.buscarPorId));
 router.get("/:id/rota", autorizar("DONO", "GESTOR"), asyncHandler(funcionarioController.rota));
 router.post("/", autorizar("DONO"), asyncHandler(funcionarioController.criar));

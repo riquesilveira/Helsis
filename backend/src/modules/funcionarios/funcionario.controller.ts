@@ -11,6 +11,7 @@ const criarFuncionarioSchema = z.object({
   salarioAtual: z.number().positive(),
   dataAdmissao: z.string().refine((v) => !isNaN(Date.parse(v)), "Data inválida."),
   especialidades: z.array(z.string()).optional(),
+  papel: z.enum(["GESTOR", "SUPORTE", "TECNICO"]).optional(),
 });
 
 const atualizarFuncionarioSchema = z.object({
@@ -19,6 +20,7 @@ const atualizarFuncionarioSchema = z.object({
   cargo: z.string().min(2).optional(),
   salarioAtual: z.number().positive().optional(),
   especialidades: z.array(z.string()).optional(),
+  papel: z.enum(["GESTOR", "SUPORTE", "TECNICO"]).optional(),
 });
 
 const atualizarSalarioSchema = z.object({

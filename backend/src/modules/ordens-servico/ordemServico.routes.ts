@@ -13,20 +13,22 @@ router.use(autenticar);
 
 router.get("/", asyncHandler(osController.listar));
 router.get("/:id", asyncHandler(osController.buscarPorId));
-router.post("/", autorizar("DONO", "GESTOR", "TECNICO"), asyncHandler(osController.criar));
+// Abertura de chamado é função do Suporte (nível 2) para cima — o técnico
+// (nível 1) apenas preenche e atualiza os chamados que recebe.
+router.post("/", autorizar("DONO", "GESTOR", "SUPORTE"), asyncHandler(osController.criar));
 router.patch(
   "/:id/status",
-  autorizar("DONO", "GESTOR", "TECNICO"),
+  autorizar("DONO", "GESTOR", "SUPORTE", "TECNICO"),
   asyncHandler(osController.atualizarStatus)
 );
 router.post(
   "/:id/pecas",
-  autorizar("DONO", "GESTOR", "TECNICO"),
+  autorizar("DONO", "GESTOR", "SUPORTE", "TECNICO"),
   asyncHandler(osController.registrarPeca)
 );
 router.get(
   "/:id/notificacoes",
-  autorizar("DONO", "GESTOR"),
+  autorizar("DONO", "GESTOR", "SUPORTE"),
   asyncHandler(osController.notificacoes)
 );
 router.patch(

@@ -35,6 +35,7 @@ const LINKS: LinkConfig[] = [
 const ROTULO_PAPEL: Record<string, string> = {
   DONO: "Diretor Técnico",
   GESTOR: "Gestor",
+  SUPORTE: "Suporte Técnico",
   TECNICO: "Técnico",
   CLIENTE: "Cliente",
 };

@@ -71,7 +71,7 @@ export interface Funcionario {
   tipoComissao?: TipoComissao | null;
   valorComissao?: number | null;
   especialidades?: string[];
-  usuario: { nome: string; email: string };
+  usuario: { nome: string; email: string; papel?: PapelUsuario };
 }
 
 export interface StatusHistoricoItem {
@@ -188,9 +188,11 @@ export interface NotificacaoItem {
   enviadaEm: string;
 }
 
+export type PapelUsuario = "DONO" | "GESTOR" | "SUPORTE" | "TECNICO" | "CLIENTE";
+
 export interface UsuarioLogado {
   id: string;
   nome: string;
   email: string;
-  papel: "DONO" | "GESTOR" | "TECNICO" | "CLIENTE";
+  papel: PapelUsuario;
 }

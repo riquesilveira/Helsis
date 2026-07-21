@@ -28,6 +28,21 @@ const FORM_VAZIO = {
   cargo: "",
   salarioAtual: "",
   dataAdmissao: new Date().toISOString().slice(0, 10),
+  papel: "TECNICO",
+};
+
+/** Papéis atribuíveis a um funcionário interno (nível 1 a 3). */
+const PAPEIS_FUNCIONARIO: { valor: string; rotulo: string }[] = [
+  { valor: "TECNICO", rotulo: "Técnico (N1)" },
+  { valor: "SUPORTE", rotulo: "Suporte Técnico (N2)" },
+  { valor: "GESTOR", rotulo: "Gerente Técnico (N3)" },
+];
+
+const ROTULO_PAPEL: Record<string, string> = {
+  DONO: "Diretor Técnico",
+  GESTOR: "Gerente Técnico",
+  SUPORTE: "Suporte Técnico",
+  TECNICO: "Técnico",
 };
 
 export function FuncionariosList() {
@@ -43,7 +58,7 @@ export function FuncionariosList() {
   // modal de edição
   const [modalEditar, setModalEditar] = useState(false);
   const [editId, setEditId] = useState("");
-  const [editForm, setEditForm] = useState({ nome: "", email: "", cargo: "", salarioAtual: "" });
+  const [editForm, setEditForm] = useState({ nome: "", email: "", cargo: "", salarioAtual: "", papel: "TECNICO" });
   const [editEspecialidades, setEditEspecialidades] = useState<string[]>([]);
   const [novaEditEsp, setNovaEditEsp] = useState("");
   const [salvandoEdit, setSalvandoEdit] = useState(false);
@@ -56,6 +71,7 @@ export function FuncionariosList() {
       email: f.usuario.email,
       cargo: f.cargo,
       salarioAtual: Number(f.salarioAtual).toLocaleString("pt-BR", { minimumFractionDigits: 2 }),
+      papel: f.usuario.papel ?? "TECNICO",
     });
     setEditEspecialidades(f.especialidades ?? []);
     setNovaEditEsp("");
@@ -81,6 +97,7 @@ export function FuncionariosList() {
         cargo: editForm.cargo,
         salarioAtual: moedaParaNumero(editForm.salarioAtual),
         especialidades: editEspecialidades,
+        papel: editForm.papel,
       });
       setModalEditar(false);
       carregar();
@@ -123,6 +140,7 @@ export function FuncionariosList() {
         salarioAtual: moedaParaNumero(form.salarioAtual),
         dataAdmissao: form.dataAdmissao,
         especialidades,
+        papel: form.papel,
       });
       setModalAberto(false);
       setForm(FORM_VAZIO);
@@ -171,7 +189,14 @@ export function FuncionariosList() {
                     Editar
                   </button>
                 </div>
-                <p className="text-xs text-grafite-500 mt-0.5 truncate">{f.cargo}</p>
+                <div className="mt-0.5 flex items-center gap-1.5">
+                  <p className="text-xs text-grafite-500 truncate">{f.cargo}</p>
+                  {f.usuario.papel && f.usuario.papel !== "TECNICO" && (
+                    <span className="inline-flex flex-shrink-0 items-center rounded-full bg-teal-50 px-2 py-0.5 text-[10px] font-medium text-teal-700">
+                      {ROTULO_PAPEL[f.usuario.papel] ?? f.usuario.papel}
+                    </span>
+                  )}
+                </div>
               </div>
             </Link>
             <span className="codigo text-sm text-grafite-700 flex-shrink-0">
@@ -243,15 +268,28 @@ export function FuncionariosList() {
               </div>
             </Campo>
           </div>
-          <Campo rotulo="Data de admissão">
-            <input
-              required
-              type="date"
-              className={classeInput}
-              value={form.dataAdmissao}
-              onChange={(e) => setForm({ ...form, dataAdmissao: e.target.value })}
-            />
-          </Campo>
+          <div className="grid grid-cols-2 gap-3">
+            <Campo rotulo="Data de admissão">
+              <input
+                required
+                type="date"
+                className={classeInput}
+                value={form.dataAdmissao}
+                onChange={(e) => setForm({ ...form, dataAdmissao: e.target.value })}
+              />
+            </Campo>
+            <Campo rotulo="Nível de acesso">
+              <select
+                className={classeInput}
+                value={form.papel}
+                onChange={(e) => setForm({ ...form, papel: e.target.value })}
+              >
+                {PAPEIS_FUNCIONARIO.map((p) => (
+                  <option key={p.valor} value={p.valor}>{p.rotulo}</option>
+                ))}
+              </select>
+            </Campo>
+          </div>
           <Campo rotulo="Especialidades">
             {especialidades.length > 0 && (
               <div className="flex flex-wrap gap-1.5 mb-2">
@@ -345,6 +383,17 @@ export function FuncionariosList() {
               </div>
             </Campo>
           </div>
+          <Campo rotulo="Nível de acesso">
+            <select
+              className={classeInput}
+              value={editForm.papel}
+              onChange={(e) => setEditForm({ ...editForm, papel: e.target.value })}
+            >
+              {PAPEIS_FUNCIONARIO.map((p) => (
+                <option key={p.valor} value={p.valor}>{p.rotulo}</option>
+              ))}
+            </select>
+          </Campo>
           <Campo rotulo="Especialidades">
             {editEspecialidades.length > 0 && (
               <div className="flex flex-wrap gap-1.5 mb-2">

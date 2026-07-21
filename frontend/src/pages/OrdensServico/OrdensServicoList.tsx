@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { ChevronRight, Plus, UserRound } from "lucide-react";
 import { api } from "../../services/api";
+import { usuarioLogado } from "../../services/auth";
 import { OPCOES_STATUS, OrdemServico, StatusOS } from "../../types";
 import { tempoRelativo } from "../../utils/formatters";
 import { PageHeader } from "../../components/ui/PageHeader";
@@ -67,6 +68,10 @@ export function OrdensServicoList() {
     api.get("/ordens-servico").then((r) => setOrdens(r.data)).catch(() => {}).finally(() => setCarregando(false));
   }, []);
 
+  // Abertura de chamado é função do Suporte (N2) para cima — o técnico (N1)
+  // apenas preenche os chamados que recebe, então não vê o botão "Nova OS".
+  const podeAbrirChamado = usuarioLogado()?.papel !== "TECNICO";
+
   const contagemPorStatus = useMemo(() => {
     const contagem = {} as Record<StatusOS | "todos", number>;
     ABAS_STATUS.forEach((aba) => {
@@ -112,10 +117,12 @@ export function OrdensServicoList() {
         titulo="Ordens de serviço"
         subtitulo="Acompanhe e gerencie os chamados técnicos."
         acoes={
-          <Link to="/ordens-servico/nova" className={classeBotao("primary")}>
-            <Plus size={16} />
-            Nova OS
-          </Link>
+          podeAbrirChamado ? (
+            <Link to="/ordens-servico/nova" className={classeBotao("primary")}>
+              <Plus size={16} />
+              Nova OS
+            </Link>
+          ) : undefined
         }
       />
 

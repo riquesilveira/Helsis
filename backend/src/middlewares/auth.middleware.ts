@@ -4,7 +4,7 @@ import { AppError } from "../utils/AppError";
 
 export interface UsuarioLogado {
   id: string;
-  papel: "DONO" | "GESTOR" | "TECNICO" | "CLIENTE";
+  papel: "DONO" | "GESTOR" | "SUPORTE" | "TECNICO" | "CLIENTE";
 }
 
 // Estende o Request do Express para carregar o usuário autenticado
