@@ -16,7 +16,7 @@ import {
 import { StatusTimeline } from "../../components/StatusTimeline";
 import { Campo, classeInput, Modal } from "../../components/Modal";
 import { usuarioLogado } from "../../services/auth";
-import { formatarReais, tempoRelativo } from "../../utils/formatters";
+import { formatarReais, tempoRelativo, formatarNumeroOS } from "../../utils/formatters";
 
 const ROTULO_MODALIDADE: Record<OrdemServico["modalidade"], string> = {
   VISITA_TECNICA: "Visita técnica",
@@ -341,7 +341,7 @@ export function OrdemServicoDetail() {
 
       <div>
         <div className="flex items-center gap-2">
-          <p className="codigo text-sm text-grafite-500">OS #{os.numero}</p>
+          <p className="codigo text-sm text-grafite-500">OS #{formatarNumeroOS(os.numero)}</p>
           <span
             className={`codigo text-xs font-medium px-1.5 py-0.5 rounded ${
               os.tipo === "PREVENTIVA"

@@ -2,6 +2,7 @@ import { CanalNotificacao, StatusNotificacao, StatusOS } from "@prisma/client";
 import { prisma } from "../../lib/prisma";
 import { ProvedorNotificacao } from "./notificacao.types";
 import { ConsoleProvider } from "./providers/console.provider";
+import { formatarNumeroOS } from "../../utils/formatarNumeroOS";
 
 const ROTULOS_STATUS: Record<StatusOS, string> = {
   RECEBIDO: "Recebemos seu chamado",
@@ -52,7 +53,7 @@ function montarMensagem(os: {
   }`;
 
   return [
-    `Atendimento nº ${os.numero} — ${os.equipamento.tipo}`,
+    `Atendimento nº ${formatarNumeroOS(os.numero)} — ${os.equipamento.tipo}`,
     ROTULOS_STATUS[os.statusAtual] + ".",
     `Acompanhe em tempo real: ${linkAcompanhamento}`,
   ].join("\n");

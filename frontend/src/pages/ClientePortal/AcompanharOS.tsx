@@ -3,6 +3,7 @@ import { useParams } from "react-router-dom";
 import { api } from "../../services/api";
 import { StatusHistoricoItem, StatusOS } from "../../types";
 import { StatusTimeline } from "../../components/StatusTimeline";
+import { formatarNumeroOS } from "../../utils/formatters";
 
 interface AcompanhamentoPublico {
   numero: number;
@@ -48,7 +49,7 @@ export function AcompanharOS() {
     <div className="min-h-screen bg-grafite-50 px-4 py-10">
       <div className="max-w-lg mx-auto space-y-6">
         <div className="text-center">
-          <p className="codigo text-xs text-grafite-500">ATENDIMENTO Nº {dados.numero}</p>
+          <p className="codigo text-xs text-grafite-500">ATENDIMENTO Nº {formatarNumeroOS(dados.numero)}</p>
           <h1 className="text-lg font-semibold text-grafite-900 mt-1">{dados.equipamento.tipo}</h1>
           {dados.equipamento.marca && (
             <p className="text-sm text-grafite-600">

@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { api } from "../../services/api";
 import { ResumoMensal } from "../../types";
-import { formatarReais } from "../../utils/formatters";
+import { formatarReais, formatarNumeroOS } from "../../utils/formatters";
 
 const NOMES_MESES = [
   "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
@@ -128,7 +128,7 @@ export function ResumoMensalFuncionario() {
             {resumo.atendimentos.map((a) => (
               <tr key={a.ordemServicoId}>
                 <td className="py-2.5 text-grafite-700">
-                  Comissão — OS #{a.numero} ({a.clienteNome})
+                  Comissão — OS #{formatarNumeroOS(a.numero)} ({a.clienteNome})
                   <span className="block text-xs text-grafite-400 mt-0.5">
                     Mão de obra {formatarReais(a.valorMaoDeObra)} · concluída em{" "}
                     {new Date(a.dataConclusao).toLocaleDateString("pt-BR")}

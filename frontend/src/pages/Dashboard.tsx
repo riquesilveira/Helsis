@@ -4,7 +4,7 @@ import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianG
 import { ClipboardList, DollarSign, Receipt, Wallet, ArrowUpRight, ArrowDownRight, ChevronRight, LucideIcon } from "lucide-react";
 import { api } from "../services/api";
 import { Funcionario, OrdemServico } from "../types";
-import { formatarReais, tempoRelativo } from "../utils/formatters";
+import { formatarReais, tempoRelativo, formatarNumeroOS } from "../utils/formatters";
 import { Card } from "../components/ui/Card";
 import { StatusBadge } from "../components/ui/Badge";
 import { HospitalLogo } from "../components/ui/HospitalLogo";
@@ -311,7 +311,7 @@ export function Dashboard() {
                       <div className="min-w-0">
                         <div className="flex items-center gap-2">
                           <span className="codigo flex-shrink-0 rounded-full bg-grafite-100 px-2 py-0.5 text-[11px] font-medium text-grafite-600">
-                            #{os.numero}
+                            #{formatarNumeroOS(os.numero)}
                           </span>
                           <p className="truncate text-sm font-semibold text-grafite-900">{os.cliente.nome}</p>
                         </div>
@@ -356,7 +356,7 @@ export function Dashboard() {
                 <div className="min-w-0">
                   <div className="flex items-center gap-2">
                     <span className="codigo flex-shrink-0 rounded-full bg-grafite-100 px-2 py-0.5 text-[11px] font-medium text-grafite-600">
-                      #{os.numero}
+                      #{formatarNumeroOS(os.numero)}
                     </span>
                     <p className="truncate text-sm font-semibold text-grafite-900">{os.cliente.nome}</p>
                   </div>

@@ -4,7 +4,7 @@ import { ChevronRight, Plus, UserRound } from "lucide-react";
 import { api } from "../../services/api";
 import { usuarioLogado } from "../../services/auth";
 import { OPCOES_STATUS, OrdemServico, StatusOS } from "../../types";
-import { tempoRelativo } from "../../utils/formatters";
+import { tempoRelativo, formatarNumeroOS } from "../../utils/formatters";
 import { PageHeader } from "../../components/ui/PageHeader";
 import { Card } from "../../components/ui/Card";
 import { StatusBadge } from "../../components/ui/Badge";
@@ -104,6 +104,7 @@ export function OrdensServicoList() {
         o.cliente.nome,
         `#${o.numero}`,
         String(o.numero),
+        formatarNumeroOS(o.numero),
         o.equipamento.tipo,
         o.funcionario?.usuario?.nome,
       ]
@@ -236,7 +237,7 @@ export function OrdensServicoList() {
                 <div className="min-w-0">
                   <div className="flex items-center gap-2">
                     <span className="codigo flex-shrink-0 rounded-full bg-grafite-100 px-2 py-0.5 text-[11px] font-medium text-grafite-600">
-                      #{os.numero}
+                      #{formatarNumeroOS(os.numero)}
                     </span>
                     <p className="truncate text-sm font-semibold text-grafite-900">{os.cliente.nome}</p>
                   </div>
