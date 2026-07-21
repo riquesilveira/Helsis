@@ -32,6 +32,17 @@ export function criarCausa(dados: CausaInput) {
   return prisma.causa.create({ data: dados });
 }
 
+export function atualizarCausa(id: string, dados: Partial<CausaInput>) {
+  return prisma.causa.update({ where: { id }, data: dados });
+}
+
+// Desativação lógica: itens são referenciados por ordens de serviço, então não
+// podem ser apagados de fato (quebraria o histórico). `ativo: false` remove do
+// catálogo/dropdowns sem afetar OS antigas.
+export function desativarCausa(id: string) {
+  return prisma.causa.update({ where: { id }, data: { ativo: false } });
+}
+
 // ---- Defeito --------------------------------------------------------------
 
 export function listarDefeitos() {
@@ -42,6 +53,14 @@ export function criarDefeito(dados: DefeitoInput) {
   return prisma.defeito.create({ data: dados });
 }
 
+export function atualizarDefeito(id: string, dados: Partial<DefeitoInput>) {
+  return prisma.defeito.update({ where: { id }, data: dados });
+}
+
+export function desativarDefeito(id: string) {
+  return prisma.defeito.update({ where: { id }, data: { ativo: false } });
+}
+
 // ---- Solução --------------------------------------------------------------
 
 export function listarSolucoes() {
@@ -50,4 +69,12 @@ export function listarSolucoes() {
 
 export function criarSolucao(dados: SolucaoInput) {
   return prisma.solucao.create({ data: dados });
+}
+
+export function atualizarSolucao(id: string, dados: Partial<SolucaoInput>) {
+  return prisma.solucao.update({ where: { id }, data: dados });
+}
+
+export function desativarSolucao(id: string) {
+  return prisma.solucao.update({ where: { id }, data: { ativo: false } });
 }

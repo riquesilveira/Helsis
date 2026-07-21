@@ -9,6 +9,7 @@ import {
   Clock,
   Users,
   UsersRound,
+  Stethoscope,
   Settings,
   LogOut,
   ChevronUp,
@@ -31,6 +32,7 @@ const LINKS: LinkConfig[] = [
   { to: "/manutencoes-preventivas", rotulo: "Manutenções preventivas", fim: false, restritoA: null, icone: CalendarClock },
   { to: "/clientes", rotulo: "Clientes", fim: false, restritoA: null, icone: Users },
   { to: "/funcionarios", rotulo: "Equipe & desempenho", fim: false, restritoA: ["DONO", "GESTOR"], icone: UsersRound },
+  { to: "/catalogo-diagnostico", rotulo: "Catálogo de diagnóstico", fim: false, restritoA: ["DONO", "GESTOR"], icone: Stethoscope },
   { to: "/folha-de-ponto", rotulo: "Folha de ponto", fim: false, restritoA: ["DONO", "GESTOR", "SUPORTE", "TECNICO"], icone: Clock },
 ];
 

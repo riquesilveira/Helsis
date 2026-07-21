@@ -19,6 +19,10 @@ export function errorMiddleware(
     return res.status(400).json({ erro: mensagem });
   }
 
+  if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === "P2002") {
+    return res.status(409).json({ erro: "Já existe um item com esse código. Use um código diferente." });
+  }
+
   if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === "P2003") {
     return res.status(400).json({ erro: "Não é possível excluir: existem registros vinculados a este item." });
   }

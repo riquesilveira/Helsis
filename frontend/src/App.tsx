@@ -16,6 +16,7 @@ import { MinhaRota } from "./pages/Funcionarios/MinhaRota";
 import { AcompanharOS } from "./pages/ClientePortal/AcompanharOS";
 import { Configuracoes } from "./pages/Configuracoes";
 import { FolhaDePonto } from "./pages/FolhaDePonto/FolhaDePonto";
+import { CatalogoDiagnostico } from "./pages/Diagnostico/CatalogoDiagnostico";
 import { usuarioLogado } from "./services/auth";
 
 function RotaProtegida({ children }: { children: React.ReactNode }) {
@@ -111,6 +112,14 @@ export default function App() {
           element={
             <RotaProtegidaPorPapel papeis={["DONO", "GESTOR", "SUPORTE", "TECNICO"]}>
               <FolhaDePonto />
+            </RotaProtegidaPorPapel>
+          }
+        />
+        <Route
+          path="/catalogo-diagnostico"
+          element={
+            <RotaProtegidaPorPapel papeis={["DONO", "GESTOR"]}>
+              <CatalogoDiagnostico />
             </RotaProtegidaPorPapel>
           }
         />
