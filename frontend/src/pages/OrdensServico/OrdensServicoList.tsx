@@ -222,7 +222,7 @@ export function OrdensServicoList() {
             <Link
               key={os.id}
               to={`/ordens-servico/${os.id}`}
-              className="card group flex items-center justify-between gap-4 px-5 py-4 transition hover:shadow-card-hover hover:-translate-y-0.5"
+              className="card group flex items-center justify-between gap-4 px-5 py-4 transition-colors hover:border-grafite-300"
             >
               <div className="flex min-w-0 items-center gap-3">
                 <HospitalLogo nome={os.cliente.nome} size={40} />

@@ -21,10 +21,10 @@ body {
 }
 
 @layer components {
-  /* Superfície padrão de conteúdo — branca, cantos generosos, borda quase
-     imperceptível e sombra suave. Base de quase toda a UI. */
+  /* Superfície padrão de conteúdo — branca, cantos generosos e borda suave.
+     Sem sombra: o sistema usa design plano. Base de quase toda a UI. */
   .card {
-    @apply bg-white rounded-2xl border border-grafite-100 shadow-card;
+    @apply bg-white rounded-2xl border border-grafite-200;
   }
 
   .input-base {
