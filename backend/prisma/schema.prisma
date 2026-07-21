@@ -73,6 +73,7 @@ model Funcionario {
   statusHistoricos StatusHistorico[]
   pecasTrocadas    PecaTrocada[]
   deslocamentos    Deslocamento[]
+  registrosPonto   RegistroPonto[]
 
   @@map("funcionarios")
 }
@@ -228,6 +229,25 @@ model StatusHistorico {
   criadoEm       DateTime     @default(now())
 
   @@map("status_historico")
+}
+
+// ----------------------------------------------------------------------------
+// FOLHA DE PONTO
+// ----------------------------------------------------------------------------
+// Registro de entrada/saída de cada funcionário (técnico N1, suporte N2 e
+// gerente N3). Um registro com saida=null é o "turno aberto" — só pode haver
+// um por funcionário de cada vez. O gerente/dono consolida a folha de todos.
+
+model RegistroPonto {
+  id            String      @id @default(uuid())
+  funcionarioId String
+  funcionario   Funcionario @relation(fields: [funcionarioId], references: [id])
+  entrada       DateTime    @default(now())
+  saida         DateTime?
+  criadoEm      DateTime    @default(now())
+
+  @@index([funcionarioId])
+  @@map("registros_ponto")
 }
 
 // ----------------------------------------------------------------------------

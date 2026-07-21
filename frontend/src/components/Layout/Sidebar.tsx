@@ -6,6 +6,7 @@ import {
   MapPin,
   ClipboardList,
   CalendarClock,
+  Clock,
   Users,
   UsersRound,
   Settings,
@@ -30,6 +31,7 @@ const LINKS: LinkConfig[] = [
   { to: "/manutencoes-preventivas", rotulo: "Manutenções preventivas", fim: false, restritoA: null, icone: CalendarClock },
   { to: "/clientes", rotulo: "Clientes", fim: false, restritoA: null, icone: Users },
   { to: "/funcionarios", rotulo: "Equipe & desempenho", fim: false, restritoA: ["DONO", "GESTOR"], icone: UsersRound },
+  { to: "/folha-de-ponto", rotulo: "Folha de ponto", fim: false, restritoA: ["DONO", "GESTOR", "SUPORTE", "TECNICO"], icone: Clock },
 ];
 
 const ROTULO_PAPEL: Record<string, string> = {

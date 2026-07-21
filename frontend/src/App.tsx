@@ -15,6 +15,7 @@ import { ResumoMensalFuncionario } from "./pages/Funcionarios/ResumoMensalFuncio
 import { MinhaRota } from "./pages/Funcionarios/MinhaRota";
 import { AcompanharOS } from "./pages/ClientePortal/AcompanharOS";
 import { Configuracoes } from "./pages/Configuracoes";
+import { FolhaDePonto } from "./pages/FolhaDePonto/FolhaDePonto";
 import { usuarioLogado } from "./services/auth";
 
 function RotaProtegida({ children }: { children: React.ReactNode }) {
@@ -102,6 +103,14 @@ export default function App() {
           element={
             <RotaProtegidaPorPapel papeis={["DONO", "GESTOR"]}>
               <ResumoMensalFuncionario />
+            </RotaProtegidaPorPapel>
+          }
+        />
+        <Route
+          path="/folha-de-ponto"
+          element={
+            <RotaProtegidaPorPapel papeis={["DONO", "GESTOR", "SUPORTE", "TECNICO"]}>
+              <FolhaDePonto />
             </RotaProtegidaPorPapel>
           }
         />

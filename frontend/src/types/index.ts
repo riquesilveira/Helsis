@@ -218,6 +218,16 @@ export interface NotificacaoItem {
   enviadaEm: string;
 }
 
+export interface RegistroPonto {
+  id: string;
+  funcionarioId: string;
+  entrada: string;
+  saida: string | null;
+  criadoEm: string;
+  // presente apenas na visão consolidada (gerente/dono)
+  funcionario?: { usuario: { nome: string } };
+}
+
 export type PapelUsuario = "DONO" | "GESTOR" | "SUPORTE" | "TECNICO" | "CLIENTE";
 
 export interface UsuarioLogado {
