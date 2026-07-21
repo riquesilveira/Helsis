@@ -1,6 +1,6 @@
 import { FormEvent, useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
-import { ChevronRight, Plus } from "lucide-react";
+import { ChevronRight, Plus, Search } from "lucide-react";
 import { api } from "../../services/api";
 import { Cliente } from "../../types";
 import { Campo, classeInput, Modal } from "../../components/Modal";
@@ -34,6 +34,7 @@ function formatarTelefone(valor: string) {
 export function ClientesList() {
   const [clientes, setClientes] = useState<Cliente[]>([]);
   const [carregando, setCarregando] = useState(true);
+  const [busca, setBusca] = useState("");
   const [modalAberto, setModalAberto] = useState(false);
   const [form, setForm] = useState(CLIENTE_VAZIO);
   const [salvando, setSalvando] = useState(false);
@@ -89,6 +90,15 @@ export function ClientesList() {
 
   useEffect(carregar, []);
 
+  const termo = busca.trim().toLowerCase();
+  const clientesFiltrados = termo
+    ? clientes.filter((c) =>
+        [c.nome, c.endereco, c.cidade, c.estado]
+          .filter(Boolean)
+          .some((campo) => campo!.toLowerCase().includes(termo))
+      )
+    : clientes;
+
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     setSalvando(true);
@@ -119,11 +129,22 @@ export function ClientesList() {
         }
       />
 
+      <div className="relative">
+        <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-grafite-400" />
+        <input
+          type="text"
+          placeholder="Buscar por nome ou endereço..."
+          value={busca}
+          onChange={(e) => setBusca(e.target.value)}
+          className="input-base pl-9"
+        />
+      </div>
+
       <Card className="divide-y divide-grafite-100 overflow-hidden p-0">
         {carregando && (
           <p className="text-sm text-grafite-500 px-5 py-4">Carregando...</p>
         )}
-        {!carregando && clientes.map((c) => (
+        {!carregando && clientesFiltrados.map((c) => (
           <Link
             key={c.id}
             to={`/clientes/${c.id}`}
@@ -145,8 +166,12 @@ export function ClientesList() {
             </div>
           </Link>
         ))}
-        {!carregando && clientes.length === 0 && (
-          <p className="text-sm text-grafite-500 px-5 py-4">Nenhum cliente cadastrado ainda.</p>
+        {!carregando && clientesFiltrados.length === 0 && (
+          <p className="text-sm text-grafite-500 px-5 py-4">
+            {clientes.length === 0
+              ? "Nenhum cliente cadastrado ainda."
+              : "Nenhum cliente encontrado com essa busca."}
+          </p>
         )}
       </Card>
 

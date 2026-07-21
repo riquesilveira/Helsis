@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { ChevronRight, Plus } from "lucide-react";
+import { ChevronRight, Plus, UserRound } from "lucide-react";
 import { api } from "../../services/api";
 import { OPCOES_STATUS, OrdemServico, StatusOS } from "../../types";
 import { tempoRelativo } from "../../utils/formatters";
@@ -178,49 +178,61 @@ export function OrdensServicoList() {
         </select>
       </div>
 
-      <Card className="divide-y divide-grafite-100 overflow-hidden p-0">
-        {carregando && (
-          <p className="text-sm text-grafite-500 px-5 py-4">Carregando...</p>
-        )}
-        {!carregando && ordensFiltradas.map((os) => (
-          <Link
-            key={os.id}
-            to={`/ordens-servico/${os.id}`}
-            className="group flex items-center justify-between gap-4 px-5 py-4 transition-colors hover:bg-grafite-50"
-          >
-            <div className="flex min-w-0 items-center gap-3">
-              <HospitalLogo nome={os.cliente.nome} size={40} />
-              <div className="min-w-0">
-                <div className="flex items-center gap-2">
-                  <span className="codigo flex-shrink-0 rounded-full bg-grafite-100 px-2 py-0.5 text-[11px] font-medium text-grafite-600">
-                    #{os.numero}
-                  </span>
-                  <p className="truncate text-sm font-semibold text-grafite-900">{os.cliente.nome}</p>
+      {carregando && (
+        <Card className="px-5 py-4 text-sm text-grafite-500">Carregando...</Card>
+      )}
+
+      {!carregando && ordensFiltradas.length > 0 && (
+        <div className="space-y-0.5">
+          {ordensFiltradas.map((os) => (
+            <Link
+              key={os.id}
+              to={`/ordens-servico/${os.id}`}
+              className="card group flex items-center justify-between gap-4 px-5 py-4 transition hover:shadow-card-hover hover:-translate-y-0.5"
+            >
+              <div className="flex min-w-0 items-center gap-3">
+                <HospitalLogo nome={os.cliente.nome} size={40} />
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2">
+                    <span className="codigo flex-shrink-0 rounded-full bg-grafite-100 px-2 py-0.5 text-[11px] font-medium text-grafite-600">
+                      #{os.numero}
+                    </span>
+                    <p className="truncate text-sm font-semibold text-grafite-900">{os.cliente.nome}</p>
+                  </div>
+                  <p className="text-xs text-grafite-500 mt-0.5 truncate">
+                    {os.equipamento.tipo} — {os.descricaoProblema}
+                  </p>
+                  <p className="mt-1 flex items-center gap-1 text-[11px] truncate">
+                    <UserRound size={12} className="flex-shrink-0 text-grafite-400" />
+                    {os.funcionario?.usuario?.nome ? (
+                      <span className="font-medium text-grafite-700">{os.funcionario.usuario.nome}</span>
+                    ) : (
+                      <span className="text-grafite-400">Sem técnico atribuído</span>
+                    )}
+                  </p>
                 </div>
-                <p className="text-xs text-grafite-500 mt-0.5 truncate">
-                  {os.equipamento.tipo} — {os.descricaoProblema}
-                </p>
               </div>
-            </div>
-            <div className="flex flex-shrink-0 items-center gap-3">
-              <div className="text-right">
-                <StatusBadge status={os.statusAtual} />
-                <p className="text-[11px] text-grafite-400 mt-1" title={new Date(os.dataAbertura).toLocaleString("pt-BR")}>
-                  {tempoRelativo(os.dataAbertura)}
-                </p>
+              <div className="flex flex-shrink-0 items-center gap-3">
+                <div className="text-right">
+                  <StatusBadge status={os.statusAtual} />
+                  <p className="text-[11px] text-grafite-400 mt-1" title={new Date(os.dataAbertura).toLocaleString("pt-BR")}>
+                    {tempoRelativo(os.dataAbertura)}
+                  </p>
+                </div>
+                <ChevronRight size={16} className="text-grafite-300 transition-colors group-hover:text-grafite-500" />
               </div>
-              <ChevronRight size={16} className="text-grafite-300 transition-colors group-hover:text-grafite-500" />
-            </div>
-          </Link>
-        ))}
-        {!carregando && ordensFiltradas.length === 0 && (
-          <p className="text-sm text-grafite-500 px-5 py-4">
-            {ordens.length === 0
-              ? "Nenhuma ordem de serviço cadastrada."
-              : "Nenhuma OS encontrada com esses filtros."}
-          </p>
-        )}
-      </Card>
+            </Link>
+          ))}
+        </div>
+      )}
+
+      {!carregando && ordensFiltradas.length === 0 && (
+        <Card className="px-5 py-4 text-sm text-grafite-500">
+          {ordens.length === 0
+            ? "Nenhuma ordem de serviço cadastrada."
+            : "Nenhuma OS encontrada com esses filtros."}
+        </Card>
+      )}
     </div>
   );
 }
