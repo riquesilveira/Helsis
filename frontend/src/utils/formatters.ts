@@ -2,6 +2,13 @@ export function formatarReais(valor: number): string {
   return `R$ ${valor.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`;
 }
 
+// Número da OS exibido como protocolo agrupado em pares (ex.: 132750 → 13-27-50).
+// É só máscara de exibição: no banco continua um inteiro sequencial. Preenche
+// com zeros à esquerda até 6 dígitos, então insere "-" a cada 2 dígitos.
+export function formatarNumeroOS(numero: number): string {
+  return String(numero).padStart(6, "0").replace(/(\d{2})(?=\d)/g, "$1-");
+}
+
 export function tempoRelativo(iso: string): string {
   const diffMs = Date.now() - new Date(iso).getTime();
   const minutos = Math.floor(diffMs / 60_000);

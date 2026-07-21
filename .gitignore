@@ -7,3 +7,6 @@ backend.env
 .DS_Store
 
 .vercel
+
+# Notas locais do assistente (memória de sessão) — não versionar
+.claude/
