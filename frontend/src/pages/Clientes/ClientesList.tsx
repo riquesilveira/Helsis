@@ -9,6 +9,14 @@ import { Card } from "../../components/ui/Card";
 import { Button, classeBotao } from "../../components/ui/Button";
 import { Chip } from "../../components/ui/Badge";
 import { HospitalLogo } from "../../components/ui/HospitalLogo";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "../../components/shadcn/table";
 
 interface MunicipioIBGE {
   nome: string;
@@ -191,45 +199,83 @@ export function ClientesList() {
         />
       </div>
 
-      <Card className="divide-y divide-grafite-100 overflow-hidden p-0">
-        {carregando && (
-          <p className="text-sm text-grafite-500 px-5 py-4">Carregando...</p>
-        )}
-        {!carregando && clientesFiltrados.map((c) => (
-          <div
-            key={c.id}
-            className="group flex items-center justify-between gap-4 px-5 py-4 transition-colors hover:bg-grafite-50"
-          >
-            <Link to={`/clientes/${c.id}`} className="flex min-w-0 flex-1 items-center gap-3">
-              <HospitalLogo nome={c.nome} size={40} />
-              <div className="min-w-0">
-                <p className="text-sm font-semibold text-grafite-900 truncate">{c.nome}</p>
-                <p className="text-xs text-grafite-500 mt-0.5 truncate">
-                  {c.telefone}
-                  {c.cidade ? ` — ${c.cidade}/${c.estado ?? ""}` : ""}
-                </p>
-              </div>
-            </Link>
-            <div className="flex shrink-0 items-center gap-2">
-              <Chip>{c.equipamentos?.length ?? 0} equip.</Chip>
-              <MenuAcoes
-                cliente={c}
-                onEditar={() => abrirEdicao(c)}
-                onExcluir={() => {
-                  setErroExcluir("");
-                  setClienteExcluir(c);
-                }}
-              />
-            </div>
-          </div>
-        ))}
-        {!carregando && clientesFiltrados.length === 0 && (
-          <p className="text-sm text-grafite-500 px-5 py-4">
-            {clientes.length === 0
-              ? "Nenhum cliente cadastrado ainda."
-              : "Nenhum cliente encontrado com essa busca."}
-          </p>
-        )}
+      <Card className="overflow-hidden p-0">
+        <Table>
+          <TableHeader>
+            <TableRow className="border-grafite-100 hover:bg-transparent">
+              <TableHead className="px-5 text-xs font-medium text-grafite-500">
+                Cliente
+              </TableHead>
+              <TableHead className="px-5 text-xs font-medium text-grafite-500">
+                Telefone
+              </TableHead>
+              <TableHead className="px-5 text-xs font-medium text-grafite-500">
+                Cidade
+              </TableHead>
+              <TableHead className="px-5 text-xs font-medium text-grafite-500">
+                Equipamentos
+              </TableHead>
+              <TableHead className="px-5 text-right text-xs font-medium text-grafite-500">
+                <span className="sr-only">Ações</span>
+              </TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {carregando && (
+              <TableRow className="border-grafite-100 hover:bg-transparent">
+                <TableCell colSpan={5} className="px-5 py-4 text-sm text-grafite-500">
+                  Carregando...
+                </TableCell>
+              </TableRow>
+            )}
+            {!carregando &&
+              clientesFiltrados.map((c) => (
+                <TableRow key={c.id} className="group border-grafite-100 hover:bg-grafite-50">
+                  <TableCell className="px-5 py-4">
+                    <Link
+                      to={`/clientes/${c.id}`}
+                      className="flex min-w-0 items-center gap-3"
+                    >
+                      <HospitalLogo nome={c.nome} size={40} />
+                      <span className="min-w-0 truncate text-sm font-semibold text-grafite-900">
+                        {c.nome}
+                      </span>
+                    </Link>
+                  </TableCell>
+                  <TableCell className="px-5 py-4 text-sm text-grafite-600">
+                    {c.telefone}
+                  </TableCell>
+                  <TableCell className="px-5 py-4 text-sm text-grafite-600">
+                    {c.cidade ? `${c.cidade}/${c.estado ?? ""}` : "—"}
+                  </TableCell>
+                  <TableCell className="px-5 py-4">
+                    <Chip>{c.equipamentos?.length ?? 0} equip.</Chip>
+                  </TableCell>
+                  <TableCell className="px-5 py-4 text-right">
+                    <div className="flex justify-end">
+                      <MenuAcoes
+                        cliente={c}
+                        onEditar={() => abrirEdicao(c)}
+                        onExcluir={() => {
+                          setErroExcluir("");
+                          setClienteExcluir(c);
+                        }}
+                      />
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))}
+            {!carregando && clientesFiltrados.length === 0 && (
+              <TableRow className="border-grafite-100 hover:bg-transparent">
+                <TableCell colSpan={5} className="px-5 py-4 text-sm text-grafite-500">
+                  {clientes.length === 0
+                    ? "Nenhum cliente cadastrado ainda."
+                    : "Nenhum cliente encontrado com essa busca."}
+                </TableCell>
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
       </Card>
 
       <Modal
