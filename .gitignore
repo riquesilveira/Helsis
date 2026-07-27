@@ -10,3 +10,4 @@ backend.env
 
 # Notas locais do assistente (memória de sessão) — não versionar
 .claude/
+frontend/yarn.lock
