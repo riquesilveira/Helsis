@@ -17,19 +17,36 @@
   --color-grafite-900: #1b232c;
   --color-grafite-950: #12181f;
 
-  --color-teal-50: #effafa;
-  --color-teal-100: #dcf3f3;
-  --color-teal-500: #14a6a8;
-  --color-teal-600: #0f8b8d;
-  --color-teal-700: #0b6b6d;
+  /* Teal desativado no design system monocromático. Os tokens `teal-*`
+     permanecem resolvíveis (ainda referenciados por componentes não
+     migrados), mas apontam para a escala grafite — nenhum verde-azulado
+     aparece. Remover de vez só depois que os componentes pararem de usar. */
+  --color-teal-50: #f7f9fa;
+  --color-teal-100: #edf1f4;
+  --color-teal-500: #26313c;
+  --color-teal-600: #1b232c;
+  --color-teal-700: #12181f;
 
-  --color-status-recebido: #5a6b78;
-  --color-status-diagnostico: #b98a2e;
-  --color-status-aguardando: #c1502e;
-  --color-status-reparo: #0f8b8d;
-  --color-status-validacao: #7a5aa6;
-  --color-status-concluido: #3f8f5f;
-  --color-status-cancelado: #9b3b3b;
+  /* Cores semânticas de status — as ÚNICAS cores não-monocromáticas do
+     sistema. Fonte da verdade; use `bg-success`, `text-danger/10`, etc. */
+  --color-success: #3f8f5f;
+  --color-warning: #b98a2e;
+  --color-danger: #c0453e;
+  --color-info: #4a6b8f;
+
+  /* Tokens de status por domínio — mantidos resolvíveis para os componentes
+     ainda não migrados (StatusBadge etc.). A cor sinaliza EXCEÇÃO, não
+     progresso: os estados do fluxo normal (recebido, diagnóstico, reparo,
+     validação) ficam em cinza neutro e são diferenciados pelo rótulo — o
+     avanço do fluxo é comunicado pelo StatusTimeline. Só três estados
+     carregam cor semântica. */
+  --color-status-recebido: var(--color-grafite-600);
+  --color-status-diagnostico: var(--color-grafite-600);
+  --color-status-reparo: var(--color-grafite-600);
+  --color-status-validacao: var(--color-grafite-600);
+  --color-status-aguardando: var(--color-warning);
+  --color-status-concluido: var(--color-success);
+  --color-status-cancelado: var(--color-danger);
 
   --font-sans: Inter, system-ui, sans-serif;
   --font-mono: Inter, system-ui, sans-serif;
@@ -40,7 +57,9 @@
     0 4px 12px rgba(18, 24, 31, 0.08), 0 2px 4px rgba(18, 24, 31, 0.05);
   --shadow-dropdown:
     0 8px 24px rgba(18, 24, 31, 0.12), 0 2px 6px rgba(18, 24, 31, 0.08);
-  --shadow-focus-teal: 0 0 0 3px rgba(15, 139, 141, 0.15);
+  /* Anel de foco monocromático (grafite-900). Nome mantido para não quebrar
+     referências existentes; o valor deixou de ser teal. */
+  --shadow-focus-teal: 0 0 0 3px rgba(27, 35, 44, 0.12);
 
   --animate-fade-in: fade-in 0.25s ease-out;
 
@@ -98,21 +117,11 @@
 @layer utilities {
   body {
     @apply text-grafite-900 font-sans antialiased;
-    /* Fundo levemente dimensional: base grafite-50 com um brilho teal muito
-     sutil no topo — dá "ambiente" sem competir com os cards brancos. */
-    background-color: #f4f7f8;
-    background-image:
-      radial-gradient(
-        60rem 40rem at 100% -10%,
-        rgba(15, 139, 141, 0.05),
-        transparent 60%
-      ),
-      radial-gradient(
-        50rem 40rem at -10% 0%,
-        rgba(43, 60, 76, 0.04),
-        transparent 55%
-      );
-    background-attachment: fixed;
+    /* Superfície de página em cinza muito claro (grafite-50) para os cards
+       brancos "puros" sobressaírem. Sem brilho teal — o fundo não carrega
+       nenhum destaque colorido no design system monocromático. */
+    background-color: #f7f9fa;
+    background-image: none;
   }
 
   /* Rótulos de código/identificadores (nº da OS, datas) — tabular pra alinhar
@@ -171,24 +180,24 @@
   ---break---
 */
 :root {
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
+  --background: #ffffff;              /* branco puro */
+  --foreground: #1b232c;             /* grafite-900 — texto primário (quase preto) */
+  --card: #ffffff;                   /* card branco puro */
+  --card-foreground: #1b232c;
+  --popover: #ffffff;
+  --popover-foreground: #1b232c;
+  --primary: #1b232c;                /* grafite-900 — primária preto/grafite (não teal) */
+  --primary-foreground: #ffffff;
+  --secondary: #edf1f4;              /* grafite-100 — superfície suave */
+  --secondary-foreground: #1b232c;
+  --muted: #edf1f4;                  /* grafite-100 — hover / cinza muito claro */
+  --muted-foreground: #4b5b68;       /* grafite-600 — texto secundário (cinza médio) */
+  --accent: #edf1f4;                 /* grafite-100 */
+  --accent-foreground: #1b232c;
+  --destructive: var(--color-danger);/* aponta para a cor semântica */
+  --border: #d3dae0;                 /* grafite-200 — hairline (borda cinza clara) */
+  --input: #d3dae0;                  /* grafite-200 */
+  --ring: #26313c;                   /* grafite-800 — anel de foco monocromático */
   --chart-1: oklch(0.87 0 0);
   --chart-2: oklch(0.556 0 0);
   --chart-3: oklch(0.439 0 0);
@@ -222,7 +231,7 @@
   --muted-foreground: oklch(0.708 0 0);
   --accent: oklch(0.269 0 0);
   --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
+  --destructive: var(--color-danger);
   --border: oklch(1 0 0 / 10%);
   --input: oklch(1 0 0 / 15%);
   --ring: oklch(0.556 0 0);
