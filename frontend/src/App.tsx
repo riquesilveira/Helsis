@@ -17,6 +17,7 @@ import { AcompanharOS } from "./pages/ClientePortal/AcompanharOS";
 import { Configuracoes } from "./pages/Configuracoes";
 import { FolhaDePonto } from "./pages/FolhaDePonto/FolhaDePonto";
 import { CatalogoDiagnostico } from "./pages/Diagnostico/CatalogoDiagnostico";
+import { SemPermissao } from "./pages/SemPermissao";
 import { usuarioLogado } from "./services/auth";
 
 function RotaProtegida({ children }: { children: React.ReactNode }) {
@@ -32,8 +33,11 @@ function RotaProtegidaPorPapel({
   papeis: string[];
 }) {
   const usuario = usuarioLogado();
-  if (!usuario || !papeis.includes(usuario.papel)) {
-    return <Navigate to="/" replace />;
+  if (!usuario) {
+    return <Navigate to="/login" replace />;
+  }
+  if (!papeis.includes(usuario.papel)) {
+    return <SemPermissao />;
   }
   return <>{children}</>;
 }
