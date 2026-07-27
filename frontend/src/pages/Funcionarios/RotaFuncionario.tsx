@@ -49,7 +49,7 @@ export function RotaFuncionario() {
           type="date"
           value={data}
           onChange={(e) => setData(e.target.value)}
-          className="border border-grafite-200 rounded-md px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
+          className="border border-grafite-200 rounded-md px-3 py-1.5 text-sm focus:outline-hidden focus:ring-2 focus:ring-teal-500"
         />
         <span className="text-sm text-grafite-500 capitalize">{dataFormatada}</span>
       </div>

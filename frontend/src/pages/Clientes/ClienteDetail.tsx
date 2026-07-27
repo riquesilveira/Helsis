@@ -214,7 +214,7 @@ export function ClienteDetail() {
         {equipamentos.map((eq: Equipamento) => (
           <Card key={eq.id} className="flex items-center justify-between gap-4 px-5 py-4">
             <div className="flex min-w-0 items-center gap-3">
-              <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-teal-50 text-teal-700">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-teal-50 text-teal-700">
                 <Cpu size={18} />
               </div>
               <div className="min-w-0">
@@ -225,7 +225,7 @@ export function ClienteDetail() {
                 </p>
                 {eq.frequenciaManutencaoMeses ? (
                   <p className="mt-1 flex items-center gap-1 text-[11px] font-medium text-teal-700">
-                    <CalendarClock size={12} className="flex-shrink-0" />
+                    <CalendarClock size={12} className="shrink-0" />
                     Preventiva a cada {eq.frequenciaManutencaoMeses} meses
                     {eq.proximaManutencaoPreventiva
                       ? ` · próxima em ${formatarProximaData(eq.proximaManutencaoPreventiva)}`
@@ -236,7 +236,7 @@ export function ClienteDetail() {
                 )}
               </div>
             </div>
-            <div className="flex flex-shrink-0 items-center gap-2">
+            <div className="flex shrink-0 items-center gap-2">
               <button
                 onClick={() => abrirEdicao(eq)}
                 className="inline-flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-medium text-grafite-600 hover:bg-grafite-100 hover:text-grafite-900 transition-colors"
@@ -469,7 +469,7 @@ function InfoItem({
         <Icone size={16} />
       </div>
       <p className="text-[11px] font-medium uppercase tracking-wide text-grafite-400">{rotulo}</p>
-      <p className="max-w-full break-words text-center text-sm text-grafite-800">{valor || "—"}</p>
+      <p className="max-w-full wrap-break-word text-center text-sm text-grafite-800">{valor || "—"}</p>
     </div>
   );
 }

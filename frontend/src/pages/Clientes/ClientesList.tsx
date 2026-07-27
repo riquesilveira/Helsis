@@ -210,7 +210,7 @@ export function ClientesList() {
                 </p>
               </div>
             </Link>
-            <div className="flex flex-shrink-0 items-center gap-2">
+            <div className="flex shrink-0 items-center gap-2">
               <Chip>{c.equipamentos?.length ?? 0} equip.</Chip>
               <MenuAcoes
                 cliente={c}

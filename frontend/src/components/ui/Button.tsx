@@ -4,11 +4,11 @@ type Variante = "primary" | "secondary" | "ghost" | "danger";
 type Tamanho = "md" | "sm";
 
 const BASE =
-  "inline-flex items-center justify-center gap-2 font-medium rounded-lg transition select-none disabled:opacity-60 disabled:pointer-events-none focus:outline-none";
+  "inline-flex items-center justify-center gap-2 font-medium rounded-lg transition select-none disabled:opacity-60 disabled:pointer-events-none focus:outline-hidden";
 
 const VARIANTES: Record<Variante, string> = {
   primary:
-    "bg-teal-600 text-white shadow-sm hover:bg-teal-700 active:bg-teal-700 focus:shadow-focus-teal",
+    "bg-teal-600 text-white shadow-xs hover:bg-teal-700 active:bg-teal-700 focus:shadow-focus-teal",
   secondary:
     "bg-white text-grafite-800 border border-grafite-200 hover:bg-grafite-50 hover:border-grafite-300",
   ghost: "text-grafite-600 hover:bg-grafite-100 hover:text-grafite-900",

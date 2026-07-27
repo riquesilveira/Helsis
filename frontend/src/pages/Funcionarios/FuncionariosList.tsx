@@ -173,7 +173,7 @@ export function FuncionariosList() {
         {!carregando && funcionarios.map((f) => (
           <div key={f.id} className="flex items-center justify-between gap-4 px-5 py-4 transition-colors hover:bg-grafite-50">
             <Link to={`/funcionarios/${f.id}`} className="flex min-w-0 flex-1 items-center gap-3">
-              <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-teal-500 to-teal-700 text-sm font-semibold text-white">
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-linear-to-br from-teal-500 to-teal-700 text-sm font-semibold text-white">
                 {f.usuario.nome.charAt(0).toUpperCase()}
               </div>
               <div className="min-w-0">
@@ -184,7 +184,7 @@ export function FuncionariosList() {
                       e.preventDefault();
                       abrirModalEditar(f);
                     }}
-                    className="flex-shrink-0 text-xs font-medium text-teal-700 hover:text-teal-800"
+                    className="shrink-0 text-xs font-medium text-teal-700 hover:text-teal-800"
                   >
                     Editar
                   </button>
@@ -192,14 +192,14 @@ export function FuncionariosList() {
                 <div className="mt-0.5 flex items-center gap-1.5">
                   <p className="text-xs text-grafite-500 truncate">{f.cargo}</p>
                   {f.usuario.papel && f.usuario.papel !== "TECNICO" && (
-                    <span className="inline-flex flex-shrink-0 items-center rounded-full bg-teal-50 px-2 py-0.5 text-[10px] font-medium text-teal-700">
+                    <span className="inline-flex shrink-0 items-center rounded-full bg-teal-50 px-2 py-0.5 text-[10px] font-medium text-teal-700">
                       {ROTULO_PAPEL[f.usuario.papel] ?? f.usuario.papel}
                     </span>
                   )}
                 </div>
               </div>
             </Link>
-            <span className="codigo text-sm text-grafite-700 flex-shrink-0">
+            <span className="codigo text-sm text-grafite-700 shrink-0">
               R$ {Number(f.salarioAtual).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
             </span>
           </div>
@@ -326,7 +326,7 @@ export function FuncionariosList() {
               <button
                 type="button"
                 onClick={adicionarEspecialidade}
-                className="flex-shrink-0 text-sm font-medium text-teal-600 hover:text-teal-700 rounded-md px-3 py-2 transition-colors"
+                className="shrink-0 text-sm font-medium text-teal-600 hover:text-teal-700 rounded-md px-3 py-2 transition-colors"
               >
                 + Adicionar
               </button>
@@ -430,7 +430,7 @@ export function FuncionariosList() {
               <button
                 type="button"
                 onClick={adicionarEditEsp}
-                className="flex-shrink-0 text-sm font-medium text-teal-600 hover:text-teal-700 rounded-md px-3 py-2 transition-colors"
+                className="shrink-0 text-sm font-medium text-teal-600 hover:text-teal-700 rounded-md px-3 py-2 transition-colors"
               >
                 + Adicionar
               </button>

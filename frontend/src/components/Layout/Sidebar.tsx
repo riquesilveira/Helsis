@@ -72,7 +72,7 @@ export function Sidebar() {
   }
 
   return (
-    <aside className="w-64 flex-shrink-0 bg-gradient-to-b from-grafite-950 to-grafite-900 text-grafite-100 min-h-screen flex flex-col border-r border-grafite-800 print:hidden">
+    <aside className="w-64 shrink-0 bg-linear-to-b from-grafite-950 to-grafite-900 text-grafite-100 min-h-screen flex flex-col border-r border-grafite-800 print:hidden">
       <div className="flex items-center gap-3 px-5 py-5 border-b border-grafite-800/70">
         <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-teal-600 shadow-[0_0_20px_rgba(15,139,141,0.35)]">
           <Activity size={18} className="text-white" />
@@ -104,7 +104,7 @@ export function Sidebar() {
                   {isActive && (
                     <span className="absolute -left-3 top-1/2 h-5 w-1 -translate-y-1/2 rounded-r-full bg-teal-400" />
                   )}
-                  <Icone size={18} className="flex-shrink-0" />
+                  <Icone size={18} className="shrink-0" />
                   {link.rotulo}
                 </>
               )}
@@ -148,7 +148,7 @@ export function Sidebar() {
             onClick={() => setMenuAberto(!menuAberto)}
             className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-grafite-800/70 transition-colors"
           >
-            <div className="w-9 h-9 rounded-full bg-gradient-to-br from-teal-500 to-teal-700 flex items-center justify-center text-white text-sm font-semibold flex-shrink-0 shadow-[0_0_16px_rgba(15,139,141,0.3)]">
+            <div className="w-9 h-9 rounded-full bg-linear-to-br from-teal-500 to-teal-700 flex items-center justify-center text-white text-sm font-semibold shrink-0 shadow-[0_0_16px_rgba(15,139,141,0.3)]">
               {usuario.nome.charAt(0).toUpperCase()}
             </div>
             <div className="min-w-0 flex-1 text-left">
@@ -157,7 +157,7 @@ export function Sidebar() {
             </div>
             <ChevronUp
               size={16}
-              className={`text-grafite-400 flex-shrink-0 transition-transform duration-200 ${
+              className={`text-grafite-400 shrink-0 transition-transform duration-200 ${
                 menuAberto ? "" : "rotate-180"
               }`}
             />

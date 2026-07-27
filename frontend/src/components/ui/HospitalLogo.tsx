@@ -56,7 +56,7 @@ export function HospitalLogo({
 
   return (
     <div
-      className={`flex flex-shrink-0 items-center justify-center overflow-hidden text-white shadow-sm ${className}`}
+      className={`flex shrink-0 items-center justify-center overflow-hidden text-white shadow-xs ${className}`}
       style={{
         width: size,
         height: size,

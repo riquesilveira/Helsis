@@ -80,7 +80,7 @@ export function ManutencoesPreventivas() {
                 <span className="codigo">{formatarData(eq.proximaManutencaoPreventiva)}</span>
               </p>
             </div>
-            <div className="flex items-center gap-4 flex-shrink-0">
+            <div className="flex items-center gap-4 shrink-0">
               <span className={`codigo text-xs font-medium ${COR_STATUS[eq.statusPreventiva]}`}>
                 {ROTULO_STATUS[eq.statusPreventiva]}
               </span>

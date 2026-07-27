@@ -44,7 +44,7 @@ export function CartaoVisitaRota({ os }: { os: OrdemServico }) {
             {os.descricaoProblema}
           </p>
         </div>
-        <div className="flex flex-col items-end gap-1 flex-shrink-0">
+        <div className="flex flex-col items-end gap-1 shrink-0">
           <span
             className={`codigo text-[11px] font-medium px-2 py-0.5 rounded-full ${COR_STATUS[os.statusAtual]}`}
           >

@@ -1,35 +1,108 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import 'tailwindcss';
 
-body {
-  @apply text-grafite-900 font-sans antialiased;
-  /* Fundo levemente dimensional: base grafite-50 com um brilho teal muito
-     sutil no topo — dá "ambiente" sem competir com os cards brancos. */
-  background-color: #F4F7F8;
-  background-image:
-    radial-gradient(60rem 40rem at 100% -10%, rgba(15, 139, 141, 0.05), transparent 60%),
-    radial-gradient(50rem 40rem at -10% 0%, rgba(43, 60, 76, 0.04), transparent 55%);
-  background-attachment: fixed;
+@theme {
+  --color-grafite-50: #f7f9fa;
+  --color-grafite-100: #edf1f4;
+  --color-grafite-200: #d3dae0;
+  --color-grafite-400: #8a99a6;
+  --color-grafite-600: #4b5b68;
+  --color-grafite-800: #26313c;
+  --color-grafite-900: #1b232c;
+  --color-grafite-950: #12181f;
+
+  --color-teal-50: #effafa;
+  --color-teal-100: #dcf3f3;
+  --color-teal-500: #14a6a8;
+  --color-teal-600: #0f8b8d;
+  --color-teal-700: #0b6b6d;
+
+  --color-status-recebido: #5a6b78;
+  --color-status-diagnostico: #b98a2e;
+  --color-status-aguardando: #c1502e;
+  --color-status-reparo: #0f8b8d;
+  --color-status-validacao: #7a5aa6;
+  --color-status-concluido: #3f8f5f;
+  --color-status-cancelado: #9b3b3b;
+
+  --font-sans: Inter, system-ui, sans-serif;
+  --font-mono: Inter, system-ui, sans-serif;
+
+  --shadow-card:
+    0 1px 2px rgba(18, 24, 31, 0.04), 0 1px 3px rgba(18, 24, 31, 0.06);
+  --shadow-card-hover:
+    0 4px 12px rgba(18, 24, 31, 0.08), 0 2px 4px rgba(18, 24, 31, 0.05);
+  --shadow-dropdown:
+    0 8px 24px rgba(18, 24, 31, 0.12), 0 2px 6px rgba(18, 24, 31, 0.08);
+  --shadow-focus-teal: 0 0 0 3px rgba(15, 139, 141, 0.15);
+
+  --animate-fade-in: fade-in 0.25s ease-out;
+
+  @keyframes fade-in {
+    0% {
+      opacity: 0;
+      transform: translateY(4px);
+    }
+    100% {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
 }
 
-/* Rótulos de código/identificadores (nº da OS, datas) — tabular pra alinhar
-   dígitos, tracking apertado. Mesma fonte (Inter) do resto. */
-.codigo {
-  @apply font-mono tracking-tight;
-  font-variant-numeric: tabular-nums;
+/*
+  The default border color has changed to `currentcolor` in Tailwind CSS v4,
+  so we've added these compatibility styles to make sure everything still
+  looks the same as it did with Tailwind CSS v3.
+
+  If we ever want to remove these styles, we need to add an explicit border
+  color utility to any element that depends on these defaults.
+*/
+@layer base {
+  *,
+  ::after,
+  ::before,
+  ::backdrop,
+  ::file-selector-button {
+    border-color: var(--color-gray-200, currentcolor);
+  }
 }
 
-@layer components {
+@utility card {
   /* Superfície padrão de conteúdo — branca, cantos generosos e borda suave.
      Sem sombra: o sistema usa design plano. Base de quase toda a UI. */
-  .card {
-    @apply bg-white rounded-2xl border border-grafite-200;
+  @apply bg-white rounded-2xl border border-grafite-200;
+}
+
+@utility input-base {
+  @apply w-full bg-white border border-grafite-200 rounded-lg px-3 py-2.5 text-sm
+           text-grafite-900 placeholder:text-grafite-400 transition
+           focus:outline-hidden focus:border-teal-500 focus:shadow-focus-teal;
+}
+
+@layer utilities {
+  body {
+    @apply text-grafite-900 font-sans antialiased;
+    /* Fundo levemente dimensional: base grafite-50 com um brilho teal muito
+     sutil no topo — dá "ambiente" sem competir com os cards brancos. */
+    background-color: #f4f7f8;
+    background-image:
+      radial-gradient(
+        60rem 40rem at 100% -10%,
+        rgba(15, 139, 141, 0.05),
+        transparent 60%
+      ),
+      radial-gradient(
+        50rem 40rem at -10% 0%,
+        rgba(43, 60, 76, 0.04),
+        transparent 55%
+      );
+    background-attachment: fixed;
   }
 
-  .input-base {
-    @apply w-full bg-white border border-grafite-200 rounded-lg px-3 py-2.5 text-sm
-           text-grafite-900 placeholder:text-grafite-400 transition
-           focus:outline-none focus:border-teal-500 focus:shadow-focus-teal;
+  /* Rótulos de código/identificadores (nº da OS, datas) — tabular pra alinhar
+   dígitos, tracking apertado. Mesma fonte (Inter) do resto. */
+  .codigo {
+    @apply font-mono tracking-tight;
+    font-variant-numeric: tabular-nums;
   }
 }

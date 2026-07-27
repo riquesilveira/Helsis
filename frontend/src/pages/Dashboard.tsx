@@ -59,7 +59,7 @@ function CartaoMetrica({
   const conteudo = (
     <Card interativo={!!to} className="h-full p-5">
       <div className="flex items-start justify-between">
-        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-teal-50 flex-shrink-0">
+        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-teal-50 shrink-0">
           <Icone size={19} className="text-teal-600" />
         </div>
         {tendencia !== null && tendencia !== undefined && (
@@ -144,7 +144,7 @@ function DespesasPorTipo({ dados }: { dados: { tipo: string; valor: number }[] }
               </div>
               <div className="h-2 bg-grafite-100 rounded-full overflow-hidden">
                 <div
-                  className="h-full rounded-full bg-gradient-to-r from-teal-500 to-teal-600 transition-all"
+                  className="h-full rounded-full bg-linear-to-r from-teal-500 to-teal-600 transition-all"
                   style={{ width: `${pct}%` }}
                 />
               </div>
@@ -310,7 +310,7 @@ export function Dashboard() {
                       <HospitalLogo nome={os.cliente.nome} size={36} />
                       <div className="min-w-0">
                         <div className="flex items-center gap-2">
-                          <span className="codigo flex-shrink-0 rounded-full bg-grafite-100 px-2 py-0.5 text-[11px] font-medium text-grafite-600">
+                          <span className="codigo shrink-0 rounded-full bg-grafite-100 px-2 py-0.5 text-[11px] font-medium text-grafite-600">
                             #{formatarNumeroOS(os.numero)}
                           </span>
                           <p className="truncate text-sm font-semibold text-grafite-900">{os.cliente.nome}</p>
@@ -318,7 +318,7 @@ export function Dashboard() {
                         <p className="mt-0.5 truncate text-xs text-grafite-500">{os.equipamento.tipo}</p>
                       </div>
                     </div>
-                    <div className="flex flex-shrink-0 items-center gap-3">
+                    <div className="flex shrink-0 items-center gap-3">
                       <StatusBadge status={os.statusAtual} />
                       <ChevronRight size={16} className="text-grafite-300 transition-colors group-hover:text-grafite-500" />
                     </div>
@@ -355,7 +355,7 @@ export function Dashboard() {
                 <HospitalLogo nome={os.cliente.nome} size={40} />
                 <div className="min-w-0">
                   <div className="flex items-center gap-2">
-                    <span className="codigo flex-shrink-0 rounded-full bg-grafite-100 px-2 py-0.5 text-[11px] font-medium text-grafite-600">
+                    <span className="codigo shrink-0 rounded-full bg-grafite-100 px-2 py-0.5 text-[11px] font-medium text-grafite-600">
                       #{formatarNumeroOS(os.numero)}
                     </span>
                     <p className="truncate text-sm font-semibold text-grafite-900">{os.cliente.nome}</p>
@@ -365,7 +365,7 @@ export function Dashboard() {
                   </p>
                 </div>
               </div>
-              <div className="flex flex-shrink-0 items-center gap-3">
+              <div className="flex shrink-0 items-center gap-3">
                 <div className="text-right">
                   <StatusBadge status={os.statusAtual} />
                   <p className="text-[11px] text-grafite-400 mt-1" title={new Date(os.dataAbertura).toLocaleString("pt-BR")}>

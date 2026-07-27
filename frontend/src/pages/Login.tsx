@@ -28,7 +28,7 @@ export function Login() {
   }
 
   return (
-    <div className="relative min-h-screen flex items-center justify-center overflow-hidden bg-gradient-to-b from-grafite-950 to-grafite-900 px-4">
+    <div className="relative min-h-screen flex items-center justify-center overflow-hidden bg-linear-to-b from-grafite-950 to-grafite-900 px-4">
       {/* brilho de fundo */}
       <div className="pointer-events-none absolute -top-40 left-1/2 h-96 w-96 -translate-x-1/2 rounded-full bg-teal-600/20 blur-3xl" />
       <div className="pointer-events-none absolute bottom-0 right-0 h-80 w-80 rounded-full bg-teal-500/10 blur-3xl" />
@@ -43,7 +43,7 @@ export function Login() {
 
         <form
           onSubmit={handleSubmit}
-          className="rounded-2xl border border-white/10 bg-white/95 p-8 shadow-dropdown backdrop-blur"
+          className="rounded-2xl border border-white/10 bg-white/95 p-8 shadow-dropdown backdrop-blur-sm"
         >
           <h1 className="mb-6 text-center text-base font-semibold text-grafite-900">
             Sistema Inteligente de

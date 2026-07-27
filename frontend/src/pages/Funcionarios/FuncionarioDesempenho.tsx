@@ -317,7 +317,7 @@ export function FuncionarioDesempenho() {
               <button
                 type="button"
                 onClick={adicionarEsp}
-                className="flex-shrink-0 text-sm font-medium text-teal-600 hover:text-teal-700 rounded-md px-3 py-2 transition-colors"
+                className="shrink-0 text-sm font-medium text-teal-600 hover:text-teal-700 rounded-md px-3 py-2 transition-colors"
               >
                 + Adicionar
               </button>

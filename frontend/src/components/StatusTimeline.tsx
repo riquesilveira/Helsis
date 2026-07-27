@@ -40,7 +40,7 @@ export function StatusTimeline({
         {ETAPAS_STATUS.map((etapa, i) => {
           const concluida = i <= indiceAtual && statusAtual !== "CANCELADO";
           return (
-            <div key={etapa.status} className="flex items-center flex-shrink-0">
+            <div key={etapa.status} className="flex items-center shrink-0">
               <div className="flex flex-col items-center gap-1.5 min-w-[84px]">
                 <div
                   className={`h-2.5 w-2.5 rounded-full ${
@@ -70,7 +70,7 @@ export function StatusTimeline({
           .reverse()
           .map((evento, i) => (
             <div key={i} className="flex items-start gap-3 px-5 py-3">
-              <span className={`mt-1.5 h-1.5 w-1.5 rounded-full flex-shrink-0 ${CORES_STATUS[evento.status]}`} />
+              <span className={`mt-1.5 h-1.5 w-1.5 rounded-full shrink-0 ${CORES_STATUS[evento.status]}`} />
               <div className="flex-1 min-w-0">
                 <p className="text-sm text-grafite-900">
                   {ETAPAS_STATUS.find((e) => e.status === evento.status)?.rotulo ?? evento.status}
@@ -84,7 +84,7 @@ export function StatusTimeline({
                   <p className="text-sm text-grafite-600 mt-0.5">{evento.observacao}</p>
                 )}
               </div>
-              <span className="codigo text-xs text-grafite-400 flex-shrink-0">
+              <span className="codigo text-xs text-grafite-400 shrink-0">
                 {formatarData(evento.criadoEm)}
               </span>
             </div>

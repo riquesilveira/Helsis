@@ -487,7 +487,7 @@ export function OrdemServicoDetail() {
                 </p>
               </div>
               <span
-                className={`text-xs codigo flex-shrink-0 ${
+                className={`text-xs codigo shrink-0 ${
                   n.status === "ENVIADA" ? "text-status-concluido" : "text-status-cancelado"
                 }`}
                 title={n.erro}
@@ -671,7 +671,7 @@ export function OrdemServicoDetail() {
                   </p>
                 )}
               </div>
-              <div className="flex flex-col items-end gap-0.5 flex-shrink-0">
+              <div className="flex flex-col items-end gap-0.5 shrink-0">
                 {p.precoUnitario != null && (
                   <span className="codigo text-xs text-grafite-600">
                     {formatarReais(p.precoUnitario * p.quantidade)}
@@ -721,7 +721,7 @@ export function OrdemServicoDetail() {
               <div key={d.id} className="py-3 flex items-start justify-between gap-3">
                 <div className="flex items-start gap-2.5">
                   <span
-                    className="mt-0.5 flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-lg bg-grafite-100 text-grafite-500"
+                    className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-grafite-100 text-grafite-500"
                     title={foiAviao ? "Avião" : "Carro"}
                   >
                     <IconeTransporte size={15} />
@@ -754,7 +754,7 @@ export function OrdemServicoDetail() {
                   </div>
                   </div>
                 </div>
-                <div className="flex items-center gap-2 flex-shrink-0">
+                <div className="flex items-center gap-2 shrink-0">
                   {custoTotal > 0 && (
                     <span className="codigo text-xs text-grafite-600">
                       {formatarReais(custoTotal)}
@@ -907,7 +907,7 @@ export function OrdemServicoDetail() {
               <button
                 type="button"
                 onClick={() => setModalNovaPeca(true)}
-                className="text-xs text-teal-700 hover:text-teal-800 flex-shrink-0"
+                className="text-xs text-teal-700 hover:text-teal-800 shrink-0"
               >
                 + nova
               </button>

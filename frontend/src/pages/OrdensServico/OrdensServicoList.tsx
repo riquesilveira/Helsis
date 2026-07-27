@@ -236,7 +236,7 @@ export function OrdensServicoList() {
                 <HospitalLogo nome={os.cliente.nome} size={40} />
                 <div className="min-w-0">
                   <div className="flex items-center gap-2">
-                    <span className="codigo flex-shrink-0 rounded-full bg-grafite-100 px-2 py-0.5 text-[11px] font-medium text-grafite-600">
+                    <span className="codigo shrink-0 rounded-full bg-grafite-100 px-2 py-0.5 text-[11px] font-medium text-grafite-600">
                       #{formatarNumeroOS(os.numero)}
                     </span>
                     <p className="truncate text-sm font-semibold text-grafite-900">{os.cliente.nome}</p>
@@ -245,7 +245,7 @@ export function OrdensServicoList() {
                     {os.equipamento.tipo} — {os.descricaoProblema}
                   </p>
                   <p className="mt-1 flex items-center gap-1 text-[11px] truncate">
-                    <UserRound size={12} className="flex-shrink-0 text-grafite-400" />
+                    <UserRound size={12} className="shrink-0 text-grafite-400" />
                     {os.funcionario?.usuario?.nome ? (
                       <span className="font-medium text-grafite-700">{os.funcionario.usuario.nome}</span>
                     ) : (
@@ -254,7 +254,7 @@ export function OrdensServicoList() {
                   </p>
                 </div>
               </div>
-              <div className="flex flex-shrink-0 items-center gap-3">
+              <div className="flex shrink-0 items-center gap-3">
                 <div className="text-right">
                   <StatusBadge status={os.statusAtual} />
                   <p className="text-[11px] text-grafite-400 mt-1" title={new Date(os.dataAbertura).toLocaleString("pt-BR")}>
