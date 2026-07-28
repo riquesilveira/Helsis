@@ -31,28 +31,28 @@ export function AcompanharOS() {
 
   if (erro) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-grafite-50 px-4">
-        <p className="text-sm text-grafite-600">Não encontramos esse atendimento.</p>
+      <div className="min-h-screen flex items-center justify-center bg-muted px-4">
+        <p className="text-sm text-danger">Não encontramos esse atendimento.</p>
       </div>
     );
   }
 
   if (!dados) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-grafite-50 px-4">
-        <p className="text-sm text-grafite-500">Carregando...</p>
+      <div className="min-h-screen flex items-center justify-center bg-muted px-4">
+        <p className="text-sm text-muted-foreground">Carregando...</p>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-grafite-50 px-4 py-10">
+    <div className="min-h-screen bg-muted px-4 py-10">
       <div className="max-w-lg mx-auto space-y-6">
         <div className="text-center">
-          <p className="codigo text-xs text-grafite-500">ATENDIMENTO Nº {formatarNumeroOS(dados.numero)}</p>
-          <h1 className="text-lg font-semibold text-grafite-900 mt-1">{dados.equipamento.tipo}</h1>
+          <p className="codigo text-xs text-muted-foreground">ATENDIMENTO Nº {formatarNumeroOS(dados.numero)}</p>
+          <h1 className="text-lg font-semibold text-foreground mt-1">{dados.equipamento.tipo}</h1>
           {dados.equipamento.marca && (
-            <p className="text-sm text-grafite-600">
+            <p className="text-sm text-muted-foreground">
               {dados.equipamento.marca} {dados.equipamento.modelo}
             </p>
           )}
@@ -60,7 +60,7 @@ export function AcompanharOS() {
 
         <StatusTimeline historico={dados.statusHistoricos} statusAtual={dados.statusAtual} />
 
-        <p className="text-xs text-center text-grafite-400">
+        <p className="text-xs text-center text-muted-foreground">
           Essa página é atualizada automaticamente conforme o técnico avança no atendimento.
         </p>
       </div>

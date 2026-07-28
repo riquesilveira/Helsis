@@ -1,9 +1,30 @@
 import { useEffect, useMemo, useState } from "react";
 import { Clock, LogIn, LogOut } from "lucide-react";
 import { api } from "../../services/api";
-import { PageHeader } from "../../components/ui/PageHeader";
+import { PageHeader } from "../../components/PageHeader";
 import { usuarioLogado } from "../../services/auth";
 import { Funcionario, RegistroPonto } from "../../types";
+import { Card, CardAction, CardContent, CardHeader, CardTitle } from "../../components/shadcn/card";
+import { Button } from "../../components/shadcn/button";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "../../components/shadcn/table";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../../components/shadcn/select";
+
+// Sentinela do filtro: o Select do shadcn não aceita item com value="",
+// então "todos" mapeia para o estado "" (sem filtro) sem alterar a lógica.
+const TODOS = "todos";
 
 function formatarDataHora(iso: string) {
   return new Date(iso).toLocaleString("pt-BR", {
@@ -95,117 +116,157 @@ export function FolhaDePonto() {
       />
 
       {/* Cartão de bater ponto */}
-      <div className="bg-white border border-grafite-200 rounded-lg p-5 flex flex-wrap items-center justify-between gap-4">
-        <div className="flex items-center gap-3">
-          <div
-            className={`flex h-11 w-11 items-center justify-center rounded-xl ${
-              atual ? "bg-status-reparo/10 text-status-reparo" : "bg-grafite-100 text-grafite-500"
-            }`}
-          >
-            <Clock size={20} />
+      <Card>
+        <CardContent className="flex flex-wrap items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <div
+              className={`flex h-11 w-11 items-center justify-center rounded-xl ${
+                atual ? "bg-muted text-foreground" : "bg-muted text-muted-foreground"
+              }`}
+            >
+              <Clock size={20} />
+            </div>
+            <div>
+              <p className="text-sm font-medium text-foreground">
+                {atual ? "Turno em andamento" : "Fora do expediente"}
+              </p>
+              <p className="text-xs text-muted-foreground">
+                {atual
+                  ? `Entrada às ${formatarDataHora(atual.entrada)} · ${duracao(atual.entrada, null)}`
+                  : `Horas hoje: ${horasHoje}`}
+              </p>
+            </div>
           </div>
-          <div>
-            <p className="text-sm font-medium text-grafite-900">
-              {atual ? "Turno em andamento" : "Fora do expediente"}
-            </p>
-            <p className="text-xs text-grafite-500">
-              {atual
-                ? `Entrada às ${formatarDataHora(atual.entrada)} · ${duracao(atual.entrada, null)}`
-                : `Horas hoje: ${horasHoje}`}
-            </p>
-          </div>
-        </div>
-        <button
-          onClick={baterPonto}
-          disabled={enviando}
-          className={`inline-flex items-center gap-2 rounded-md px-4 py-2 text-sm font-medium text-white transition-colors disabled:opacity-60 ${
-            atual ? "bg-status-cancelado hover:opacity-90" : "bg-teal-600 hover:bg-teal-700"
-          }`}
-        >
-          {atual ? <LogOut size={16} /> : <LogIn size={16} />}
-          {enviando ? "Registrando..." : atual ? "Registrar saída" : "Registrar entrada"}
-        </button>
-      </div>
-      {erro && <p className="text-sm text-red-500">{erro}</p>}
+          <Button onClick={baterPonto} disabled={enviando}>
+            {atual ? <LogOut /> : <LogIn />}
+            {enviando ? "Registrando..." : atual ? "Registrar saída" : "Registrar entrada"}
+          </Button>
+        </CardContent>
+      </Card>
+      {erro && <p className="text-sm text-danger">{erro}</p>}
 
       {/* Meus registros */}
-      <div className="bg-white border border-grafite-200 rounded-lg overflow-hidden">
-        <div className="px-5 py-3 border-b border-grafite-200">
-          <h2 className="text-sm font-medium text-grafite-900">Meus registros</h2>
-        </div>
-        {meus.length === 0 ? (
-          <p className="px-5 py-6 text-sm text-grafite-400">Nenhum registro de ponto ainda.</p>
-        ) : (
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="text-left text-xs text-grafite-500 border-b border-grafite-100">
-                <th className="px-5 py-2 font-medium">Entrada</th>
-                <th className="px-5 py-2 font-medium">Saída</th>
-                <th className="px-5 py-2 font-medium">Duração</th>
-              </tr>
-            </thead>
-            <tbody>
-              {meus.map((r) => (
-                <tr key={r.id} className="border-b border-grafite-50 last:border-0">
-                  <td className="px-5 py-2.5 text-grafite-900">{formatarDataHora(r.entrada)}</td>
-                  <td className="px-5 py-2.5 text-grafite-600">
-                    {r.saida ? formatarDataHora(r.saida) : <span className="text-status-reparo">em andamento</span>}
-                  </td>
-                  <td className="px-5 py-2.5 codigo text-grafite-700">{duracao(r.entrada, r.saida)}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
-      </div>
+      <Card className="py-0">
+        <CardHeader className="border-b border-border py-4">
+          <CardTitle className="text-sm">Meus registros</CardTitle>
+        </CardHeader>
+        <Table>
+          <TableHeader>
+            <TableRow className="border-border hover:bg-transparent">
+              <TableHead className="px-5 text-xs font-medium text-muted-foreground">
+                Entrada
+              </TableHead>
+              <TableHead className="px-5 text-xs font-medium text-muted-foreground">
+                Saída
+              </TableHead>
+              <TableHead className="px-5 text-xs font-medium text-muted-foreground">
+                Duração
+              </TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {meus.length === 0 ? (
+              <TableRow className="border-border hover:bg-transparent">
+                <TableCell colSpan={3} className="px-5 py-4 text-sm text-muted-foreground">
+                  Nenhum registro de ponto ainda.
+                </TableCell>
+              </TableRow>
+            ) : (
+              meus.map((r) => (
+                <TableRow key={r.id} className="border-border hover:bg-muted/50">
+                  <TableCell className="px-5 py-3 text-sm text-foreground">
+                    {formatarDataHora(r.entrada)}
+                  </TableCell>
+                  <TableCell className="px-5 py-3 text-sm text-muted-foreground">
+                    {r.saida ? (
+                      formatarDataHora(r.saida)
+                    ) : (
+                      <span className="font-medium text-foreground">em andamento</span>
+                    )}
+                  </TableCell>
+                  <TableCell className="px-5 py-3 font-mono text-sm text-muted-foreground">
+                    {duracao(r.entrada, r.saida)}
+                  </TableCell>
+                </TableRow>
+              ))
+            )}
+          </TableBody>
+        </Table>
+      </Card>
 
       {/* Visão consolidada — gerente/dono */}
       {podeConsolidar && (
-        <div className="bg-white border border-grafite-200 rounded-lg overflow-hidden">
-          <div className="px-5 py-3 border-b border-grafite-200 flex flex-wrap items-center justify-between gap-3">
-            <h2 className="text-sm font-medium text-grafite-900">Folha da equipe</h2>
-            <select
-              className="text-sm border border-grafite-200 rounded-md px-2 py-1.5 text-grafite-700"
-              value={filtroFuncionario}
-              onChange={(e) => setFiltroFuncionario(e.target.value)}
-            >
-              <option value="">Todos os funcionários</option>
-              {funcionarios.map((f) => (
-                <option key={f.id} value={f.id}>
-                  {f.usuario.nome}
-                </option>
-              ))}
-            </select>
-          </div>
-          {consolidado.length === 0 ? (
-            <p className="px-5 py-6 text-sm text-grafite-400">Nenhum registro no período.</p>
-          ) : (
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="text-left text-xs text-grafite-500 border-b border-grafite-100">
-                  <th className="px-5 py-2 font-medium">Funcionário</th>
-                  <th className="px-5 py-2 font-medium">Entrada</th>
-                  <th className="px-5 py-2 font-medium">Saída</th>
-                  <th className="px-5 py-2 font-medium">Duração</th>
-                </tr>
-              </thead>
-              <tbody>
-                {consolidado.map((r) => (
-                  <tr key={r.id} className="border-b border-grafite-50 last:border-0">
-                    <td className="px-5 py-2.5 text-grafite-900">
+        <Card className="py-0">
+          <CardHeader className="flex flex-wrap items-center justify-between gap-3 border-b border-border py-4">
+            <CardTitle className="text-sm">Folha da equipe</CardTitle>
+            <CardAction className="self-center">
+              <Select
+                value={filtroFuncionario || TODOS}
+                onValueChange={(v) => setFiltroFuncionario(v === TODOS ? "" : v)}
+              >
+                <SelectTrigger size="sm" className="w-52">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value={TODOS}>Todos os funcionários</SelectItem>
+                  {funcionarios.map((f) => (
+                    <SelectItem key={f.id} value={f.id}>
+                      {f.usuario.nome}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </CardAction>
+          </CardHeader>
+          <Table>
+            <TableHeader>
+              <TableRow className="border-border hover:bg-transparent">
+                <TableHead className="px-5 text-xs font-medium text-muted-foreground">
+                  Funcionário
+                </TableHead>
+                <TableHead className="px-5 text-xs font-medium text-muted-foreground">
+                  Entrada
+                </TableHead>
+                <TableHead className="px-5 text-xs font-medium text-muted-foreground">
+                  Saída
+                </TableHead>
+                <TableHead className="px-5 text-xs font-medium text-muted-foreground">
+                  Duração
+                </TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {consolidado.length === 0 ? (
+                <TableRow className="border-border hover:bg-transparent">
+                  <TableCell colSpan={4} className="px-5 py-4 text-sm text-muted-foreground">
+                    Nenhum registro no período.
+                  </TableCell>
+                </TableRow>
+              ) : (
+                consolidado.map((r) => (
+                  <TableRow key={r.id} className="border-border hover:bg-muted/50">
+                    <TableCell className="px-5 py-3 text-sm text-foreground">
                       {r.funcionario?.usuario.nome ?? "—"}
-                    </td>
-                    <td className="px-5 py-2.5 text-grafite-600">{formatarDataHora(r.entrada)}</td>
-                    <td className="px-5 py-2.5 text-grafite-600">
-                      {r.saida ? formatarDataHora(r.saida) : <span className="text-status-reparo">em andamento</span>}
-                    </td>
-                    <td className="px-5 py-2.5 codigo text-grafite-700">{duracao(r.entrada, r.saida)}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
-        </div>
+                    </TableCell>
+                    <TableCell className="px-5 py-3 text-sm text-muted-foreground">
+                      {formatarDataHora(r.entrada)}
+                    </TableCell>
+                    <TableCell className="px-5 py-3 text-sm text-muted-foreground">
+                      {r.saida ? (
+                        formatarDataHora(r.saida)
+                      ) : (
+                        <span className="font-medium text-foreground">em andamento</span>
+                      )}
+                    </TableCell>
+                    <TableCell className="px-5 py-3 font-mono text-sm text-muted-foreground">
+                      {duracao(r.entrada, r.saida)}
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
+        </Card>
       )}
     </div>
   );

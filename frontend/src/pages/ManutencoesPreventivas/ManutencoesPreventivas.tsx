@@ -2,6 +2,10 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { api } from "../../services/api";
 import { EquipamentoComManutencao, StatusManutencaoPreventiva } from "../../types";
+import { PageHeader } from "../../components/PageHeader";
+import { Badge } from "../../components/shadcn/badge";
+import { Button } from "../../components/shadcn/button";
+import { Card, CardDescription, CardHeader, CardTitle } from "../../components/shadcn/card";
 
 const ROTULO_STATUS: Record<StatusManutencaoPreventiva, string> = {
   ATRASADA: "Atrasada",
@@ -9,11 +13,27 @@ const ROTULO_STATUS: Record<StatusManutencaoPreventiva, string> = {
   EM_DIA: "Em dia",
 };
 
-const COR_STATUS: Record<StatusManutencaoPreventiva, string> = {
-  ATRASADA: "text-status-cancelado",
-  PROXIMA: "text-status-diagnostico",
-  EM_DIA: "text-status-concluido",
+// Fundo suave (10% da cor) + texto forte, no estilo do StatusBadge das OS.
+const CLASSE_STATUS: Record<StatusManutencaoPreventiva, string> = {
+  ATRASADA: "bg-danger/10 text-danger",
+  PROXIMA: "bg-status-diagnostico/10 text-status-diagnostico",
+  EM_DIA: "bg-status-concluido/10 text-status-concluido",
 };
+
+const PONTO_STATUS: Record<StatusManutencaoPreventiva, string> = {
+  ATRASADA: "bg-danger",
+  PROXIMA: "bg-status-diagnostico",
+  EM_DIA: "bg-status-concluido",
+};
+
+function StatusPreventivaBadge({ status }: { status: StatusManutencaoPreventiva }) {
+  return (
+    <Badge className={`gap-1.5 border-transparent ${CLASSE_STATUS[status]}`}>
+      <span className={`h-1.5 w-1.5 rounded-full ${PONTO_STATUS[status]}`} />
+      {ROTULO_STATUS[status]}
+    </Badge>
+  );
+}
 
 function formatarData(iso?: string | null) {
   if (!iso) return "sem data definida";
@@ -37,69 +57,73 @@ export function ManutencoesPreventivas() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-xl font-semibold text-grafite-900">Manutenções preventivas</h1>
-        <p className="text-sm text-grafite-600 mt-1">
-          Agenda de revisões programadas — não depende do cliente relatar um problema.
-        </p>
-      </div>
+      <PageHeader
+        titulo="Manutenções preventivas"
+        subtitulo="Agenda de revisões programadas — não depende do cliente relatar um problema."
+      />
 
       <div className="grid grid-cols-3 gap-4">
-        <div className="bg-white border border-grafite-200 rounded-lg p-5">
-          <p className="text-xs text-grafite-500">Atrasadas</p>
-          <p className="codigo text-2xl font-semibold text-status-cancelado mt-1">
-            {contagem.ATRASADA}
-          </p>
-        </div>
-        <div className="bg-white border border-grafite-200 rounded-lg p-5">
-          <p className="text-xs text-grafite-500">Nos próximos 30 dias</p>
-          <p className="codigo text-2xl font-semibold text-status-diagnostico mt-1">
-            {contagem.PROXIMA}
-          </p>
-        </div>
-        <div className="bg-white border border-grafite-200 rounded-lg p-5">
-          <p className="text-xs text-grafite-500">Em dia</p>
-          <p className="codigo text-2xl font-semibold text-status-concluido mt-1">
-            {contagem.EM_DIA}
-          </p>
-        </div>
+        <Card>
+          <CardHeader>
+            <CardDescription>Atrasadas</CardDescription>
+            <CardTitle className="text-2xl font-semibold text-danger">{contagem.ATRASADA}</CardTitle>
+          </CardHeader>
+        </Card>
+        <Card>
+          <CardHeader>
+            <CardDescription>Nos próximos 30 dias</CardDescription>
+            <CardTitle className="text-2xl font-semibold text-status-diagnostico">
+              {contagem.PROXIMA}
+            </CardTitle>
+          </CardHeader>
+        </Card>
+        <Card>
+          <CardHeader>
+            <CardDescription>Em dia</CardDescription>
+            <CardTitle className="text-2xl font-semibold text-status-concluido">
+              {contagem.EM_DIA}
+            </CardTitle>
+          </CardHeader>
+        </Card>
       </div>
 
-      <div className="bg-white border border-grafite-200 rounded-lg divide-y divide-grafite-100">
-        {carregando && (
-          <p className="text-sm text-grafite-500 px-5 py-4">Carregando...</p>
-        )}
-        {!carregando && equipamentos.map((eq) => (
-          <div key={eq.id} className="flex items-center justify-between px-5 py-4">
-            <div>
-              <p className="text-sm text-grafite-900">
-                {eq.cliente.nome} <span className="text-grafite-400">·</span> {eq.tipo}
-              </p>
-              <p className="text-xs text-grafite-500 mt-0.5">
-                Preventiva a cada {eq.frequenciaManutencaoMeses} meses · próxima em{" "}
-                <span className="codigo">{formatarData(eq.proximaManutencaoPreventiva)}</span>
-              </p>
-            </div>
-            <div className="flex items-center gap-4 shrink-0">
-              <span className={`codigo text-xs font-medium ${COR_STATUS[eq.statusPreventiva]}`}>
-                {ROTULO_STATUS[eq.statusPreventiva]}
-              </span>
-              <Link
-                to={`/ordens-servico/nova?clienteId=${eq.cliente.id}&equipamentoId=${eq.id}&tipo=PREVENTIVA`}
-                className="text-xs font-medium text-teal-700 hover:text-teal-800"
-              >
-                Abrir OS preventiva →
-              </Link>
-            </div>
-          </div>
-        ))}
-        {!carregando && equipamentos.length === 0 && (
-          <p className="text-sm text-grafite-500 px-5 py-4">
-            Nenhum equipamento com manutenção preventiva agendada ainda. Defina uma frequência ao
-            cadastrar ou editar um equipamento.
-          </p>
-        )}
-      </div>
+      <Card className="py-0">
+        <div className="divide-y divide-border">
+          {carregando && (
+            <p className="px-5 py-4 text-sm text-muted-foreground">Carregando...</p>
+          )}
+          {!carregando &&
+            equipamentos.map((eq) => (
+              <div key={eq.id} className="flex items-center justify-between gap-4 px-5 py-4">
+                <div className="min-w-0">
+                  <p className="text-sm text-foreground">
+                    {eq.cliente.nome} <span className="text-muted-foreground">·</span> {eq.tipo}
+                  </p>
+                  <p className="mt-0.5 text-xs text-muted-foreground">
+                    Preventiva a cada {eq.frequenciaManutencaoMeses} meses · próxima em{" "}
+                    {formatarData(eq.proximaManutencaoPreventiva)}
+                  </p>
+                </div>
+                <div className="flex shrink-0 items-center gap-4">
+                  <StatusPreventivaBadge status={eq.statusPreventiva} />
+                  <Button asChild variant="ghost" size="sm">
+                    <Link
+                      to={`/ordens-servico/nova?clienteId=${eq.cliente.id}&equipamentoId=${eq.id}&tipo=PREVENTIVA`}
+                    >
+                      Abrir OS preventiva →
+                    </Link>
+                  </Button>
+                </div>
+              </div>
+            ))}
+          {!carregando && equipamentos.length === 0 && (
+            <p className="px-5 py-4 text-sm text-muted-foreground">
+              Nenhum equipamento com manutenção preventiva agendada ainda. Defina uma frequência ao
+              cadastrar ou editar um equipamento.
+            </p>
+          )}
+        </div>
+      </Card>
     </div>
   );
 }

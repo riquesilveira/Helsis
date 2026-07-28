@@ -1,9 +1,27 @@
 import { FormEvent, useEffect, useState } from "react";
 import { Plus, Pencil, Trash2, Clock } from "lucide-react";
 import { api } from "../../services/api";
-import { PageHeader } from "../../components/ui/PageHeader";
-import { Modal, Campo, classeInput } from "../../components/Modal";
-import { classeBotao } from "../../components/ui/Button";
+import { PageHeader } from "../../components/PageHeader";
+import { Card } from "../../components/shadcn/card";
+import { Button } from "../../components/shadcn/button";
+import { Input } from "../../components/shadcn/input";
+import { Label } from "../../components/shadcn/label";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "../../components/shadcn/table";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "../../components/shadcn/dialog";
+import { Tabs, TabsList, TabsTrigger } from "../../components/shadcn/tabs";
 
 // Gestão do catálogo de diagnóstico codificado: Causa / Defeito / Solução.
 // São tabelas de códigos padronizados que o técnico escolhe no fechamento do
@@ -133,139 +151,148 @@ function SecaoCatalogo({ config }: { config: ConfigCatalogo }) {
   }
 
   return (
-    <div className="bg-white border border-grafite-200 rounded-lg overflow-hidden">
-      <div className="px-5 py-3 border-b border-grafite-200 flex items-center justify-between gap-3">
-        <h2 className="text-sm font-medium text-grafite-900">
+    <Card className="py-0">
+      <div className="flex items-center justify-between gap-3 border-b border-border px-5 py-3">
+        <h2 className="text-sm font-medium text-foreground">
           {config.rotulo}
           {!carregando && (
-            <span className="ml-2 text-xs font-normal text-grafite-400">{itens.length}</span>
+            <span className="ml-2 text-xs font-normal text-muted-foreground">{itens.length}</span>
           )}
         </h2>
-        <button onClick={abrirNovo} className={classeBotao("primary", "sm")}>
-          <Plus size={15} />
+        <Button size="sm" onClick={abrirNovo}>
+          <Plus />
           {novo} {config.singular}
-        </button>
+        </Button>
       </div>
 
       {carregando ? (
-        <p className="px-5 py-6 text-sm text-grafite-400">Carregando...</p>
+        <p className="px-5 py-6 text-sm text-muted-foreground">Carregando...</p>
       ) : erroLista ? (
-        <p className="px-5 py-6 text-sm text-red-500">{erroLista}</p>
+        <p className="px-5 py-6 text-sm text-danger">{erroLista}</p>
       ) : itens.length === 0 ? (
-        <p className="px-5 py-6 text-sm text-grafite-400">
+        <p className="px-5 py-6 text-sm text-muted-foreground">
           Nenhum{f ? "a" : ""} {config.singular} cadastrad{f ? "a" : "o"} ainda.
         </p>
       ) : (
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="text-left text-xs text-grafite-500 border-b border-grafite-100">
-              <th className="px-5 py-2 font-medium w-32">Código</th>
-              <th className="px-5 py-2 font-medium">Descrição</th>
-              {config.temTempo && <th className="px-5 py-2 font-medium w-32">Tempo est.</th>}
-              <th className="px-5 py-2 font-medium w-24 text-right">Ações</th>
-            </tr>
-          </thead>
-          <tbody>
+        <Table>
+          <TableHeader>
+            <TableRow className="border-border hover:bg-transparent">
+              <TableHead className="w-32 px-5 text-xs font-medium text-muted-foreground">
+                Código
+              </TableHead>
+              <TableHead className="px-5 text-xs font-medium text-muted-foreground">
+                Descrição
+              </TableHead>
+              {config.temTempo && (
+                <TableHead className="w-32 px-5 text-xs font-medium text-muted-foreground">
+                  Tempo est.
+                </TableHead>
+              )}
+              <TableHead className="w-24 px-5 text-right text-xs font-medium text-muted-foreground">
+                <span className="sr-only">Ações</span>
+              </TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
             {itens.map((item) => (
-              <tr key={item.id} className="border-b border-grafite-50 last:border-0">
-                <td className="px-5 py-2.5">
-                  <span className="codigo font-medium text-grafite-800">{item.codigo}</span>
-                </td>
-                <td className="px-5 py-2.5 text-grafite-700">{item.descricao}</td>
+              <TableRow key={item.id} className="border-border hover:bg-muted/50">
+                <TableCell className="px-5 py-2.5">
+                  <span className="codigo font-medium text-foreground">{item.codigo}</span>
+                </TableCell>
+                <TableCell className="px-5 py-2.5 text-foreground">{item.descricao}</TableCell>
                 {config.temTempo && (
-                  <td className="px-5 py-2.5 text-grafite-600">
+                  <TableCell className="px-5 py-2.5 text-muted-foreground">
                     <span className="inline-flex items-center gap-1.5">
-                      <Clock size={13} className="text-grafite-400" />
+                      <Clock size={13} className="text-muted-foreground" />
                       {formatarTempo(item.tempoEstimadoMin)}
                     </span>
-                  </td>
+                  </TableCell>
                 )}
-                <td className="px-5 py-2.5">
+                <TableCell className="px-5 py-2.5">
                   <div className="flex items-center justify-end gap-1">
-                    <button
+                    <Button
+                      variant="ghost"
+                      size="icon-sm"
                       onClick={() => abrirEdicao(item)}
-                      className="p-1.5 rounded-md text-grafite-500 hover:bg-grafite-100 hover:text-grafite-800 transition"
                       aria-label="Editar"
                     >
-                      <Pencil size={15} />
-                    </button>
-                    <button
+                      <Pencil />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon-sm"
                       onClick={() => excluir(item)}
-                      className="p-1.5 rounded-md text-grafite-500 hover:bg-red-50 hover:text-red-600 transition"
                       aria-label="Remover"
+                      className="text-muted-foreground hover:bg-danger/10 hover:text-danger"
                     >
-                      <Trash2 size={15} />
-                    </button>
+                      <Trash2 />
+                    </Button>
                   </div>
-                </td>
-              </tr>
+                </TableCell>
+              </TableRow>
             ))}
-          </tbody>
-        </table>
+          </TableBody>
+        </Table>
       )}
 
-      <Modal
-        aberto={modalAberto}
-        onFechar={() => setModalAberto(false)}
-        titulo={`${editando ? "Editar" : novo} ${config.singular}`}
-      >
-        <form onSubmit={salvar}>
-          <div className="grid grid-cols-3 gap-3">
-            <div className="col-span-1">
-              <Campo rotulo="Código">
-                <input
+      <Dialog open={modalAberto} onOpenChange={(aberto) => { if (!aberto) setModalAberto(false); }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{`${editando ? "Editar" : novo} ${config.singular}`}</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={salvar} className="space-y-4">
+            <div className="grid grid-cols-3 gap-3">
+              <div className="col-span-1 grid gap-1.5">
+                <Label htmlFor="catalogo-codigo">Código</Label>
+                <Input
+                  id="catalogo-codigo"
                   required
-                  className={classeInput}
                   value={codigo}
                   onChange={(e) => setCodigo(e.target.value)}
                   placeholder="C01"
                 />
-              </Campo>
-            </div>
-            <div className="col-span-2">
-              <Campo rotulo="Descrição">
-                <input
+              </div>
+              <div className="col-span-2 grid gap-1.5">
+                <Label htmlFor="catalogo-descricao">Descrição</Label>
+                <Input
+                  id="catalogo-descricao"
                   required
                   minLength={2}
-                  className={classeInput}
                   value={descricao}
                   onChange={(e) => setDescricao(e.target.value)}
                   placeholder="Descrição padronizada"
                 />
-              </Campo>
+              </div>
             </div>
-          </div>
 
-          {config.temTempo && (
-            <Campo rotulo="Tempo estimado (minutos) — opcional">
-              <input
-                type="number"
-                min={1}
-                className={classeInput}
-                value={tempo}
-                onChange={(e) => setTempo(e.target.value)}
-                placeholder="Ex.: 90"
-              />
-            </Campo>
-          )}
+            {config.temTempo && (
+              <div className="grid gap-1.5">
+                <Label htmlFor="catalogo-tempo">Tempo estimado (minutos) — opcional</Label>
+                <Input
+                  id="catalogo-tempo"
+                  type="number"
+                  min={1}
+                  value={tempo}
+                  onChange={(e) => setTempo(e.target.value)}
+                  placeholder="Ex.: 90"
+                />
+              </div>
+            )}
 
-          {erroForm && <p className="text-xs text-red-500 mb-3">{erroForm}</p>}
+            {erroForm && <p className="text-sm text-danger">{erroForm}</p>}
 
-          <div className="flex justify-end gap-2 mt-1">
-            <button
-              type="button"
-              onClick={() => setModalAberto(false)}
-              className={classeBotao("secondary", "md")}
-            >
-              Cancelar
-            </button>
-            <button type="submit" disabled={salvando} className={classeBotao("primary", "md")}>
-              {salvando ? "Salvando..." : editando ? "Salvar" : "Adicionar"}
-            </button>
-          </div>
-        </form>
-      </Modal>
-    </div>
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setModalAberto(false)}>
+                Cancelar
+              </Button>
+              <Button type="submit" disabled={salvando}>
+                {salvando ? "Salvando..." : editando ? "Salvar" : "Adicionar"}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+    </Card>
   );
 }
 
@@ -280,21 +307,15 @@ export function CatalogoDiagnostico() {
         subtitulo="Padronize as causas, defeitos e soluções escolhidos no fechamento dos chamados."
       />
 
-      <div className="flex items-center gap-2 border-b border-grafite-200">
-        {CATALOGOS.map((c) => (
-          <button
-            key={c.chave}
-            onClick={() => setTab(c.chave)}
-            className={`relative -mb-px px-4 py-2.5 text-sm font-medium transition-colors ${
-              tab === c.chave
-                ? "text-teal-700 border-b-2 border-teal-600"
-                : "text-grafite-500 hover:text-grafite-800 border-b-2 border-transparent"
-            }`}
-          >
-            {c.rotulo}
-          </button>
-        ))}
-      </div>
+      <Tabs value={tab} onValueChange={(valor) => setTab(valor as TipoCatalogo)}>
+        <TabsList>
+          {CATALOGOS.map((c) => (
+            <TabsTrigger key={c.chave} value={c.chave}>
+              {c.rotulo}
+            </TabsTrigger>
+          ))}
+        </TabsList>
+      </Tabs>
 
       <SecaoCatalogo key={ativo.chave} config={ativo} />
     </div>

@@ -1,8 +1,17 @@
 import { FormEvent, useEffect, useState } from "react";
 import { api } from "../services/api";
 import { usuarioLogado } from "../services/auth";
-import { Campo, classeInput } from "../components/Modal";
-import { Settings, User, Lock, Shield, Calendar } from "lucide-react";
+import { User, Lock, Shield, Calendar } from "lucide-react";
+import { PageHeader } from "../components/PageHeader";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "../components/shadcn/card";
+import { Button } from "../components/shadcn/button";
+import { Input } from "../components/shadcn/input";
+import { Label } from "../components/shadcn/label";
 
 const ROTULO_PAPEL: Record<string, string> = {
   DONO: "Diretor Técnico",
@@ -95,140 +104,146 @@ export function Configuracoes() {
     }
   }
 
-  if (!perfil) return <p className="text-sm text-grafite-500">Carregando...</p>;
+  if (!perfil) return <p className="text-sm text-muted-foreground">Carregando...</p>;
 
   return (
     <div className="space-y-6 max-w-2xl">
-      <div className="flex items-center gap-3">
-        <Settings size={22} className="text-grafite-400" />
-        <h1 className="text-xl font-semibold text-grafite-900">Configurações</h1>
-      </div>
+      <PageHeader titulo="Configurações" />
 
       {/* Info da conta */}
-      <div className="bg-white border border-grafite-200 rounded-lg p-5">
-        <div className="flex items-center gap-3 mb-4">
-          <Shield size={18} className="text-teal-600" />
-          <h2 className="text-sm font-medium text-grafite-900">Informações da conta</h2>
-        </div>
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <p className="text-xs text-grafite-500">Função</p>
-            <p className="text-sm text-grafite-900 mt-0.5 font-medium">
-              {ROTULO_PAPEL[perfil.papel] ?? perfil.papel}
-            </p>
-          </div>
-          {perfil.criadoEm && (
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-sm font-medium">
+            <Shield className="size-4 text-muted-foreground" />
+            Informações da conta
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-2 gap-4">
             <div>
-              <p className="text-xs text-grafite-500">Membro desde</p>
-              <p className="text-sm text-grafite-900 mt-0.5 flex items-center gap-1.5">
-                <Calendar size={14} className="text-grafite-400" />
-                {new Date(perfil.criadoEm).toLocaleDateString("pt-BR", {
-                  day: "2-digit",
-                  month: "long",
-                  year: "numeric",
-                })}
+              <p className="text-xs text-muted-foreground">Função</p>
+              <p className="mt-0.5 text-sm font-medium text-foreground">
+                {ROTULO_PAPEL[perfil.papel] ?? perfil.papel}
               </p>
             </div>
-          )}
-        </div>
-      </div>
+            {perfil.criadoEm && (
+              <div>
+                <p className="text-xs text-muted-foreground">Membro desde</p>
+                <p className="mt-0.5 flex items-center gap-1.5 text-sm text-foreground">
+                  <Calendar className="size-3.5 text-muted-foreground" />
+                  {new Date(perfil.criadoEm).toLocaleDateString("pt-BR", {
+                    day: "2-digit",
+                    month: "long",
+                    year: "numeric",
+                  })}
+                </p>
+              </div>
+            )}
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Editar perfil */}
-      <div className="bg-white border border-grafite-200 rounded-lg p-5">
-        <div className="flex items-center gap-3 mb-4">
-          <User size={18} className="text-teal-600" />
-          <h2 className="text-sm font-medium text-grafite-900">Editar perfil</h2>
-        </div>
-        <form onSubmit={salvarPerfil}>
-          <div className="grid grid-cols-2 gap-3">
-            <Campo rotulo="Nome completo">
-              <input
-                required
-                className={classeInput}
-                value={nome}
-                onChange={(e) => setNome(e.target.value)}
-              />
-            </Campo>
-            <Campo rotulo="E-mail">
-              <input
-                required
-                type="email"
-                className={classeInput}
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-              />
-            </Campo>
-          </div>
-          {msgPerfil && (
-            <p className={`text-xs mb-3 ${msgPerfil.tipo === "ok" ? "text-teal-600" : "text-red-500"}`}>
-              {msgPerfil.texto}
-            </p>
-          )}
-          <button
-            type="submit"
-            disabled={salvandoPerfil}
-            className="bg-teal-600 hover:bg-teal-700 text-white text-sm font-medium rounded-md px-4 py-2 transition-colors disabled:opacity-60"
-          >
-            {salvandoPerfil ? "Salvando..." : "Salvar perfil"}
-          </button>
-        </form>
-      </div>
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-sm font-medium">
+            <User className="size-4 text-muted-foreground" />
+            Editar perfil
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={salvarPerfil} className="space-y-4">
+            <div className="grid grid-cols-2 gap-3">
+              <div className="grid gap-1.5">
+                <Label htmlFor="perfil-nome">Nome completo</Label>
+                <Input
+                  id="perfil-nome"
+                  required
+                  value={nome}
+                  onChange={(e) => setNome(e.target.value)}
+                />
+              </div>
+              <div className="grid gap-1.5">
+                <Label htmlFor="perfil-email">E-mail</Label>
+                <Input
+                  id="perfil-email"
+                  required
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                />
+              </div>
+            </div>
+            {msgPerfil && (
+              <p className={`text-xs ${msgPerfil.tipo === "ok" ? "text-foreground" : "text-danger"}`}>
+                {msgPerfil.texto}
+              </p>
+            )}
+            <Button type="submit" disabled={salvandoPerfil}>
+              {salvandoPerfil ? "Salvando..." : "Salvar perfil"}
+            </Button>
+          </form>
+        </CardContent>
+      </Card>
 
       {/* Alterar senha */}
-      <div className="bg-white border border-grafite-200 rounded-lg p-5">
-        <div className="flex items-center gap-3 mb-4">
-          <Lock size={18} className="text-teal-600" />
-          <h2 className="text-sm font-medium text-grafite-900">Alterar senha</h2>
-        </div>
-        <form onSubmit={alterarSenha}>
-          <Campo rotulo="Senha atual">
-            <input
-              required
-              type="password"
-              autoComplete="current-password"
-              className={classeInput}
-              value={senhaAtual}
-              onChange={(e) => setSenhaAtual(e.target.value)}
-            />
-          </Campo>
-          <div className="grid grid-cols-2 gap-3">
-            <Campo rotulo="Nova senha">
-              <input
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-sm font-medium">
+            <Lock className="size-4 text-muted-foreground" />
+            Alterar senha
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={alterarSenha} className="space-y-4">
+            <div className="grid gap-1.5">
+              <Label htmlFor="senha-atual">Senha atual</Label>
+              <Input
+                id="senha-atual"
                 required
                 type="password"
-                minLength={6}
-                autoComplete="new-password"
-                className={classeInput}
-                value={novaSenha}
-                onChange={(e) => setNovaSenha(e.target.value)}
+                autoComplete="current-password"
+                value={senhaAtual}
+                onChange={(e) => setSenhaAtual(e.target.value)}
               />
-            </Campo>
-            <Campo rotulo="Confirmar nova senha">
-              <input
-                required
-                type="password"
-                minLength={6}
-                autoComplete="new-password"
-                className={classeInput}
-                value={confirmarSenha}
-                onChange={(e) => setConfirmarSenha(e.target.value)}
-              />
-            </Campo>
-          </div>
-          {msgSenha && (
-            <p className={`text-xs mb-3 ${msgSenha.tipo === "ok" ? "text-teal-600" : "text-red-500"}`}>
-              {msgSenha.texto}
-            </p>
-          )}
-          <button
-            type="submit"
-            disabled={salvandoSenha}
-            className="bg-teal-600 hover:bg-teal-700 text-white text-sm font-medium rounded-md px-4 py-2 transition-colors disabled:opacity-60"
-          >
-            {salvandoSenha ? "Alterando..." : "Alterar senha"}
-          </button>
-        </form>
-      </div>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="grid gap-1.5">
+                <Label htmlFor="senha-nova">Nova senha</Label>
+                <Input
+                  id="senha-nova"
+                  required
+                  type="password"
+                  minLength={6}
+                  autoComplete="new-password"
+                  value={novaSenha}
+                  onChange={(e) => setNovaSenha(e.target.value)}
+                />
+              </div>
+              <div className="grid gap-1.5">
+                <Label htmlFor="senha-confirmar">Confirmar nova senha</Label>
+                <Input
+                  id="senha-confirmar"
+                  required
+                  type="password"
+                  minLength={6}
+                  autoComplete="new-password"
+                  value={confirmarSenha}
+                  onChange={(e) => setConfirmarSenha(e.target.value)}
+                />
+              </div>
+            </div>
+            {msgSenha && (
+              <p className={`text-xs ${msgSenha.tipo === "ok" ? "text-foreground" : "text-danger"}`}>
+                {msgSenha.texto}
+              </p>
+            )}
+            <Button type="submit" disabled={salvandoSenha}>
+              {salvandoSenha ? "Alterando..." : "Alterar senha"}
+            </Button>
+          </form>
+        </CardContent>
+      </Card>
     </div>
   );
 }

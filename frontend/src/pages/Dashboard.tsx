@@ -5,9 +5,12 @@ import { ClipboardList, DollarSign, Receipt, Wallet, ArrowUpRight, ArrowDownRigh
 import { api } from "../services/api";
 import { Funcionario, OrdemServico } from "../types";
 import { formatarReais, tempoRelativo, formatarNumeroOS } from "../utils/formatters";
-import { Card } from "../components/ui/Card";
-import { StatusBadge } from "../components/ui/Badge";
-import { HospitalLogo } from "../components/ui/HospitalLogo";
+import { Card, CardContent, CardHeader, CardTitle } from "../components/shadcn/card";
+import { Badge } from "../components/shadcn/badge";
+import { Button } from "../components/shadcn/button";
+import { StatusBadge } from "../components/StatusBadge";
+import { HospitalLogo } from "../components/HospitalLogo";
+import { PageHeader } from "../components/PageHeader";
 
 function mesmoMes(iso: string | null, data: Date) {
   if (!iso) return false;
@@ -57,28 +60,22 @@ function CartaoMetrica({
   to?: string;
 }) {
   const conteudo = (
-    <Card interativo={!!to} className="h-full p-5">
+    <Card className={`h-full p-5${to ? " transition-shadow hover:shadow-md" : ""}`}>
       <div className="flex items-start justify-between">
-        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-teal-50 shrink-0">
-          <Icone size={19} className="text-teal-600" />
+        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-muted shrink-0">
+          <Icone size={19} className="text-foreground" />
         </div>
         {tendencia !== null && tendencia !== undefined && (
-          <span
-            className={`inline-flex items-center gap-0.5 rounded-full px-2 py-0.5 text-xs font-medium ${
-              tendencia >= 0
-                ? "bg-status-concluido/10 text-status-concluido"
-                : "bg-status-cancelado/10 text-status-cancelado"
-            }`}
-          >
+          <span className="inline-flex items-center gap-0.5 rounded-full bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground">
             {tendencia >= 0 ? <ArrowUpRight size={13} /> : <ArrowDownRight size={13} />}
             {Math.abs(tendencia).toFixed(1)}%
           </span>
         )}
       </div>
-      <p className="mt-4 text-xs font-medium uppercase tracking-wide text-grafite-400">{rotulo}</p>
-      <p className="codigo mt-1 text-[26px] font-semibold leading-tight text-grafite-900">{valor}</p>
+      <p className="mt-4 text-xs font-medium uppercase tracking-wide text-muted-foreground">{rotulo}</p>
+      <p className="codigo mt-1 text-[26px] font-semibold leading-tight text-foreground">{valor}</p>
       {tendencia !== null && tendencia !== undefined && (
-        <p className="mt-1 text-[11px] text-grafite-400">vs. mês passado</p>
+        <p className="mt-1 text-[11px] text-muted-foreground">vs. mês passado</p>
       )}
     </Card>
   );
@@ -87,43 +84,47 @@ function CartaoMetrica({
 
 function GraficoFaturamento({ dados }: { dados: { dia: string; valor: number }[] }) {
   return (
-    <Card className="p-5">
-      <h2 className="text-base font-semibold text-grafite-900 mb-4">Faturamento nos últimos 30 dias</h2>
-      <ResponsiveContainer width="100%" height={240}>
-        <AreaChart data={dados} margin={{ top: 5, right: 8, left: 0, bottom: 0 }}>
-          <defs>
-            <linearGradient id="corFaturamento" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="5%" stopColor="#0F8B8D" stopOpacity={0.25} />
-              <stop offset="95%" stopColor="#0F8B8D" stopOpacity={0} />
-            </linearGradient>
-          </defs>
-          <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#EDF1F4" />
-          <XAxis
-            dataKey="dia"
-            tick={{ fontSize: 11, fill: "#8A99A6" }}
-            axisLine={false}
-            tickLine={false}
-            interval={4}
-          />
-          <YAxis
-            tick={{ fontSize: 11, fill: "#8A99A6" }}
-            axisLine={false}
-            tickLine={false}
-            tickFormatter={(v) => `R$${v}`}
-            width={54}
-          />
-          <Tooltip
-            formatter={(value: number) => [formatarReais(value), "Faturamento"]}
-            contentStyle={{
-              borderRadius: 12,
-              border: "1px solid #EDF1F4",
-              boxShadow: "0 8px 24px rgba(18,24,31,0.12)",
-              fontSize: 12,
-            }}
-          />
-          <Area type="monotone" dataKey="valor" stroke="#0F8B8D" strokeWidth={2.5} fill="url(#corFaturamento)" />
-        </AreaChart>
-      </ResponsiveContainer>
+    <Card>
+      <CardHeader>
+        <CardTitle>Faturamento nos últimos 30 dias</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <ResponsiveContainer width="100%" height={240}>
+          <AreaChart data={dados} margin={{ top: 5, right: 8, left: 0, bottom: 0 }}>
+            <defs>
+              <linearGradient id="corFaturamento" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="5%" stopColor="var(--foreground)" stopOpacity={0.2} />
+                <stop offset="95%" stopColor="var(--foreground)" stopOpacity={0} />
+              </linearGradient>
+            </defs>
+            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--border)" />
+            <XAxis
+              dataKey="dia"
+              tick={{ fontSize: 11, fill: "var(--muted-foreground)" }}
+              axisLine={false}
+              tickLine={false}
+              interval={4}
+            />
+            <YAxis
+              tick={{ fontSize: 11, fill: "var(--muted-foreground)" }}
+              axisLine={false}
+              tickLine={false}
+              tickFormatter={(v) => `R$${v}`}
+              width={54}
+            />
+            <Tooltip
+              formatter={(value: number) => [formatarReais(value), "Faturamento"]}
+              contentStyle={{
+                borderRadius: 12,
+                border: "1px solid var(--border)",
+                boxShadow: "0 8px 24px rgba(18,24,31,0.12)",
+                fontSize: 12,
+              }}
+            />
+            <Area type="monotone" dataKey="valor" stroke="var(--foreground)" strokeWidth={2.5} fill="url(#corFaturamento)" />
+          </AreaChart>
+        </ResponsiveContainer>
+      </CardContent>
     </Card>
   );
 }
@@ -131,20 +132,22 @@ function GraficoFaturamento({ dados }: { dados: { dia: string; valor: number }[]
 function DespesasPorTipo({ dados }: { dados: { tipo: string; valor: number }[] }) {
   const total = dados.reduce((soma, d) => soma + d.valor, 0);
   return (
-    <Card className="p-5">
-      <h2 className="text-base font-semibold text-grafite-900 mb-4">Despesas por tipo no mês</h2>
-      <div className="space-y-4">
+    <Card>
+      <CardHeader>
+        <CardTitle>Despesas por tipo no mês</CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-4">
         {dados.map((d) => {
           const pct = total > 0 ? (d.valor / total) * 100 : 0;
           return (
             <div key={d.tipo}>
               <div className="flex justify-between text-sm mb-1.5">
-                <span className="text-grafite-700">{d.tipo}</span>
-                <span className="codigo font-medium text-grafite-900">{formatarReais(d.valor)}</span>
+                <span className="text-foreground">{d.tipo}</span>
+                <span className="codigo font-medium text-foreground">{formatarReais(d.valor)}</span>
               </div>
-              <div className="h-2 bg-grafite-100 rounded-full overflow-hidden">
+              <div className="h-2 bg-muted rounded-full overflow-hidden">
                 <div
-                  className="h-full rounded-full bg-linear-to-r from-teal-500 to-teal-600 transition-all"
+                  className="h-full rounded-full bg-foreground transition-all"
                   style={{ width: `${pct}%` }}
                 />
               </div>
@@ -152,9 +155,9 @@ function DespesasPorTipo({ dados }: { dados: { tipo: string; valor: number }[] }
           );
         })}
         {dados.every((d) => d.valor === 0) && (
-          <p className="text-sm text-grafite-500">Nenhuma despesa registrada este mês.</p>
+          <p className="text-sm text-muted-foreground">Nenhuma despesa registrada este mês.</p>
         )}
-      </div>
+      </CardContent>
     </Card>
   );
 }
@@ -230,10 +233,7 @@ export function Dashboard() {
 
   return (
     <div className="space-y-8">
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight text-grafite-900">Painel</h1>
-        <p className="mt-1 text-sm text-grafite-500">Visão geral da operação neste mês.</p>
-      </div>
+      <PageHeader titulo="Painel" subtitulo="Visão geral da operação neste mês." />
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <CartaoMetrica rotulo="Tickets abertos" valor={abertas.length} icone={ClipboardList} to="/ordens-servico" />
@@ -265,13 +265,13 @@ export function Dashboard() {
       </div>
 
       <div>
-        <h2 className="text-base font-semibold text-grafite-900 mb-3">Agenda de hoje, por técnico</h2>
+        <h2 className="text-base font-semibold text-foreground mb-3">Agenda de hoje, por técnico</h2>
         {agendaDoDia.length === 0 ? (
-          <Card className="px-5 py-4 text-sm text-grafite-500">Nenhum técnico cadastrado ainda.</Card>
+          <Card className="px-5 py-4 text-sm text-muted-foreground">Nenhum técnico cadastrado ainda.</Card>
         ) : (
-          <Card className="overflow-hidden p-0">
+          <Card className="p-0">
             {/* Abas dos técnicos */}
-            <div className="flex items-center gap-1 overflow-x-auto border-b border-grafite-100 px-3 pt-2">
+            <div className="flex items-center gap-1 overflow-x-auto border-b border-border px-3 pt-2">
               {agendaDoDia.map(({ funcionario, quantidade }) => {
                 const ativo = funcionario.id === tecnicoAtivoId;
                 return (
@@ -280,60 +280,53 @@ export function Dashboard() {
                     onClick={() => setAbaTecnico(funcionario.id)}
                     className={`flex items-center gap-2 whitespace-nowrap rounded-t-lg border-b-2 px-3 py-2.5 text-sm transition-colors ${
                       ativo
-                        ? "border-teal-600 text-grafite-900 font-medium"
-                        : "border-transparent text-grafite-500 hover:text-grafite-900"
+                        ? "border-foreground text-foreground font-medium"
+                        : "border-transparent text-muted-foreground hover:text-foreground"
                     }`}
                   >
                     {funcionario.usuario.nome.split(" ")[0]}
-                    <span
-                      className={`codigo rounded-full px-1.5 text-[11px] ${
-                        ativo ? "bg-teal-100 text-teal-700" : "bg-grafite-100 text-grafite-500"
-                      }`}
-                    >
+                    <Badge variant={ativo ? "default" : "secondary"} className="codigo">
                       {quantidade}
-                    </span>
+                    </Badge>
                   </button>
                 );
               })}
             </div>
 
             {/* Atendimentos do técnico selecionado */}
-            <div className="divide-y divide-grafite-100">
+            <div className="divide-y divide-border">
               {agendaAtiva && agendaAtiva.atendimentos.length > 0 ? (
                 agendaAtiva.atendimentos.map((os) => (
                   <Link
                     key={os.id}
                     to={`/ordens-servico/${os.id}`}
-                    className="group flex items-center justify-between gap-4 px-5 py-3.5 transition-colors hover:bg-grafite-50"
+                    className="group flex items-center justify-between gap-4 px-5 py-3.5 transition-colors hover:bg-muted/50"
                   >
                     <div className="flex min-w-0 items-center gap-3">
                       <HospitalLogo nome={os.cliente.nome} size={36} />
                       <div className="min-w-0">
                         <div className="flex items-center gap-2">
-                          <span className="codigo shrink-0 rounded-full bg-grafite-100 px-2 py-0.5 text-[11px] font-medium text-grafite-600">
+                          <Badge variant="secondary" className="codigo shrink-0">
                             #{formatarNumeroOS(os.numero)}
-                          </span>
-                          <p className="truncate text-sm font-semibold text-grafite-900">{os.cliente.nome}</p>
+                          </Badge>
+                          <p className="truncate text-sm font-semibold text-foreground">{os.cliente.nome}</p>
                         </div>
-                        <p className="mt-0.5 truncate text-xs text-grafite-500">{os.equipamento.tipo}</p>
+                        <p className="mt-0.5 truncate text-xs text-muted-foreground">{os.equipamento.tipo}</p>
                       </div>
                     </div>
                     <div className="flex shrink-0 items-center gap-3">
                       <StatusBadge status={os.statusAtual} />
-                      <ChevronRight size={16} className="text-grafite-300 transition-colors group-hover:text-grafite-500" />
+                      <ChevronRight size={16} className="text-muted-foreground transition-colors group-hover:text-foreground" />
                     </div>
                   </Link>
                 ))
               ) : (
                 <div className="flex items-center justify-between px-5 py-6">
-                  <p className="text-sm text-grafite-400">Livre hoje — nenhum atendimento agendado.</p>
+                  <p className="text-sm text-muted-foreground">Livre hoje — nenhum atendimento agendado.</p>
                   {agendaAtiva && (
-                    <Link
-                      to={`/funcionarios/${agendaAtiva.funcionario.id}/rota`}
-                      className="text-xs font-medium text-teal-700 hover:text-teal-800"
-                    >
-                      Ver rota
-                    </Link>
+                    <Button asChild variant="link" size="sm">
+                      <Link to={`/funcionarios/${agendaAtiva.funcionario.id}/rota`}>Ver rota</Link>
+                    </Button>
                   )}
                 </div>
               )}
@@ -343,24 +336,24 @@ export function Dashboard() {
       </div>
 
       <div>
-        <h2 className="text-base font-semibold text-grafite-900 mb-3">Ordens de serviço em aberto</h2>
-        <Card className="divide-y divide-grafite-100 overflow-hidden">
+        <h2 className="text-base font-semibold text-foreground mb-3">Ordens de serviço em aberto</h2>
+        <Card className="p-0 divide-y divide-border">
           {abertas.map((os) => (
             <Link
               key={os.id}
               to={`/ordens-servico/${os.id}`}
-              className="group flex items-center justify-between gap-4 px-5 py-3.5 hover:bg-grafite-50 transition-colors"
+              className="group flex items-center justify-between gap-4 px-5 py-3.5 hover:bg-muted/50 transition-colors"
             >
               <div className="flex min-w-0 items-center gap-3">
                 <HospitalLogo nome={os.cliente.nome} size={40} />
                 <div className="min-w-0">
                   <div className="flex items-center gap-2">
-                    <span className="codigo shrink-0 rounded-full bg-grafite-100 px-2 py-0.5 text-[11px] font-medium text-grafite-600">
+                    <Badge variant="secondary" className="codigo shrink-0">
                       #{formatarNumeroOS(os.numero)}
-                    </span>
-                    <p className="truncate text-sm font-semibold text-grafite-900">{os.cliente.nome}</p>
+                    </Badge>
+                    <p className="truncate text-sm font-semibold text-foreground">{os.cliente.nome}</p>
                   </div>
-                  <p className="text-xs text-grafite-500 mt-0.5 truncate">
+                  <p className="text-xs text-muted-foreground mt-0.5 truncate">
                     {os.equipamento.tipo} — {os.descricaoProblema}
                   </p>
                 </div>
@@ -368,16 +361,16 @@ export function Dashboard() {
               <div className="flex shrink-0 items-center gap-3">
                 <div className="text-right">
                   <StatusBadge status={os.statusAtual} />
-                  <p className="text-[11px] text-grafite-400 mt-1" title={new Date(os.dataAbertura).toLocaleString("pt-BR")}>
+                  <p className="text-[11px] text-muted-foreground mt-1" title={new Date(os.dataAbertura).toLocaleString("pt-BR")}>
                     {tempoRelativo(os.dataAbertura)}
                   </p>
                 </div>
-                <ChevronRight size={16} className="text-grafite-300 group-hover:text-grafite-500 transition-colors" />
+                <ChevronRight size={16} className="text-muted-foreground group-hover:text-foreground transition-colors" />
               </div>
             </Link>
           ))}
           {abertas.length === 0 && (
-            <p className="text-sm text-grafite-500 px-5 py-4">Nenhuma OS em aberto no momento.</p>
+            <p className="text-sm text-muted-foreground px-5 py-4">Nenhuma OS em aberto no momento.</p>
           )}
         </Card>
       </div>
