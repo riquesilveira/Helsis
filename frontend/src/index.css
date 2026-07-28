@@ -17,16 +17,6 @@
   --color-grafite-900: #1b232c;
   --color-grafite-950: #12181f;
 
-  /* Teal desativado no design system monocromático. Os tokens `teal-*`
-     permanecem resolvíveis (ainda referenciados por componentes não
-     migrados), mas apontam para a escala grafite — nenhum verde-azulado
-     aparece. Remover de vez só depois que os componentes pararem de usar. */
-  --color-teal-50: #f7f9fa;
-  --color-teal-100: #edf1f4;
-  --color-teal-500: #26313c;
-  --color-teal-600: #1b232c;
-  --color-teal-700: #12181f;
-
   /* Cores semânticas de status — as ÚNICAS cores não-monocromáticas do
      sistema. Fonte da verdade; use `bg-success`, `text-danger/10`, etc. */
   --color-success: #3f8f5f;
@@ -57,9 +47,6 @@
     0 4px 12px rgba(18, 24, 31, 0.08), 0 2px 4px rgba(18, 24, 31, 0.05);
   --shadow-dropdown:
     0 8px 24px rgba(18, 24, 31, 0.12), 0 2px 6px rgba(18, 24, 31, 0.08);
-  /* Anel de foco monocromático (grafite-900). Nome mantido para não quebrar
-     referências existentes; o valor deixou de ser teal. */
-  --shadow-focus-teal: 0 0 0 3px rgba(27, 35, 44, 0.12);
 
   --animate-fade-in: fade-in 0.25s ease-out;
 
@@ -100,18 +87,6 @@
   html {
     @apply font-sans;
   }
-}
-
-@utility card {
-  /* Superfície padrão de conteúdo — branca, cantos generosos e borda suave.
-     Sem sombra: o sistema usa design plano. Base de quase toda a UI. */
-  @apply bg-white rounded-2xl border border-grafite-200;
-}
-
-@utility input-base {
-  @apply w-full bg-white border border-grafite-200 rounded-lg px-3 py-2.5 text-sm
-           text-grafite-900 placeholder:text-grafite-400 transition
-           focus:outline-hidden focus:border-teal-500 focus:shadow-focus-teal;
 }
 
 @layer utilities {
