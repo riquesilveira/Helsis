@@ -1,6 +1,6 @@
 import { FormEvent, useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import { ArrowLeft, Car, Pencil, Plane } from "lucide-react";
+import { ArrowLeft, Car, Pencil, Plane, Plus, X } from "lucide-react";
 import { api } from "../../services/api";
 import {
   Causa,
@@ -15,9 +15,35 @@ import {
   StatusOS,
 } from "../../types";
 import { StatusTimeline } from "../../components/StatusTimeline";
-import { Campo, classeInput, Modal } from "../../components/Modal";
+import { TipoBadge } from "../../components/StatusBadge";
 import { usuarioLogado } from "../../services/auth";
 import { formatarReais, tempoRelativo, formatarNumeroOS } from "../../utils/formatters";
+import {
+  Card,
+  CardAction,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "../../components/shadcn/card";
+import { Button } from "../../components/shadcn/button";
+import { Input } from "../../components/shadcn/input";
+import { Label } from "../../components/shadcn/label";
+import { Textarea } from "../../components/shadcn/textarea";
+import { Checkbox } from "../../components/shadcn/checkbox";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../../components/shadcn/select";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "../../components/shadcn/dialog";
 
 const ROTULO_MODALIDADE: Record<OrdemServico["modalidade"], string> = {
   VISITA_TECNICA: "Visita técnica",
@@ -368,7 +394,7 @@ export function OrdemServicoDetail() {
     }
   }
 
-  if (!os) return <p className="text-sm text-grafite-500">Carregando...</p>;
+  if (!os) return <p className="text-sm text-muted-foreground">Carregando...</p>;
 
   const semTecnico = !os.funcionario;
   const valorPecas = (os.pecasTrocadas ?? []).reduce(
@@ -381,7 +407,7 @@ export function OrdemServicoDetail() {
     <div className="space-y-6 max-w-3xl">
       <Link
         to="/ordens-servico"
-        className="inline-flex items-center gap-1.5 text-sm text-grafite-500 hover:text-grafite-900 transition-colors"
+        className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
       >
         <ArrowLeft size={16} />
         Ordens de serviço
@@ -389,22 +415,14 @@ export function OrdemServicoDetail() {
 
       <div>
         <div className="flex items-center gap-2">
-          <p className="codigo text-sm text-grafite-500">OS #{formatarNumeroOS(os.numero)}</p>
-          <span
-            className={`codigo text-xs font-medium px-1.5 py-0.5 rounded ${
-              os.tipo === "PREVENTIVA"
-                ? "bg-teal-100 text-teal-700"
-                : "bg-grafite-100 text-grafite-600"
-            }`}
-          >
-            {os.tipo === "PREVENTIVA" ? "preventiva" : "corretiva"}
-          </span>
-          <span className="text-xs text-grafite-400" title={new Date(os.dataAbertura).toLocaleString("pt-BR")}>
+          <p className="codigo text-sm text-muted-foreground">OS #{formatarNumeroOS(os.numero)}</p>
+          <TipoBadge tipo={os.tipo} />
+          <span className="text-xs text-muted-foreground" title={new Date(os.dataAbertura).toLocaleString("pt-BR")}>
             aberta {tempoRelativo(os.dataAbertura)}
           </span>
         </div>
-        <h1 className="text-xl font-semibold text-grafite-900 mt-1">{os.cliente.nome}</h1>
-        <p className="text-sm text-grafite-600 mt-1">
+        <h1 className="text-xl font-semibold text-foreground mt-1">{os.cliente.nome}</h1>
+        <p className="text-sm text-muted-foreground mt-1">
           {os.equipamento.tipo}
           {os.equipamento.marca ? ` — ${os.equipamento.marca} ${os.equipamento.modelo ?? ""}` : ""}
           {" · "}
@@ -412,726 +430,802 @@ export function OrdemServicoDetail() {
         </p>
       </div>
 
-      <div className="bg-white border border-grafite-200 rounded-lg p-5">
-        <p className="text-xs text-grafite-500 mb-1">Problema relatado</p>
-        <p className="text-sm text-grafite-900">{os.descricaoProblema}</p>
-      </div>
+      <Card>
+        <CardContent>
+          <p className="text-xs text-muted-foreground mb-1">Problema relatado</p>
+          <p className="text-sm text-foreground">{os.descricaoProblema}</p>
+        </CardContent>
+      </Card>
 
       {/* Diagnóstico codificado — só aparece depois de preenchido no fechamento */}
       {(os.causa || os.defeito || os.solucao) && (
-        <div className="bg-white border border-grafite-200 rounded-lg p-5">
-          <p className="text-xs text-grafite-500 mb-3">Diagnóstico</p>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <div>
-              <p className="text-[11px] uppercase tracking-wide text-grafite-400">Causa</p>
-              <p className="text-sm text-grafite-900 mt-0.5">
-                {os.causa ? (
-                  <>
-                    <span className="codigo">{os.causa.codigo}</span> — {os.causa.descricao}
-                  </>
-                ) : (
-                  <span className="text-grafite-400">—</span>
-                )}
-              </p>
+        <Card>
+          <CardContent>
+            <p className="text-xs text-muted-foreground mb-3">Diagnóstico</p>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div>
+                <p className="text-[11px] uppercase tracking-wide text-muted-foreground">Causa</p>
+                <p className="text-sm text-foreground mt-0.5">
+                  {os.causa ? (
+                    <>
+                      <span className="codigo">{os.causa.codigo}</span> — {os.causa.descricao}
+                    </>
+                  ) : (
+                    <span className="text-muted-foreground">—</span>
+                  )}
+                </p>
+              </div>
+              <div>
+                <p className="text-[11px] uppercase tracking-wide text-muted-foreground">Defeito</p>
+                <p className="text-sm text-foreground mt-0.5">
+                  {os.defeito ? (
+                    <>
+                      <span className="codigo">{os.defeito.codigo}</span> — {os.defeito.descricao}
+                    </>
+                  ) : (
+                    <span className="text-muted-foreground">—</span>
+                  )}
+                </p>
+              </div>
+              <div>
+                <p className="text-[11px] uppercase tracking-wide text-muted-foreground">Solução</p>
+                <p className="text-sm text-foreground mt-0.5">
+                  {os.solucao ? (
+                    <>
+                      <span className="codigo">{os.solucao.codigo}</span> — {os.solucao.descricao}
+                    </>
+                  ) : (
+                    <span className="text-muted-foreground">—</span>
+                  )}
+                </p>
+              </div>
             </div>
-            <div>
-              <p className="text-[11px] uppercase tracking-wide text-grafite-400">Defeito</p>
-              <p className="text-sm text-grafite-900 mt-0.5">
-                {os.defeito ? (
-                  <>
-                    <span className="codigo">{os.defeito.codigo}</span> — {os.defeito.descricao}
-                  </>
-                ) : (
-                  <span className="text-grafite-400">—</span>
-                )}
-              </p>
-            </div>
-            <div>
-              <p className="text-[11px] uppercase tracking-wide text-grafite-400">Solução</p>
-              <p className="text-sm text-grafite-900 mt-0.5">
-                {os.solucao ? (
-                  <>
-                    <span className="codigo">{os.solucao.codigo}</span> — {os.solucao.descricao}
-                  </>
-                ) : (
-                  <span className="text-grafite-400">—</span>
-                )}
-              </p>
-            </div>
-          </div>
-        </div>
+          </CardContent>
+        </Card>
       )}
 
       <div>
-        <h2 className="text-sm font-medium text-grafite-900 mb-3">Acompanhamento</h2>
+        <h2 className="text-sm font-medium text-foreground mb-3">Acompanhamento</h2>
         <StatusTimeline historico={os.statusHistoricos} statusAtual={os.statusAtual} />
       </div>
 
-      <div className="bg-white border border-grafite-200 rounded-lg p-5">
-        <h2 className="text-sm font-medium text-grafite-900 mb-3">
-          Notificações enviadas ao cliente
-        </h2>
-        <div className="divide-y divide-grafite-100">
-          {notificacoes.map((n) => (
-            <div key={n.id} className="py-2.5 flex items-start justify-between gap-3">
-              <div className="min-w-0">
-                <p className="text-sm text-grafite-900 truncate">{n.mensagem.split("\n")[0]}</p>
-                <p className="codigo text-xs text-grafite-500 mt-0.5">
-                  {n.canal} → {n.destinatario} ·{" "}
-                  {new Date(n.enviadaEm).toLocaleString("pt-BR", {
-                    day: "2-digit",
-                    month: "2-digit",
-                    hour: "2-digit",
-                    minute: "2-digit",
-                  })}
-                </p>
+      <Card>
+        <CardHeader>
+          <CardTitle>Notificações enviadas ao cliente</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="divide-y divide-border">
+            {notificacoes.map((n) => (
+              <div key={n.id} className="py-2.5 flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="text-sm text-foreground truncate">{n.mensagem.split("\n")[0]}</p>
+                  <p className="codigo text-xs text-muted-foreground mt-0.5">
+                    {n.canal} → {n.destinatario} ·{" "}
+                    {new Date(n.enviadaEm).toLocaleString("pt-BR", {
+                      day: "2-digit",
+                      month: "2-digit",
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })}
+                  </p>
+                </div>
+                <span
+                  className={`text-xs codigo shrink-0 ${
+                    n.status === "ENVIADA" ? "text-status-concluido" : "text-status-cancelado"
+                  }`}
+                  title={n.erro}
+                >
+                  {n.status === "ENVIADA" ? "enviada" : "falhou"}
+                </span>
               </div>
-              <span
-                className={`text-xs codigo shrink-0 ${
-                  n.status === "ENVIADA" ? "text-status-concluido" : "text-status-cancelado"
-                }`}
-                title={n.erro}
-              >
-                {n.status === "ENVIADA" ? "enviada" : "falhou"}
-              </span>
-            </div>
-          ))}
-          {notificacoes.length === 0 && (
-            <p className="text-sm text-grafite-500 py-2">Nenhuma notificação enviada ainda.</p>
-          )}
-        </div>
-      </div>
+            ))}
+            {notificacoes.length === 0 && (
+              <p className="text-sm text-muted-foreground py-2">Nenhuma notificação enviada ainda.</p>
+            )}
+          </div>
+        </CardContent>
+      </Card>
 
       <div className="grid grid-cols-2 gap-4">
-        <div className="bg-white border border-grafite-200 rounded-lg p-5">
-          <p className="text-xs text-grafite-500">Técnico responsável</p>
-          <p className="text-sm text-grafite-900 mt-1">
-            {os.funcionario?.usuario.nome ?? "Não atribuído"}
-          </p>
-          {podeDesignar && os.statusAtual !== "CONCLUIDO" && os.statusAtual !== "CANCELADO" && (
-            <form onSubmit={handleAtribuir} className="mt-3 flex flex-col gap-2">
-              <select
-                className={classeInput}
-                value={tecnicoSelecionado}
-                onChange={(e) => setTecnicoSelecionado(e.target.value)}
-              >
-                <option value="">{os.funcionario ? "Reatribuir para..." : "Designar técnico..."}</option>
-                {tecnicos
-                  .filter((t) => t.id !== os.funcionario?.id)
-                  .map((t) => (
-                    <option key={t.id} value={t.id}>
-                      {t.usuario.nome}
-                    </option>
-                  ))}
-              </select>
-              <button
-                type="submit"
-                disabled={atribuindo || !tecnicoSelecionado}
-                className="bg-teal-600 hover:bg-teal-700 text-white text-xs font-medium rounded-md px-3 py-1.5 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
-              >
-                {atribuindo ? "Salvando..." : os.funcionario ? "Reatribuir" : "Designar"}
-              </button>
-              {erroAtribuir && <p className="text-xs text-red-500">{erroAtribuir}</p>}
-            </form>
-          )}
-        </div>
-        <div className="bg-white border border-grafite-200 rounded-lg p-5">
-          <p className="text-xs text-grafite-500">Tentativas até agora</p>
-          <p className="codigo text-sm text-grafite-900 mt-1">{os.numeroTentativas + 1}</p>
-        </div>
+        <Card>
+          <CardContent>
+            <p className="text-xs text-muted-foreground">Técnico responsável</p>
+            <p className="text-sm text-foreground mt-1">
+              {os.funcionario?.usuario.nome ?? "Não atribuído"}
+            </p>
+            {podeDesignar && os.statusAtual !== "CONCLUIDO" && os.statusAtual !== "CANCELADO" && (
+              <form onSubmit={handleAtribuir} className="mt-3 flex flex-col gap-2">
+                <Select value={tecnicoSelecionado} onValueChange={setTecnicoSelecionado}>
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder={os.funcionario ? "Reatribuir para..." : "Designar técnico..."} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {tecnicos
+                      .filter((t) => t.id !== os.funcionario?.id)
+                      .map((t) => (
+                        <SelectItem key={t.id} value={t.id}>
+                          {t.usuario.nome}
+                        </SelectItem>
+                      ))}
+                  </SelectContent>
+                </Select>
+                <Button type="submit" size="sm" disabled={atribuindo || !tecnicoSelecionado}>
+                  {atribuindo ? "Salvando..." : os.funcionario ? "Reatribuir" : "Designar"}
+                </Button>
+                {erroAtribuir && <p className="text-xs text-danger">{erroAtribuir}</p>}
+              </form>
+            )}
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent>
+            <p className="text-xs text-muted-foreground">Tentativas até agora</p>
+            <p className="codigo text-sm text-foreground mt-1">{os.numeroTentativas + 1}</p>
+          </CardContent>
+        </Card>
       </div>
 
       {/* Atualizar status */}
       {os.statusAtual !== "CONCLUIDO" && os.statusAtual !== "CANCELADO" && (
-        <div className="bg-white border border-grafite-200 rounded-lg p-5">
-          <h2 className="text-sm font-medium text-grafite-900 mb-3">Atualizar status</h2>
-          <form onSubmit={handleAtualizarStatus}>
-            <Campo rotulo="Novo status">
-              <select
-                className={classeInput}
-                value={novoStatus}
-                onChange={(e) => setNovoStatus(e.target.value as StatusOS)}
-              >
-                {opcoesStatus.map((op) => (
-                  <option key={op.status} value={op.status}>
-                    {op.rotulo}
-                  </option>
-                ))}
-              </select>
-            </Campo>
-            <Campo rotulo="Observação (opcional)">
-              <textarea
-                rows={2}
-                className={classeInput}
-                placeholder="Ex: peça trocada não resolveu, retornando ao reparo"
-                value={observacao}
-                onChange={(e) => setObservacao(e.target.value)}
-              />
-            </Campo>
-            {/* Diagnóstico codificado — aparece no fechamento (parcial ou total),
-                onde o técnico padroniza causa/defeito/solução por dropdown. */}
-            {(novoStatus === "AGUARDANDO_VALIDACAO" || novoStatus === "CONCLUIDO") && (
-              <div className="mb-1 rounded-md border border-status-validacao/30 bg-status-validacao/5 p-3">
-                <p className="text-xs font-medium text-grafite-700 mb-2">
-                  Diagnóstico (padronizado)
-                </p>
-                <Campo rotulo="Causa">
-                  <select
-                    className={classeInput}
-                    value={causaId}
-                    onChange={(e) => setCausaId(e.target.value)}
-                  >
-                    <option value="">Selecione…</option>
-                    {causas.map((c) => (
-                      <option key={c.id} value={c.id}>
-                        {c.codigo} — {c.descricao}
-                      </option>
+        <Card>
+          <CardHeader>
+            <CardTitle>Atualizar status</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleAtualizarStatus}>
+              <div className="grid gap-1.5 mb-4">
+                <Label htmlFor="novo-status">Novo status</Label>
+                <Select value={novoStatus} onValueChange={(v) => setNovoStatus(v as StatusOS)}>
+                  <SelectTrigger id="novo-status" className="w-full">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {opcoesStatus.map((op) => (
+                      <SelectItem key={op.status} value={op.status}>
+                        {op.rotulo}
+                      </SelectItem>
                     ))}
-                  </select>
-                </Campo>
-                <Campo rotulo="Defeito">
-                  <select
-                    className={classeInput}
-                    value={defeitoId}
-                    onChange={(e) => setDefeitoId(e.target.value)}
-                  >
-                    <option value="">Selecione…</option>
-                    {defeitos.map((d) => (
-                      <option key={d.id} value={d.id}>
-                        {d.codigo} — {d.descricao}
-                      </option>
-                    ))}
-                  </select>
-                </Campo>
-                <Campo rotulo="Solução">
-                  <select
-                    className={classeInput}
-                    value={solucaoId}
-                    onChange={(e) => setSolucaoId(e.target.value)}
-                  >
-                    <option value="">Selecione…</option>
-                    {solucoes.map((s) => (
-                      <option key={s.id} value={s.id}>
-                        {s.codigo} — {s.descricao}
-                      </option>
-                    ))}
-                  </select>
-                </Campo>
+                  </SelectContent>
+                </Select>
               </div>
-            )}
-            <label className="flex items-center gap-2 mb-4 text-sm text-grafite-700">
-              <input
-                type="checkbox"
-                checked={novaTentativa}
-                onChange={(e) => setNovaTentativa(e.target.checked)}
-              />
-              Essa mudança representa uma nova tentativa de resolver o problema
-            </label>
-            {erroStatus && (
-              <p className="text-xs text-red-500 mb-3">{erroStatus}</p>
-            )}
-            <button
-              type="submit"
-              disabled={enviandoStatus}
-              className="bg-teal-600 hover:bg-teal-700 text-white text-sm font-medium rounded-md px-4 py-2 transition-colors disabled:opacity-60"
-            >
-              {enviandoStatus ? "Salvando..." : "Salvar status"}
-            </button>
-          </form>
-        </div>
+              <div className="grid gap-1.5 mb-4">
+                <Label htmlFor="observacao-status">Observação (opcional)</Label>
+                <Textarea
+                  id="observacao-status"
+                  rows={2}
+                  placeholder="Ex: peça trocada não resolveu, retornando ao reparo"
+                  value={observacao}
+                  onChange={(e) => setObservacao(e.target.value)}
+                />
+              </div>
+              {/* Diagnóstico codificado — aparece no fechamento (parcial ou total),
+                  onde o técnico padroniza causa/defeito/solução por dropdown. */}
+              {(novoStatus === "AGUARDANDO_VALIDACAO" || novoStatus === "CONCLUIDO") && (
+                <div className="mb-4 rounded-md border border-status-validacao/30 bg-status-validacao/5 p-3">
+                  <p className="text-xs font-medium text-foreground mb-2">
+                    Diagnóstico (padronizado)
+                  </p>
+                  <div className="grid gap-1.5 mb-4">
+                    <Label htmlFor="causa-diag">Causa</Label>
+                    <Select value={causaId} onValueChange={setCausaId}>
+                      <SelectTrigger id="causa-diag" className="w-full">
+                        <SelectValue placeholder="Selecione…" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {causas.map((c) => (
+                          <SelectItem key={c.id} value={c.id}>
+                            {c.codigo} — {c.descricao}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="grid gap-1.5 mb-4">
+                    <Label htmlFor="defeito-diag">Defeito</Label>
+                    <Select value={defeitoId} onValueChange={setDefeitoId}>
+                      <SelectTrigger id="defeito-diag" className="w-full">
+                        <SelectValue placeholder="Selecione…" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {defeitos.map((d) => (
+                          <SelectItem key={d.id} value={d.id}>
+                            {d.codigo} — {d.descricao}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="grid gap-1.5">
+                    <Label htmlFor="solucao-diag">Solução</Label>
+                    <Select value={solucaoId} onValueChange={setSolucaoId}>
+                      <SelectTrigger id="solucao-diag" className="w-full">
+                        <SelectValue placeholder="Selecione…" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {solucoes.map((s) => (
+                          <SelectItem key={s.id} value={s.id}>
+                            {s.codigo} — {s.descricao}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+              )}
+              <div className="mb-4 flex items-center gap-2">
+                <Checkbox
+                  id="nova-tentativa"
+                  checked={novaTentativa}
+                  onCheckedChange={(v) => setNovaTentativa(v === true)}
+                />
+                <Label htmlFor="nova-tentativa" className="text-sm font-normal text-foreground">
+                  Essa mudança representa uma nova tentativa de resolver o problema
+                </Label>
+              </div>
+              {erroStatus && (
+                <p className="text-xs text-danger mb-3">{erroStatus}</p>
+              )}
+              <Button type="submit" disabled={enviandoStatus}>
+                {enviandoStatus ? "Salvando..." : "Salvar status"}
+              </Button>
+            </form>
+          </CardContent>
+        </Card>
       )}
 
       {/* Peças trocadas */}
-      <div className="bg-white border border-grafite-200 rounded-lg p-5">
-        <div className="flex items-center justify-between mb-3">
-          <h2 className="text-sm font-medium text-grafite-900">Peças trocadas</h2>
-          <button
-            onClick={() => setModalPecaAberto(true)}
-            disabled={semTecnico}
-            className="text-xs font-medium text-teal-700 hover:text-teal-800 disabled:opacity-40 disabled:cursor-not-allowed"
-            title={semTecnico ? "Atribua um técnico à OS primeiro" : ""}
-          >
-            + Registrar peça
-          </button>
-        </div>
-
-        <div className="divide-y divide-grafite-100">
-          {(os.pecasTrocadas ?? []).map((p) => (
-            <div key={p.id} className="py-3 flex items-start justify-between gap-3">
-              <div>
-                <p className="text-sm text-grafite-900">
-                  {p.pecaCatalogo.nome}{" "}
-                  <span className="codigo text-xs text-grafite-500">
-                    ({p.tipoServico}, tentativa {p.tentativaNumero})
-                  </span>
-                </p>
-                {p.garantiaAte && (
-                  <p className="text-xs text-grafite-500 mt-0.5">
-                    Garantia até {new Date(p.garantiaAte).toLocaleDateString("pt-BR")}
-                  </p>
-                )}
-              </div>
-              <div className="flex flex-col items-end gap-0.5 shrink-0">
-                {p.precoUnitario != null && (
-                  <span className="codigo text-xs text-grafite-600">
-                    {formatarReais(p.precoUnitario * p.quantidade)}
-                  </span>
-                )}
-                {p.resolveuProblema !== null && (
-                  <span
-                    className={`text-xs codigo ${
-                      p.resolveuProblema ? "text-status-concluido" : "text-status-cancelado"
-                    }`}
-                  >
-                    {p.resolveuProblema ? "resolveu" : "não resolveu"}
-                  </span>
-                )}
-              </div>
-            </div>
-          ))}
-          {(os.pecasTrocadas ?? []).length === 0 && (
-            <p className="text-sm text-grafite-500 py-3">Nenhuma peça registrada ainda.</p>
-          )}
-        </div>
-      </div>
-
-      {/* Deslocamentos (viagens) */}
-      <div className="bg-white border border-grafite-200 rounded-lg p-5">
-        <div className="flex items-center justify-between mb-3">
-          <h2 className="text-sm font-medium text-grafite-900">Deslocamentos</h2>
-          {podeVerFinanceiro && (
-            <button
-              onClick={abrirNovoDeslocamento}
+      <Card>
+        <CardHeader>
+          <CardTitle>Peças trocadas</CardTitle>
+          <CardAction>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setModalPecaAberto(true)}
               disabled={semTecnico}
-              className="text-xs font-medium text-teal-700 hover:text-teal-800 disabled:opacity-40 disabled:cursor-not-allowed"
               title={semTecnico ? "Atribua um técnico à OS primeiro" : ""}
             >
-              + Registrar deslocamento
-            </button>
-          )}
-        </div>
-
-        <div className="divide-y divide-grafite-100">
-          {(os.deslocamentos ?? []).map((d) => {
-            const custoTotal =
-              (d.custoPassagem ?? 0) + (d.custoHospedagem ?? 0) + (d.custoAlimentacao ?? 0);
-            const foiAviao = d.modalTransporte === "AVIAO";
-            const IconeTransporte = foiAviao ? Plane : Car;
-            return (
-              <div key={d.id} className="py-3 flex items-start justify-between gap-3">
-                <div className="flex items-start gap-2.5">
-                  <span
-                    className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-grafite-100 text-grafite-500"
-                    title={foiAviao ? "Avião" : "Carro"}
-                  >
-                    <IconeTransporte size={15} />
-                  </span>
-                  <div>
-                  <p className="text-sm text-grafite-900">
-                    {d.origemCidade ?? "—"} → {d.destinoCidade ?? "—"}
-                    {d.diasViagem != null && (
-                      <span className="codigo text-xs text-grafite-500">
-                        {" "}({d.diasViagem} {d.diasViagem === 1 ? "dia" : "dias"})
-                      </span>
-                    )}
+              <Plus />
+              Registrar peça
+            </Button>
+          </CardAction>
+        </CardHeader>
+        <CardContent>
+          <div className="divide-y divide-border">
+            {(os.pecasTrocadas ?? []).map((p) => (
+              <div key={p.id} className="py-3 flex items-start justify-between gap-3">
+                <div>
+                  <p className="text-sm text-foreground">
+                    {p.pecaCatalogo.nome}{" "}
+                    <span className="codigo text-xs text-muted-foreground">
+                      ({p.tipoServico}, tentativa {p.tentativaNumero})
+                    </span>
                   </p>
-                  <div className="flex gap-3 mt-0.5">
-                    {d.custoPassagem != null && d.custoPassagem > 0 && (
-                      <span className="text-xs text-grafite-500">
-                        {foiAviao ? "Passagem" : "Combustível"}: {formatarReais(d.custoPassagem)}
-                      </span>
-                    )}
-                    {d.custoHospedagem != null && d.custoHospedagem > 0 && (
-                      <span className="text-xs text-grafite-500">
-                        Hospedagem: {formatarReais(d.custoHospedagem)}
-                      </span>
-                    )}
-                    {d.custoAlimentacao != null && d.custoAlimentacao > 0 && (
-                      <span className="text-xs text-grafite-500">
-                        Alimentação: {formatarReais(d.custoAlimentacao)}
-                      </span>
-                    )}
-                  </div>
-                  </div>
+                  {p.garantiaAte && (
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      Garantia até {new Date(p.garantiaAte).toLocaleDateString("pt-BR")}
+                    </p>
+                  )}
                 </div>
-                <div className="flex items-center gap-2 shrink-0">
-                  {custoTotal > 0 && (
-                    <span className="codigo text-xs text-grafite-600">
-                      {formatarReais(custoTotal)}
+                <div className="flex flex-col items-end gap-0.5 shrink-0">
+                  {p.precoUnitario != null && (
+                    <span className="codigo text-xs text-muted-foreground">
+                      {formatarReais(p.precoUnitario * p.quantidade)}
                     </span>
                   )}
-                  {podeVerFinanceiro && (
-                    <>
-                      <button
-                        onClick={() => abrirEdicaoDeslocamento(d)}
-                        className="p-1 text-grafite-400 hover:text-grafite-700"
-                        title="Editar deslocamento"
-                      >
-                        <Pencil size={13} />
-                      </button>
-                      <button
-                        onClick={() => solicitarExclusaoDeslocamento(d.id)}
-                        className="text-xs text-red-500 hover:text-red-700"
-                        title="Excluir deslocamento"
-                      >
-                        ✕
-                      </button>
-                    </>
+                  {p.resolveuProblema !== null && (
+                    <span
+                      className={`text-xs codigo ${
+                        p.resolveuProblema ? "text-status-concluido" : "text-status-cancelado"
+                      }`}
+                    >
+                      {p.resolveuProblema ? "resolveu" : "não resolveu"}
+                    </span>
                   )}
                 </div>
               </div>
-            );
-          })}
-          {(os.deslocamentos ?? []).length === 0 && (
-            <p className="text-sm text-grafite-500 py-3">Nenhum deslocamento registrado ainda.</p>
+            ))}
+            {(os.pecasTrocadas ?? []).length === 0 && (
+              <p className="text-sm text-muted-foreground py-3">Nenhuma peça registrada ainda.</p>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Deslocamentos (viagens) */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Deslocamentos</CardTitle>
+          {podeVerFinanceiro && (
+            <CardAction>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={abrirNovoDeslocamento}
+                disabled={semTecnico}
+                title={semTecnico ? "Atribua um técnico à OS primeiro" : ""}
+              >
+                <Plus />
+                Registrar deslocamento
+              </Button>
+            </CardAction>
           )}
-        </div>
-        {erroDeslocamento && (
-          <p className="text-xs text-red-500 mt-2">{erroDeslocamento}</p>
-        )}
-      </div>
+        </CardHeader>
+        <CardContent>
+          <div className="divide-y divide-border">
+            {(os.deslocamentos ?? []).map((d) => {
+              const custoTotal =
+                (d.custoPassagem ?? 0) + (d.custoHospedagem ?? 0) + (d.custoAlimentacao ?? 0);
+              const foiAviao = d.modalTransporte === "AVIAO";
+              const IconeTransporte = foiAviao ? Plane : Car;
+              return (
+                <div key={d.id} className="py-3 flex items-start justify-between gap-3">
+                  <div className="flex items-start gap-2.5">
+                    <span
+                      className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground"
+                      title={foiAviao ? "Avião" : "Carro"}
+                    >
+                      <IconeTransporte size={15} />
+                    </span>
+                    <div>
+                    <p className="text-sm text-foreground">
+                      {d.origemCidade ?? "—"} → {d.destinoCidade ?? "—"}
+                      {d.diasViagem != null && (
+                        <span className="codigo text-xs text-muted-foreground">
+                          {" "}({d.diasViagem} {d.diasViagem === 1 ? "dia" : "dias"})
+                        </span>
+                      )}
+                    </p>
+                    <div className="flex gap-3 mt-0.5">
+                      {d.custoPassagem != null && d.custoPassagem > 0 && (
+                        <span className="text-xs text-muted-foreground">
+                          {foiAviao ? "Passagem" : "Combustível"}: {formatarReais(d.custoPassagem)}
+                        </span>
+                      )}
+                      {d.custoHospedagem != null && d.custoHospedagem > 0 && (
+                        <span className="text-xs text-muted-foreground">
+                          Hospedagem: {formatarReais(d.custoHospedagem)}
+                        </span>
+                      )}
+                      {d.custoAlimentacao != null && d.custoAlimentacao > 0 && (
+                        <span className="text-xs text-muted-foreground">
+                          Alimentação: {formatarReais(d.custoAlimentacao)}
+                        </span>
+                      )}
+                    </div>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2 shrink-0">
+                    {custoTotal > 0 && (
+                      <span className="codigo text-xs text-muted-foreground">
+                        {formatarReais(custoTotal)}
+                      </span>
+                    )}
+                    {podeVerFinanceiro && (
+                      <>
+                        <Button
+                          variant="ghost"
+                          size="icon-sm"
+                          onClick={() => abrirEdicaoDeslocamento(d)}
+                          title="Editar deslocamento"
+                        >
+                          <Pencil />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon-sm"
+                          onClick={() => solicitarExclusaoDeslocamento(d.id)}
+                          className="text-danger hover:text-danger"
+                          title="Excluir deslocamento"
+                        >
+                          <X />
+                        </Button>
+                      </>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+            {(os.deslocamentos ?? []).length === 0 && (
+              <p className="text-sm text-muted-foreground py-3">Nenhum deslocamento registrado ainda.</p>
+            )}
+          </div>
+          {erroDeslocamento && (
+            <p className="text-xs text-danger mt-2">{erroDeslocamento}</p>
+          )}
+        </CardContent>
+      </Card>
 
       {/* Fechamento financeiro — editável só por dono/gestor (é quem decide o
           valor cobrado e a comissão). O técnico vê uma versão só leitura,
           pra ter transparência sobre quanto vai receber, sem poder alterar. */}
       {podeVerFinanceiro ? (
-        <div className="bg-white border border-grafite-200 rounded-lg p-5">
-          <h2 className="text-sm font-medium text-grafite-900 mb-1">Fechamento financeiro</h2>
-          <p className="text-xs text-grafite-500 mb-4">
-            A comissão do técnico incide só sobre a mão de obra — peça é custo repassado ao cliente.
-          </p>
-          <form onSubmit={handleSalvarFinanceiro}>
-            <div className="grid grid-cols-2 gap-4 mb-4">
-              <div>
-                <p className="text-xs text-grafite-500 mb-1">Valor das peças</p>
-                <p className="codigo text-lg font-semibold text-grafite-900">
-                  {formatarReais(valorPecas)}
-                </p>
+        <Card>
+          <CardHeader>
+            <CardTitle>Fechamento financeiro</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-xs text-muted-foreground mb-4">
+              A comissão do técnico incide só sobre a mão de obra — peça é custo repassado ao cliente.
+            </p>
+            <form onSubmit={handleSalvarFinanceiro}>
+              <div className="grid grid-cols-2 gap-4 mb-4">
+                <div>
+                  <p className="text-xs text-muted-foreground mb-1">Valor das peças</p>
+                  <p className="codigo text-lg font-semibold text-foreground">
+                    {formatarReais(valorPecas)}
+                  </p>
+                </div>
+                <div className="grid gap-1.5">
+                  <Label htmlFor="valor-mao-obra">Valor da mão de obra (R$)</Label>
+                  <Input
+                    id="valor-mao-obra"
+                    type="number"
+                    min={0}
+                    step="0.01"
+                    value={valorMaoDeObra}
+                    onChange={(e) => handleValorMaoDeObraChange(e.target.value)}
+                  />
+                </div>
               </div>
-              <Campo rotulo="Valor da mão de obra (R$)">
-                <input
-                  type="number"
-                  min={0}
-                  step="0.01"
-                  className={classeInput}
-                  value={valorMaoDeObra}
-                  onChange={(e) => handleValorMaoDeObraChange(e.target.value)}
-                />
-              </Campo>
-            </div>
-            <div className="grid grid-cols-2 gap-4 mb-4">
-              <div>
-                <p className="text-xs text-grafite-500 mb-1">Valor total do atendimento</p>
-                <p className="codigo text-lg font-semibold text-grafite-900">
-                  {formatarReais(valorTotal)}
-                </p>
+              <div className="grid grid-cols-2 gap-4 mb-4">
+                <div>
+                  <p className="text-xs text-muted-foreground mb-1">Valor total do atendimento</p>
+                  <p className="codigo text-lg font-semibold text-foreground">
+                    {formatarReais(valorTotal)}
+                  </p>
+                </div>
+                <div className="grid gap-1.5">
+                  <Label htmlFor="valor-comissao">
+                    {os.funcionario?.tipoComissao
+                      ? `Comissão do técnico (${
+                          os.funcionario.tipoComissao === "PERCENTUAL"
+                            ? `${os.funcionario.valorComissao}% da mão de obra`
+                            : "valor fixo"
+                        })`
+                      : "Comissão do técnico (sem comissão configurada)"}
+                  </Label>
+                  <Input
+                    id="valor-comissao"
+                    type="number"
+                    min={0}
+                    step="0.01"
+                    value={valorComissao}
+                    onChange={(e) => setValorComissao(e.target.value)}
+                    disabled={!os.funcionario}
+                    placeholder={!os.funcionario ? "Atribua um técnico primeiro" : "0,00"}
+                  />
+                </div>
               </div>
-              <Campo
-                rotulo={
-                  os.funcionario?.tipoComissao
-                    ? `Comissão do técnico (${
-                        os.funcionario.tipoComissao === "PERCENTUAL"
-                          ? `${os.funcionario.valorComissao}% da mão de obra`
-                          : "valor fixo"
-                      })`
-                    : "Comissão do técnico (sem comissão configurada)"
-                }
-              >
-                <input
-                  type="number"
-                  min={0}
-                  step="0.01"
-                  className={classeInput}
-                  value={valorComissao}
-                  onChange={(e) => setValorComissao(e.target.value)}
-                  disabled={!os.funcionario}
-                  placeholder={!os.funcionario ? "Atribua um técnico primeiro" : "0,00"}
-                />
-              </Campo>
-            </div>
-            <button
-              type="submit"
-              disabled={salvandoFinanceiro}
-              className="bg-teal-600 hover:bg-teal-700 text-white text-sm font-medium rounded-md px-4 py-2 transition-colors disabled:opacity-60"
-            >
-              {salvandoFinanceiro ? "Salvando..." : "Salvar fechamento"}
-            </button>
-          </form>
-        </div>
+              <Button type="submit" disabled={salvandoFinanceiro}>
+                {salvandoFinanceiro ? "Salvando..." : "Salvar fechamento"}
+              </Button>
+            </form>
+          </CardContent>
+        </Card>
       ) : (
         os.valorMaoDeObra != null && (
-          <div className="bg-white border border-grafite-200 rounded-lg p-5">
-            <h2 className="text-sm font-medium text-grafite-900 mb-3">
-              Fechamento financeiro deste atendimento
-            </h2>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <p className="text-xs text-grafite-500">Mão de obra</p>
-                <p className="codigo text-lg font-semibold text-grafite-900 mt-1">
-                  {formatarReais(os.valorMaoDeObra)}
-                </p>
+          <Card>
+            <CardHeader>
+              <CardTitle>Fechamento financeiro deste atendimento</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <p className="text-xs text-muted-foreground">Mão de obra</p>
+                  <p className="codigo text-lg font-semibold text-foreground mt-1">
+                    {formatarReais(os.valorMaoDeObra)}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground">Sua comissão</p>
+                  <p className="codigo text-lg font-semibold text-foreground mt-1">
+                    {os.valorComissao != null ? formatarReais(os.valorComissao) : "—"}
+                  </p>
+                </div>
               </div>
-              <div>
-                <p className="text-xs text-grafite-500">Sua comissão</p>
-                <p className="codigo text-lg font-semibold text-teal-600 mt-1">
-                  {os.valorComissao != null ? formatarReais(os.valorComissao) : "—"}
-                </p>
-              </div>
-            </div>
-          </div>
+            </CardContent>
+          </Card>
         )
       )}
 
-      <Modal
-        titulo="Registrar peça trocada"
-        aberto={modalPecaAberto}
-        onFechar={() => { setModalPecaAberto(false); setErroPeca(null); }}
-      >
-        <form onSubmit={handleRegistrarPeca}>
-          <Campo rotulo="Peça">
-            <div className="flex gap-2">
-              <select
-                required
-                className={classeInput}
-                value={pecaCatalogoId}
-                onChange={(e) => setPecaCatalogoId(e.target.value)}
-              >
-                <option value="">Selecione...</option>
-                {pecas.map((p) => (
-                  <option key={p.id} value={p.id}>
-                    {p.nome}
-                    {p.precoUnitario != null ? ` — ${formatarReais(p.precoUnitario)}` : ""}
-                  </option>
-                ))}
-              </select>
-              <button
-                type="button"
-                onClick={() => setModalNovaPeca(true)}
-                className="text-xs text-teal-700 hover:text-teal-800 shrink-0"
-              >
-                + nova
-              </button>
-            </div>
-          </Campo>
-          <Campo rotulo="Tipo de serviço">
-            <select
-              className={classeInput}
-              value={tipoServico}
-              onChange={(e) => setTipoServico(e.target.value)}
-            >
-              <option value="Substituição">Substituição</option>
-              <option value="Reparo">Reparo</option>
-              <option value="Limpeza">Limpeza</option>
-            </select>
-          </Campo>
-          <Campo rotulo="Garantia (meses)">
-            <input
-              type="number"
-              min={0}
-              className={classeInput}
-              value={garantiaMeses}
-              onChange={(e) => setGarantiaMeses(Number(e.target.value))}
-            />
-          </Campo>
-          <Campo rotulo="Essa troca resolveu o problema?">
-            <select
-              className={classeInput}
-              value={resolveuProblema}
-              onChange={(e) => setResolveuProblema(e.target.value as typeof resolveuProblema)}
-            >
-              <option value="indefinido">Ainda não sei (aguardando teste)</option>
-              <option value="sim">Sim, resolveu</option>
-              <option value="nao">Não, será preciso tentar outra coisa</option>
-            </select>
-          </Campo>
-          {erroPeca && (
-            <p className="text-xs text-red-500 mb-3">{erroPeca}</p>
-          )}
-          <button
-            type="submit"
-            disabled={enviandoPeca}
-            className="w-full mt-2 bg-teal-600 hover:bg-teal-700 text-white text-sm font-medium rounded-md py-2 transition-colors disabled:opacity-60"
-          >
-            {enviandoPeca ? "Salvando..." : "Registrar peça"}
-          </button>
-        </form>
-      </Modal>
-
-      <Modal
-        titulo={deslocamentoEditando ? "Editar deslocamento" : "Registrar deslocamento"}
-        aberto={modalDeslocamentoAberto}
-        onFechar={() => {
-          setModalDeslocamentoAberto(false);
-          setDeslocamentoEditando(null);
-          setErroDeslocamento(null);
+      {/* Modal registrar peça trocada */}
+      <Dialog
+        open={modalPecaAberto}
+        onOpenChange={(aberto) => {
+          if (!aberto) {
+            setModalPecaAberto(false);
+            setErroPeca(null);
+          }
         }}
       >
-        <form onSubmit={handleSalvarDeslocamento}>
-          <Campo rotulo="Meio de transporte">
-            <div className="grid grid-cols-2 gap-2">
-              {([
-                { valor: "CARRO", rotulo: "Carro", Icone: Car },
-                { valor: "AVIAO", rotulo: "Avião", Icone: Plane },
-              ] as const).map(({ valor, rotulo, Icone }) => (
-                <button
-                  key={valor}
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Registrar peça trocada</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleRegistrarPeca} className="space-y-4">
+            <div className="grid gap-1.5">
+              <Label htmlFor="peca-catalogo">Peça</Label>
+              <div className="flex gap-2">
+                <Select required value={pecaCatalogoId} onValueChange={setPecaCatalogoId}>
+                  <SelectTrigger id="peca-catalogo" className="w-full">
+                    <SelectValue placeholder="Selecione..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {pecas.map((p) => (
+                      <SelectItem key={p.id} value={p.id}>
+                        {p.nome}
+                        {p.precoUnitario != null ? ` — ${formatarReais(p.precoUnitario)}` : ""}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Button
                   type="button"
-                  onClick={() => setModalTransporte(valor)}
-                  className={`flex items-center justify-center gap-2 rounded-lg border px-3 py-2 text-sm font-medium transition-colors ${
-                    modalTransporte === valor
-                      ? "border-teal-600 bg-teal-50 text-teal-700"
-                      : "border-grafite-200 text-grafite-600 hover:border-grafite-300"
-                  }`}
+                  variant="outline"
+                  onClick={() => setModalNovaPeca(true)}
+                  className="shrink-0"
                 >
-                  <Icone size={16} />
-                  {rotulo}
-                </button>
-              ))}
+                  + nova
+                </Button>
+              </div>
             </div>
-          </Campo>
-          <Campo rotulo="Cidade de origem">
-            <input
-              className={classeInput}
-              placeholder="Ex: São Paulo"
-              value={origemCidade}
-              onChange={(e) => setOrigemCidade(e.target.value)}
-            />
-          </Campo>
-          <Campo rotulo="Cidade de destino">
-            <input
-              className={classeInput}
-              placeholder="Ex: Campinas"
-              value={destinoCidade}
-              onChange={(e) => setDestinoCidade(e.target.value)}
-            />
-          </Campo>
-          <div className="grid grid-cols-2 gap-3">
-            <Campo rotulo={modalTransporte === "AVIAO" ? "Custo passagem (R$)" : "Custo combustível (R$)"}>
-              <input
+            <div className="grid gap-1.5">
+              <Label htmlFor="tipo-servico">Tipo de serviço</Label>
+              <Select value={tipoServico} onValueChange={setTipoServico}>
+                <SelectTrigger id="tipo-servico" className="w-full">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Substituição">Substituição</SelectItem>
+                  <SelectItem value="Reparo">Reparo</SelectItem>
+                  <SelectItem value="Limpeza">Limpeza</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="grid gap-1.5">
+              <Label htmlFor="garantia-meses">Garantia (meses)</Label>
+              <Input
+                id="garantia-meses"
                 type="number"
                 min={0}
-                step="0.01"
-                className={classeInput}
-                value={custoPassagem}
-                onChange={(e) => setCustoPassagem(e.target.value)}
+                value={garantiaMeses}
+                onChange={(e) => setGarantiaMeses(Number(e.target.value))}
               />
-            </Campo>
-            <Campo rotulo="Custo hospedagem (R$)">
-              <input
-                type="number"
-                min={0}
-                step="0.01"
-                className={classeInput}
-                value={custoHospedagem}
-                onChange={(e) => setCustoHospedagem(e.target.value)}
-              />
-            </Campo>
-          </div>
-          <div className="grid grid-cols-2 gap-3">
-            <Campo rotulo="Custo alimentação (R$)">
-              <input
-                type="number"
-                min={0}
-                step="0.01"
-                className={classeInput}
-                value={custoAlimentacao}
-                onChange={(e) => setCustoAlimentacao(e.target.value)}
-              />
-            </Campo>
-            <Campo rotulo="Dias de viagem">
-              <input
-                type="number"
-                min={1}
-                step="1"
-                className={classeInput}
-                value={diasViagem}
-                onChange={(e) => setDiasViagem(e.target.value)}
-              />
-            </Campo>
-          </div>
-          {erroDeslocamento && (
-            <p className="text-xs text-red-500 mt-2">{erroDeslocamento}</p>
-          )}
-          <button
-            type="submit"
-            disabled={enviandoDeslocamento}
-            className="w-full mt-2 bg-teal-600 hover:bg-teal-700 text-white text-sm font-medium rounded-md py-2 transition-colors disabled:opacity-60"
-          >
-            {enviandoDeslocamento
-              ? "Salvando..."
-              : deslocamentoEditando
-              ? "Salvar alterações"
-              : "Registrar deslocamento"}
-          </button>
-        </form>
-      </Modal>
+            </div>
+            <div className="grid gap-1.5">
+              <Label htmlFor="resolveu-problema">Essa troca resolveu o problema?</Label>
+              <Select
+                value={resolveuProblema}
+                onValueChange={(v) => setResolveuProblema(v as typeof resolveuProblema)}
+              >
+                <SelectTrigger id="resolveu-problema" className="w-full">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="indefinido">Ainda não sei (aguardando teste)</SelectItem>
+                  <SelectItem value="sim">Sim, resolveu</SelectItem>
+                  <SelectItem value="nao">Não, será preciso tentar outra coisa</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            {erroPeca && (
+              <p className="text-xs text-danger">{erroPeca}</p>
+            )}
+            <Button type="submit" disabled={enviandoPeca} className="w-full">
+              {enviandoPeca ? "Salvando..." : "Registrar peça"}
+            </Button>
+          </form>
+        </DialogContent>
+      </Dialog>
 
-      <Modal
-        titulo="Cadastrar nova peça no catálogo"
-        aberto={modalNovaPeca}
-        onFechar={() => { setModalNovaPeca(false); setErroCriarPeca(null); }}
+      {/* Modal registrar/editar deslocamento */}
+      <Dialog
+        open={modalDeslocamentoAberto}
+        onOpenChange={(aberto) => {
+          if (!aberto) {
+            setModalDeslocamentoAberto(false);
+            setDeslocamentoEditando(null);
+            setErroDeslocamento(null);
+          }
+        }}
       >
-        <form onSubmit={handleCriarPeca}>
-          <Campo rotulo="Nome da peça">
-            <input
-              required
-              className={classeInput}
-              value={nomeNovaPeca}
-              onChange={(e) => setNomeNovaPeca(e.target.value)}
-            />
-          </Campo>
-          <Campo rotulo="Preço unitário (R$, opcional)">
-            <input
-              type="number"
-              min={0}
-              step="0.01"
-              className={classeInput}
-              value={precoNovaPeca}
-              onChange={(e) => setPrecoNovaPeca(e.target.value)}
-            />
-          </Campo>
-          {erroCriarPeca && (
-            <p className="text-xs text-red-500 mb-3">{erroCriarPeca}</p>
-          )}
-          <button
-            type="submit"
-            disabled={enviandoNovaPeca}
-            className="w-full mt-2 bg-teal-600 hover:bg-teal-700 text-white text-sm font-medium rounded-md py-2 transition-colors disabled:opacity-60"
-          >
-            {enviandoNovaPeca ? "Cadastrando..." : "Cadastrar peça"}
-          </button>
-        </form>
-      </Modal>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>
+              {deslocamentoEditando ? "Editar deslocamento" : "Registrar deslocamento"}
+            </DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleSalvarDeslocamento} className="space-y-4">
+            <div className="grid gap-1.5">
+              <Label>Meio de transporte</Label>
+              <div className="grid grid-cols-2 gap-2">
+                {([
+                  { valor: "CARRO", rotulo: "Carro", Icone: Car },
+                  { valor: "AVIAO", rotulo: "Avião", Icone: Plane },
+                ] as const).map(({ valor, rotulo, Icone }) => (
+                  <Button
+                    key={valor}
+                    type="button"
+                    variant={modalTransporte === valor ? "default" : "outline"}
+                    onClick={() => setModalTransporte(valor)}
+                  >
+                    <Icone size={16} />
+                    {rotulo}
+                  </Button>
+                ))}
+              </div>
+            </div>
+            <div className="grid gap-1.5">
+              <Label htmlFor="origem-cidade">Cidade de origem</Label>
+              <Input
+                id="origem-cidade"
+                placeholder="Ex: São Paulo"
+                value={origemCidade}
+                onChange={(e) => setOrigemCidade(e.target.value)}
+              />
+            </div>
+            <div className="grid gap-1.5">
+              <Label htmlFor="destino-cidade">Cidade de destino</Label>
+              <Input
+                id="destino-cidade"
+                placeholder="Ex: Campinas"
+                value={destinoCidade}
+                onChange={(e) => setDestinoCidade(e.target.value)}
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="grid gap-1.5">
+                <Label htmlFor="custo-passagem">
+                  {modalTransporte === "AVIAO" ? "Custo passagem (R$)" : "Custo combustível (R$)"}
+                </Label>
+                <Input
+                  id="custo-passagem"
+                  type="number"
+                  min={0}
+                  step="0.01"
+                  value={custoPassagem}
+                  onChange={(e) => setCustoPassagem(e.target.value)}
+                />
+              </div>
+              <div className="grid gap-1.5">
+                <Label htmlFor="custo-hospedagem">Custo hospedagem (R$)</Label>
+                <Input
+                  id="custo-hospedagem"
+                  type="number"
+                  min={0}
+                  step="0.01"
+                  value={custoHospedagem}
+                  onChange={(e) => setCustoHospedagem(e.target.value)}
+                />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="grid gap-1.5">
+                <Label htmlFor="custo-alimentacao">Custo alimentação (R$)</Label>
+                <Input
+                  id="custo-alimentacao"
+                  type="number"
+                  min={0}
+                  step="0.01"
+                  value={custoAlimentacao}
+                  onChange={(e) => setCustoAlimentacao(e.target.value)}
+                />
+              </div>
+              <div className="grid gap-1.5">
+                <Label htmlFor="dias-viagem">Dias de viagem</Label>
+                <Input
+                  id="dias-viagem"
+                  type="number"
+                  min={1}
+                  step="1"
+                  value={diasViagem}
+                  onChange={(e) => setDiasViagem(e.target.value)}
+                />
+              </div>
+            </div>
+            {erroDeslocamento && (
+              <p className="text-xs text-danger">{erroDeslocamento}</p>
+            )}
+            <Button type="submit" disabled={enviandoDeslocamento} className="w-full">
+              {enviandoDeslocamento
+                ? "Salvando..."
+                : deslocamentoEditando
+                ? "Salvar alterações"
+                : "Registrar deslocamento"}
+            </Button>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Modal cadastrar nova peça no catálogo */}
+      <Dialog
+        open={modalNovaPeca}
+        onOpenChange={(aberto) => {
+          if (!aberto) {
+            setModalNovaPeca(false);
+            setErroCriarPeca(null);
+          }
+        }}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Cadastrar nova peça no catálogo</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleCriarPeca} className="space-y-4">
+            <div className="grid gap-1.5">
+              <Label htmlFor="nome-nova-peca">Nome da peça</Label>
+              <Input
+                id="nome-nova-peca"
+                required
+                value={nomeNovaPeca}
+                onChange={(e) => setNomeNovaPeca(e.target.value)}
+              />
+            </div>
+            <div className="grid gap-1.5">
+              <Label htmlFor="preco-nova-peca">Preço unitário (R$, opcional)</Label>
+              <Input
+                id="preco-nova-peca"
+                type="number"
+                min={0}
+                step="0.01"
+                value={precoNovaPeca}
+                onChange={(e) => setPrecoNovaPeca(e.target.value)}
+              />
+            </div>
+            {erroCriarPeca && (
+              <p className="text-xs text-danger">{erroCriarPeca}</p>
+            )}
+            <Button type="submit" disabled={enviandoNovaPeca} className="w-full">
+              {enviandoNovaPeca ? "Cadastrando..." : "Cadastrar peça"}
+            </Button>
+          </form>
+        </DialogContent>
+      </Dialog>
 
       {/* Modal de confirmação de exclusão de deslocamento */}
-      <Modal
-        titulo="Excluir deslocamento"
-        aberto={modalConfirmarExclusao}
-        onFechar={() => { setModalConfirmarExclusao(false); setDeslocamentoParaExcluir(null); setErroDeslocamento(null); }}
+      <Dialog
+        open={modalConfirmarExclusao}
+        onOpenChange={(aberto) => {
+          if (!aberto) {
+            setModalConfirmarExclusao(false);
+            setDeslocamentoParaExcluir(null);
+            setErroDeslocamento(null);
+          }
+        }}
       >
-        <p className="text-sm text-grafite-700 mb-5">
-          Tem certeza que deseja excluir este deslocamento? Essa ação não pode ser desfeita.
-        </p>
-        {erroDeslocamento && (
-          <p className="text-xs text-red-500 mb-3">{erroDeslocamento}</p>
-        )}
-        <div className="flex gap-3 justify-end">
-          <button
-            type="button"
-            onClick={() => { setModalConfirmarExclusao(false); setDeslocamentoParaExcluir(null); setErroDeslocamento(null); }}
-            className="px-4 py-2 text-sm font-medium text-grafite-700 border border-grafite-200 rounded-md hover:bg-grafite-50 transition-colors"
-          >
-            Cancelar
-          </button>
-          <button
-            type="button"
-            onClick={confirmarExclusaoDeslocamento}
-            className="px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-md transition-colors"
-          >
-            Excluir
-          </button>
-        </div>
-      </Modal>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Excluir deslocamento</DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-muted-foreground">
+            Tem certeza que deseja excluir este deslocamento? Essa ação não pode ser desfeita.
+          </p>
+          {erroDeslocamento && (
+            <p className="text-xs text-danger">{erroDeslocamento}</p>
+          )}
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => {
+                setModalConfirmarExclusao(false);
+                setDeslocamentoParaExcluir(null);
+                setErroDeslocamento(null);
+              }}
+            >
+              Cancelar
+            </Button>
+            <Button
+              type="button"
+              onClick={confirmarExclusaoDeslocamento}
+              className="bg-danger text-white hover:bg-danger/90"
+            >
+              Excluir
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

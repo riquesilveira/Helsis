@@ -1,15 +1,32 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { ChevronRight, Plus, UserRound } from "lucide-react";
+import { ChevronRight, Plus, Search, UserRound } from "lucide-react";
 import { api } from "../../services/api";
 import { usuarioLogado } from "../../services/auth";
 import { OPCOES_STATUS, OrdemServico, StatusOS } from "../../types";
 import { tempoRelativo, formatarNumeroOS } from "../../utils/formatters";
-import { PageHeader } from "../../components/ui/PageHeader";
-import { Card } from "../../components/ui/Card";
-import { StatusBadge } from "../../components/ui/Badge";
-import { classeBotao } from "../../components/ui/Button";
-import { HospitalLogo } from "../../components/ui/HospitalLogo";
+import { PageHeader } from "../../components/PageHeader";
+import { HospitalLogo } from "../../components/HospitalLogo";
+import { StatusBadge } from "../../components/StatusBadge";
+import { Card } from "../../components/shadcn/card";
+import { Button } from "../../components/shadcn/button";
+import { Badge } from "../../components/shadcn/badge";
+import { Input } from "../../components/shadcn/input";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "../../components/shadcn/table";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../../components/shadcn/select";
 
 type Periodo = "todas" | "24h" | "7dias" | "15dias" | "30dias" | "personalizado";
 
@@ -113,168 +130,218 @@ export function OrdensServicoList() {
     });
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-6">
       <PageHeader
         titulo="Ordens de serviço"
         subtitulo="Acompanhe e gerencie os chamados técnicos."
         acoes={
           podeAbrirChamado ? (
-            <Link to="/ordens-servico/nova" className={classeBotao("primary")}>
-              <Plus size={16} />
-              Nova OS
-            </Link>
+            <Button asChild>
+              <Link to="/ordens-servico/nova">
+                <Plus />
+                Nova OS
+              </Link>
+            </Button>
           ) : undefined
         }
       />
 
-      <div className="flex items-center gap-1 border-b border-grafite-200 overflow-x-auto">
+      <div className="flex items-center gap-1 overflow-x-auto border-b border-border">
         {ABAS_STATUS.map((aba) => (
           <button
             key={aba.chave}
             onClick={() => setStatusFiltro(aba.chave)}
-            className={`flex items-center gap-1.5 px-3 py-2.5 text-sm font-medium border-b-2 -mb-px whitespace-nowrap transition-colors ${
+            className={`-mb-px flex items-center gap-1.5 whitespace-nowrap border-b-2 px-3 py-2.5 text-sm font-medium transition-colors ${
               statusFiltro === aba.chave
-                ? "border-teal-600 text-teal-700"
-                : "border-transparent text-grafite-500 hover:text-grafite-900"
+                ? "border-foreground text-foreground"
+                : "border-transparent text-muted-foreground hover:text-foreground"
             }`}
           >
             {aba.rotulo}
-            <span
-              className={`codigo text-[11px] px-1.5 rounded-full ${
-                statusFiltro === aba.chave ? "bg-teal-100 text-teal-700" : "bg-grafite-100 text-grafite-500"
-              }`}
-            >
+            <Badge variant="secondary" className="h-4 px-1.5 text-[11px]">
               {contagemPorStatus[aba.chave]}
-            </span>
+            </Badge>
           </button>
         ))}
       </div>
 
       {periodo === "personalizado" && (
-        <div className="flex items-center gap-3 bg-grafite-50 border border-grafite-100 rounded-xl px-4 py-3">
-          <label className="text-xs text-grafite-600 flex items-center gap-2">
+        <div className="flex items-center gap-3 rounded-xl border border-border bg-muted px-4 py-3">
+          <label className="flex items-center gap-2 text-xs text-muted-foreground">
             De
-            <input
+            <Input
               type="date"
               value={dataInicio}
               onChange={(e) => setDataInicio(e.target.value)}
-              className="input-base w-auto py-1.5"
+              className="w-auto"
             />
           </label>
-          <label className="text-xs text-grafite-600 flex items-center gap-2">
+          <label className="flex items-center gap-2 text-xs text-muted-foreground">
             Até
-            <input
+            <Input
               type="date"
               value={dataFim}
               onChange={(e) => setDataFim(e.target.value)}
-              className="input-base w-auto py-1.5"
+              className="w-auto"
             />
           </label>
           {(dataInicio || dataFim) && (
-            <button
+            <Button
+              variant="ghost"
+              size="sm"
               onClick={() => {
                 setDataInicio("");
                 setDataFim("");
               }}
-              className="text-xs text-teal-700 hover:text-teal-800 font-medium"
             >
               Limpar
-            </button>
+            </Button>
           )}
           {!dataInicio && !dataFim && (
-            <span className="text-xs text-grafite-500">Escolha um período pra filtrar.</span>
+            <span className="text-xs text-muted-foreground">Escolha um período pra filtrar.</span>
           )}
         </div>
       )}
 
       <div className="flex items-center gap-3">
-        <input
-          type="text"
-          placeholder="Buscar por cliente, nº da OS ou equipamento..."
-          value={busca}
-          onChange={(e) => setBusca(e.target.value)}
-          className="input-base flex-1"
-        />
-        <select
-          value={funcionarioFiltro}
-          onChange={(e) => setFuncionarioFiltro(e.target.value)}
-          className="input-base w-auto min-w-[180px]"
+        <div className="relative flex-1">
+          <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            type="text"
+            placeholder="Buscar por cliente, nº da OS ou equipamento..."
+            value={busca}
+            onChange={(e) => setBusca(e.target.value)}
+            className="pl-9"
+          />
+        </div>
+        <Select
+          value={funcionarioFiltro || "TODOS"}
+          onValueChange={(v) => setFuncionarioFiltro(v === "TODOS" ? "" : v)}
         >
-          <option value="">Todos os técnicos</option>
-          {tecnicos.map((t) => (
-            <option key={t.id} value={t.id}>
-              {t.nome}
-            </option>
-          ))}
-        </select>
-        <select
-          value={periodo}
-          onChange={(e) => setPeriodo(e.target.value as Periodo)}
-          className="input-base w-auto min-w-[180px]"
-        >
-          {OPCOES_PERIODO.map((op) => (
-            <option key={op.chave} value={op.chave}>
-              {op.rotulo}
-            </option>
-          ))}
-        </select>
+          <SelectTrigger className="w-auto min-w-[180px]">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="TODOS">Todos os técnicos</SelectItem>
+            {tecnicos.map((t) => (
+              <SelectItem key={t.id} value={t.id}>
+                {t.nome}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <Select value={periodo} onValueChange={(v) => setPeriodo(v as Periodo)}>
+          <SelectTrigger className="w-auto min-w-[180px]">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {OPCOES_PERIODO.map((op) => (
+              <SelectItem key={op.chave} value={op.chave}>
+                {op.rotulo}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
 
-      {carregando && (
-        <Card className="px-5 py-4 text-sm text-grafite-500">Carregando...</Card>
-      )}
-
-      {!carregando && ordensFiltradas.length > 0 && (
-        <div className="space-y-0.5">
-          {ordensFiltradas.map((os) => (
-            <Link
-              key={os.id}
-              to={`/ordens-servico/${os.id}`}
-              className="card group flex items-center justify-between gap-4 px-5 py-4 transition-colors hover:border-grafite-300"
-            >
-              <div className="flex min-w-0 items-center gap-3">
-                <HospitalLogo nome={os.cliente.nome} size={40} />
-                <div className="min-w-0">
-                  <div className="flex items-center gap-2">
-                    <span className="codigo shrink-0 rounded-full bg-grafite-100 px-2 py-0.5 text-[11px] font-medium text-grafite-600">
-                      #{formatarNumeroOS(os.numero)}
+      <Card className="py-0">
+        <Table>
+          <TableHeader>
+            <TableRow className="border-border hover:bg-transparent">
+              <TableHead className="px-5 text-xs font-medium text-muted-foreground">
+                Ordem
+              </TableHead>
+              <TableHead className="px-5 text-xs font-medium text-muted-foreground">
+                Equipamento
+              </TableHead>
+              <TableHead className="px-5 text-xs font-medium text-muted-foreground">
+                Técnico
+              </TableHead>
+              <TableHead className="px-5 text-xs font-medium text-muted-foreground">
+                Status
+              </TableHead>
+              <TableHead className="px-5 text-right text-xs font-medium text-muted-foreground">
+                <span className="sr-only">Detalhes</span>
+              </TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {carregando && (
+              <TableRow className="border-border hover:bg-transparent">
+                <TableCell colSpan={5} className="px-5 py-4 text-sm text-muted-foreground">
+                  Carregando...
+                </TableCell>
+              </TableRow>
+            )}
+            {!carregando &&
+              ordensFiltradas.map((os) => (
+                <TableRow key={os.id} className="group border-border hover:bg-muted/50">
+                  <TableCell className="px-5 py-4">
+                    <Link
+                      to={`/ordens-servico/${os.id}`}
+                      className="flex min-w-0 items-center gap-3"
+                    >
+                      <HospitalLogo nome={os.cliente.nome} size={40} />
+                      <div className="flex min-w-0 items-center gap-2">
+                        <Badge variant="secondary" className="codigo shrink-0">
+                          #{formatarNumeroOS(os.numero)}
+                        </Badge>
+                        <span className="min-w-0 truncate text-sm font-semibold text-foreground">
+                          {os.cliente.nome}
+                        </span>
+                      </div>
+                    </Link>
+                  </TableCell>
+                  <TableCell className="px-5 py-4 text-sm text-muted-foreground">
+                    <span className="line-clamp-1">
+                      {os.equipamento.tipo} — {os.descricaoProblema}
                     </span>
-                    <p className="truncate text-sm font-semibold text-grafite-900">{os.cliente.nome}</p>
-                  </div>
-                  <p className="text-xs text-grafite-500 mt-0.5 truncate">
-                    {os.equipamento.tipo} — {os.descricaoProblema}
-                  </p>
-                  <p className="mt-1 flex items-center gap-1 text-[11px] truncate">
-                    <UserRound size={12} className="shrink-0 text-grafite-400" />
+                  </TableCell>
+                  <TableCell className="px-5 py-4 text-sm">
                     {os.funcionario?.usuario?.nome ? (
-                      <span className="font-medium text-grafite-700">{os.funcionario.usuario.nome}</span>
+                      <span className="flex items-center gap-1 font-medium text-foreground">
+                        <UserRound size={12} className="shrink-0 text-muted-foreground" />
+                        {os.funcionario.usuario.nome}
+                      </span>
                     ) : (
-                      <span className="text-grafite-400">Sem técnico atribuído</span>
+                      <span className="flex items-center gap-1 text-muted-foreground">
+                        <UserRound size={12} className="shrink-0" />
+                        Sem técnico atribuído
+                      </span>
                     )}
-                  </p>
-                </div>
-              </div>
-              <div className="flex shrink-0 items-center gap-3">
-                <div className="text-right">
-                  <StatusBadge status={os.statusAtual} />
-                  <p className="text-[11px] text-grafite-400 mt-1" title={new Date(os.dataAbertura).toLocaleString("pt-BR")}>
-                    {tempoRelativo(os.dataAbertura)}
-                  </p>
-                </div>
-                <ChevronRight size={16} className="text-grafite-300 transition-colors group-hover:text-grafite-500" />
-              </div>
-            </Link>
-          ))}
-        </div>
-      )}
-
-      {!carregando && ordensFiltradas.length === 0 && (
-        <Card className="px-5 py-4 text-sm text-grafite-500">
-          {ordens.length === 0
-            ? "Nenhuma ordem de serviço cadastrada."
-            : "Nenhuma OS encontrada com esses filtros."}
-        </Card>
-      )}
+                  </TableCell>
+                  <TableCell className="px-5 py-4">
+                    <StatusBadge status={os.statusAtual} />
+                    <p
+                      className="mt-1 text-[11px] text-muted-foreground"
+                      title={new Date(os.dataAbertura).toLocaleString("pt-BR")}
+                    >
+                      {tempoRelativo(os.dataAbertura)}
+                    </p>
+                  </TableCell>
+                  <TableCell className="px-5 py-4 text-right">
+                    <Link
+                      to={`/ordens-servico/${os.id}`}
+                      aria-label="Ver ordem de serviço"
+                      className="inline-flex text-muted-foreground transition-colors hover:text-foreground"
+                    >
+                      <ChevronRight size={16} />
+                    </Link>
+                  </TableCell>
+                </TableRow>
+              ))}
+            {!carregando && ordensFiltradas.length === 0 && (
+              <TableRow className="border-border hover:bg-transparent">
+                <TableCell colSpan={5} className="px-5 py-4 text-sm text-muted-foreground">
+                  {ordens.length === 0
+                    ? "Nenhuma ordem de serviço cadastrada."
+                    : "Nenhuma OS encontrada com esses filtros."}
+                </TableCell>
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
+      </Card>
     </div>
   );
 }

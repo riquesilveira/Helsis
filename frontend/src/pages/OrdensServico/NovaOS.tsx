@@ -2,7 +2,19 @@ import { FormEvent, useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { api } from "../../services/api";
 import { Cliente, Equipamento, Funcionario, TipoOS } from "../../types";
-import { Campo, classeInput } from "../../components/Modal";
+import { PageHeader } from "../../components/PageHeader";
+import { Card, CardContent } from "../../components/shadcn/card";
+import { Button } from "../../components/shadcn/button";
+import { Input } from "../../components/shadcn/input";
+import { Label } from "../../components/shadcn/label";
+import { Textarea } from "../../components/shadcn/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../../components/shadcn/select";
 
 export function NovaOS() {
   const [searchParams] = useSearchParams();
@@ -77,138 +89,155 @@ export function NovaOS() {
 
   return (
     <div className="max-w-lg space-y-6">
-      <h1 className="text-xl font-semibold text-grafite-900">Nova ordem de serviço</h1>
+      <PageHeader titulo="Nova ordem de serviço" />
 
-      <form onSubmit={handleSubmit} className="bg-white border border-grafite-200 rounded-lg p-5">
-        <Campo rotulo="Tipo de atendimento">
-          <div className="flex gap-2">
-            <button
-              type="button"
-              onClick={() => handleTipoChange("CORRETIVA")}
-              className={`flex-1 text-sm rounded-md py-2 border transition-colors ${
-                tipo === "CORRETIVA"
-                  ? "bg-teal-600 text-white border-teal-600"
-                  : "border-grafite-200 text-grafite-600 hover:bg-grafite-50"
-              }`}
-            >
-              Corretiva
-            </button>
-            <button
-              type="button"
-              onClick={() => handleTipoChange("PREVENTIVA")}
-              className={`flex-1 text-sm rounded-md py-2 border transition-colors ${
-                tipo === "PREVENTIVA"
-                  ? "bg-teal-600 text-white border-teal-600"
-                  : "border-grafite-200 text-grafite-600 hover:bg-grafite-50"
-              }`}
-            >
-              Preventiva
-            </button>
-          </div>
-          <span className="text-xs text-grafite-500 mt-1 block">
-            {tipo === "CORRETIVA"
-              ? "Aberta por causa de um problema relatado pelo cliente."
-              : "Manutenção agendada, sem necessariamente ter um problema relatado."}
-          </span>
-        </Campo>
+      <Card>
+        <CardContent>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="grid gap-1.5">
+              <Label>Tipo de atendimento</Label>
+              <div className="flex gap-2">
+                <Button
+                  type="button"
+                  variant={tipo === "CORRETIVA" ? "default" : "outline"}
+                  onClick={() => handleTipoChange("CORRETIVA")}
+                  className="flex-1"
+                >
+                  Corretiva
+                </Button>
+                <Button
+                  type="button"
+                  variant={tipo === "PREVENTIVA" ? "default" : "outline"}
+                  onClick={() => handleTipoChange("PREVENTIVA")}
+                  className="flex-1"
+                >
+                  Preventiva
+                </Button>
+              </div>
+              <span className="text-xs text-muted-foreground">
+                {tipo === "CORRETIVA"
+                  ? "Aberta por causa de um problema relatado pelo cliente."
+                  : "Manutenção agendada, sem necessariamente ter um problema relatado."}
+              </span>
+            </div>
 
-        <Campo rotulo="Cliente">
-          <select
-            required
-            className={classeInput}
-            value={clienteId}
-            onChange={(e) => {
-              setClienteId(e.target.value);
-              setEquipamentoId("");
-            }}
-          >
-            <option value="">Selecione...</option>
-            {clientes.map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.nome}
-              </option>
-            ))}
-          </select>
-        </Campo>
+            <div className="grid gap-1.5">
+              <Label htmlFor="os-cliente">Cliente</Label>
+              <Select
+                required
+                value={clienteId}
+                onValueChange={(valor) => {
+                  setClienteId(valor);
+                  setEquipamentoId("");
+                }}
+              >
+                <SelectTrigger id="os-cliente" className="w-full">
+                  <SelectValue placeholder="Selecione..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {clientes.map((c) => (
+                    <SelectItem key={c.id} value={c.id}>
+                      {c.nome}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
 
-        <Campo rotulo="Equipamento">
-          <select
-            required
-            disabled={!clienteId}
-            className={classeInput}
-            value={equipamentoId}
-            onChange={(e) => setEquipamentoId(e.target.value)}
-          >
-            <option value="">
-              {clienteId ? "Selecione..." : "Escolha um cliente primeiro"}
-            </option>
-            {equipamentos.map((eq) => (
-              <option key={eq.id} value={eq.id}>
-                {eq.tipo} {eq.marca ? `— ${eq.marca} ${eq.modelo ?? ""}` : ""}
-              </option>
-            ))}
-          </select>
-        </Campo>
+            <div className="grid gap-1.5">
+              <Label htmlFor="os-equipamento">Equipamento</Label>
+              <Select
+                required
+                disabled={!clienteId}
+                value={equipamentoId}
+                onValueChange={(valor) => setEquipamentoId(valor)}
+              >
+                <SelectTrigger id="os-equipamento" className="w-full">
+                  <SelectValue
+                    placeholder={clienteId ? "Selecione..." : "Escolha um cliente primeiro"}
+                  />
+                </SelectTrigger>
+                <SelectContent>
+                  {equipamentos.map((eq) => (
+                    <SelectItem key={eq.id} value={eq.id}>
+                      {eq.tipo} {eq.marca ? `— ${eq.marca} ${eq.modelo ?? ""}` : ""}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
 
-        <Campo rotulo="Técnico responsável (opcional)">
-          <select
-            className={classeInput}
-            value={funcionarioId}
-            onChange={(e) => setFuncionarioId(e.target.value)}
-          >
-            <option value="">A definir depois</option>
-            {funcionarios.map((f) => (
-              <option key={f.id} value={f.id}>
-                {f.usuario.nome} — {f.cargo}
-              </option>
-            ))}
-          </select>
-        </Campo>
+            <div className="grid gap-1.5">
+              <Label htmlFor="os-tecnico">Técnico responsável (opcional)</Label>
+              <Select value={funcionarioId} onValueChange={(valor) => setFuncionarioId(valor)}>
+                <SelectTrigger id="os-tecnico" className="w-full">
+                  <SelectValue placeholder="A definir depois" />
+                </SelectTrigger>
+                <SelectContent>
+                  {funcionarios.map((f) => (
+                    <SelectItem key={f.id} value={f.id}>
+                      {f.usuario.nome} — {f.cargo}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
 
-        <Campo rotulo="Data agendada da visita (opcional)">
-          <input
-            type="date"
-            className={classeInput}
-            value={dataAgendada}
-            onChange={(e) => setDataAgendada(e.target.value)}
-          />
-          <span className="text-xs text-grafite-500 mt-1 block">
-            É essa data que define em qual dia a OS aparece na rota do técnico.
-          </span>
-        </Campo>
+            <div className="grid gap-1.5">
+              <Label htmlFor="os-data">Data agendada da visita (opcional)</Label>
+              <Input
+                id="os-data"
+                type="date"
+                value={dataAgendada}
+                onChange={(e) => setDataAgendada(e.target.value)}
+              />
+              <span className="text-xs text-muted-foreground">
+                É essa data que define em qual dia a OS aparece na rota do técnico.
+              </span>
+            </div>
 
-        <Campo rotulo="Modalidade de atendimento">
-          <select
-            className={classeInput}
-            value={modalidade}
-            onChange={(e) => setModalidade(e.target.value as typeof modalidade)}
-          >
-            <option value="VISITA_TECNICA">Visita técnica (técnico vai até o cliente)</option>
-            <option value="OFICINA">Oficina (cliente traz o equipamento)</option>
-            <option value="REMOTO">Suporte remoto</option>
-          </select>
-        </Campo>
+            <div className="grid gap-1.5">
+              <Label htmlFor="os-modalidade">Modalidade de atendimento</Label>
+              <Select
+                value={modalidade}
+                onValueChange={(valor) => setModalidade(valor as typeof modalidade)}
+              >
+                <SelectTrigger id="os-modalidade" className="w-full">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="VISITA_TECNICA">
+                    Visita técnica (técnico vai até o cliente)
+                  </SelectItem>
+                  <SelectItem value="OFICINA">Oficina (cliente traz o equipamento)</SelectItem>
+                  <SelectItem value="REMOTO">Suporte remoto</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
 
-        <Campo rotulo={tipo === "PREVENTIVA" ? "Observações" : "Descrição do problema"}>
-          <textarea
-            required
-            rows={3}
-            className={classeInput}
-            value={descricaoProblema}
-            onChange={(e) => setDescricaoProblema(e.target.value)}
-          />
-        </Campo>
+            <div className="grid gap-1.5">
+              <Label htmlFor="os-descricao">
+                {tipo === "PREVENTIVA" ? "Observações" : "Descrição do problema"}
+              </Label>
+              <Textarea
+                id="os-descricao"
+                required
+                rows={3}
+                value={descricaoProblema}
+                onChange={(e) => setDescricaoProblema(e.target.value)}
+              />
+            </div>
 
-        {erro && <p className="text-sm text-status-cancelado mb-3">{erro}</p>}
+            {erro && (
+              <p className="rounded-lg bg-danger/10 px-3 py-2 text-sm text-danger">{erro}</p>
+            )}
 
-        <button
-          type="submit"
-          disabled={enviando}
-          className="w-full bg-teal-600 hover:bg-teal-700 text-white text-sm font-medium rounded-md py-2 transition-colors disabled:opacity-60"
-        >
-          {enviando ? "Abrindo..." : "Abrir ordem de serviço"}
-        </button>
-      </form>
+            <Button type="submit" disabled={enviando} className="w-full">
+              {enviando ? "Abrindo..." : "Abrir ordem de serviço"}
+            </Button>
+          </form>
+        </CardContent>
+      </Card>
     </div>
   );
 }
