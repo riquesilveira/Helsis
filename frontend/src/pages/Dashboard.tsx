@@ -5,7 +5,7 @@ import { ChevronRight, TrendingUp, TrendingDown } from "lucide-react";
 import { api } from "../services/api";
 import { Funcionario, OrdemServico } from "../types";
 import { formatarReais, tempoRelativo, formatarNumeroOS } from "../utils/formatters";
-import { Card, CardAction, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "../components/shadcn/card";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "../components/shadcn/card";
 import { Badge } from "../components/shadcn/badge";
 import { Button } from "../components/shadcn/button";
 import { StatusBadge } from "../components/StatusBadge";
@@ -67,20 +67,20 @@ function CartaoMetrica({
         to ? " transition-shadow hover:shadow-md" : ""
       }`}
     >
-      <CardHeader>
-        <CardDescription>{rotulo}</CardDescription>
-        <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
-          {valor}
-        </CardTitle>
-        {temTendencia && (
-          <CardAction>
-            <Badge variant="outline">
+      <CardHeader className="flex flex-col gap-1.5">
+        <div className="flex items-center justify-between gap-2">
+          <CardDescription>{rotulo}</CardDescription>
+          {temTendencia && (
+            <Badge variant="outline" className="gap-1">
               {subiu ? <TrendingUp /> : <TrendingDown />}
               {subiu ? "+" : "-"}
               {Math.abs(tendencia as number).toFixed(1)}%
             </Badge>
-          </CardAction>
-        )}
+          )}
+        </div>
+        <CardTitle className="text-3xl font-semibold tabular-nums whitespace-nowrap">
+          {valor}
+        </CardTitle>
       </CardHeader>
       <CardFooter className="flex-col items-start gap-1.5 text-sm">
         {temTendencia && (

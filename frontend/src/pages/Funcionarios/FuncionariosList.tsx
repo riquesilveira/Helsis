@@ -5,6 +5,14 @@ import { api } from "../../services/api";
 import { Funcionario } from "../../types";
 import { PageHeader } from "../../components/PageHeader";
 import { Card } from "../../components/shadcn/card";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "../../components/shadcn/table";
 import { Button } from "../../components/shadcn/button";
 import { Badge } from "../../components/shadcn/badge";
 import { Input } from "../../components/shadcn/input";
@@ -181,50 +189,72 @@ export function FuncionariosList() {
         }
       />
 
-      <Card className="divide-y divide-border overflow-hidden py-0">
-        {carregando && (
-          <p className="px-5 py-4 text-sm text-muted-foreground">Carregando...</p>
-        )}
-        {!carregando && funcionarios.map((f) => (
-          <div key={f.id} className="flex items-center justify-between gap-4 px-5 py-4 transition-colors hover:bg-muted/50">
-            <Link to={`/funcionarios/${f.id}`} className="flex min-w-0 flex-1 items-center gap-3">
-              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-secondary text-sm font-semibold text-secondary-foreground">
-                {f.usuario.nome.charAt(0).toUpperCase()}
-              </div>
-              <div className="min-w-0">
-                <div className="flex items-center gap-2">
-                  <p className="truncate text-sm text-foreground">{f.usuario.nome}</p>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      abrirModalEditar(f);
-                    }}
-                    className="h-auto shrink-0 px-2 py-0.5 text-xs"
-                  >
-                    Editar
-                  </Button>
-                </div>
-                <div className="mt-0.5 flex items-center gap-1.5">
-                  <p className="truncate text-xs text-muted-foreground">{f.cargo}</p>
-                  {f.usuario.papel && f.usuario.papel !== "TECNICO" && (
-                    <Badge variant="secondary" className="shrink-0">
-                      {ROTULO_PAPEL[f.usuario.papel] ?? f.usuario.papel}
+      <Card className="py-0">
+        <Table>
+          <TableHeader>
+            <TableRow className="border-border hover:bg-transparent">
+              <TableHead className="px-5 text-xs font-medium text-muted-foreground">
+                Funcionário
+              </TableHead>
+              <TableHead className="px-5 text-xs font-medium text-muted-foreground">
+                Acesso
+              </TableHead>
+              <TableHead className="px-5 text-right text-xs font-medium text-muted-foreground">
+                Salário
+              </TableHead>
+              <TableHead className="px-5 text-right text-xs font-medium text-muted-foreground">
+                <span className="sr-only">Ações</span>
+              </TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {carregando && (
+              <TableRow className="border-border hover:bg-transparent">
+                <TableCell colSpan={4} className="px-5 py-4 text-sm text-muted-foreground">
+                  Carregando...
+                </TableCell>
+              </TableRow>
+            )}
+            {!carregando &&
+              funcionarios.map((f) => (
+                <TableRow key={f.id} className="border-border hover:bg-muted/50">
+                  <TableCell className="px-5 py-4">
+                    <Link to={`/funcionarios/${f.id}`} className="flex min-w-0 items-center gap-3">
+                      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-secondary text-sm font-semibold text-secondary-foreground">
+                        {f.usuario.nome.charAt(0).toUpperCase()}
+                      </div>
+                      <div className="min-w-0">
+                        <p className="truncate text-sm font-medium text-foreground">
+                          {f.usuario.nome}
+                        </p>
+                        <p className="truncate text-xs text-muted-foreground">{f.cargo}</p>
+                      </div>
+                    </Link>
+                  </TableCell>
+                  <TableCell className="px-5 py-4">
+                    <Badge variant="secondary">
+                      {ROTULO_PAPEL[f.usuario.papel ?? "TECNICO"] ?? f.usuario.papel ?? "—"}
                     </Badge>
-                  )}
-                </div>
-              </div>
-            </Link>
-            <span className="codigo shrink-0 text-sm text-foreground">
-              R$ {Number(f.salarioAtual).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
-            </span>
-          </div>
-        ))}
-        {!carregando && funcionarios.length === 0 && (
-          <p className="px-5 py-4 text-sm text-muted-foreground">Nenhum funcionário cadastrado.</p>
-        )}
+                  </TableCell>
+                  <TableCell className="codigo px-5 py-4 text-right text-sm text-foreground">
+                    R$ {Number(f.salarioAtual).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                  </TableCell>
+                  <TableCell className="px-5 py-4 text-right">
+                    <Button variant="ghost" size="sm" onClick={() => abrirModalEditar(f)}>
+                      Editar
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              ))}
+            {!carregando && funcionarios.length === 0 && (
+              <TableRow className="border-border hover:bg-transparent">
+                <TableCell colSpan={4} className="px-5 py-4 text-sm text-muted-foreground">
+                  Nenhum funcionário cadastrado.
+                </TableCell>
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
       </Card>
 
       <Dialog open={modalAberto} onOpenChange={(aberto) => { if (!aberto) { setModalAberto(false); setErroSubmit(null); } }}>
