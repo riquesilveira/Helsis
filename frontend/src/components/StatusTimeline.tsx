@@ -1,4 +1,5 @@
 import { ETAPAS_STATUS, StatusHistoricoItem, StatusOS } from "../types";
+import { Card } from "./shadcn/card";
 
 const CORES_STATUS: Record<StatusOS, string> = {
   RECEBIDO: "bg-status-recebido",
@@ -34,29 +35,29 @@ export function StatusTimeline({
   const indiceAtual = ETAPAS_STATUS.findIndex((e) => e.status === statusAtual);
 
   return (
-    <div className="card">
+    <Card className="gap-0 py-0">
       {/* Trilho de etapas padrão (o "quanto falta") */}
-      <div className="flex items-center px-5 pt-5 pb-4 overflow-x-auto">
+      <div className="flex items-center overflow-x-auto px-5 pt-5 pb-4">
         {ETAPAS_STATUS.map((etapa, i) => {
           const concluida = i <= indiceAtual && statusAtual !== "CANCELADO";
           return (
-            <div key={etapa.status} className="flex items-center shrink-0">
-              <div className="flex flex-col items-center gap-1.5 min-w-[84px]">
+            <div key={etapa.status} className="flex shrink-0 items-center">
+              <div className="flex min-w-[84px] flex-col items-center gap-1.5">
                 <div
                   className={`h-2.5 w-2.5 rounded-full ${
-                    concluida ? CORES_STATUS[etapa.status] : "bg-grafite-200"
+                    concluida ? CORES_STATUS[etapa.status] : "bg-border"
                   }`}
                 />
                 <span
-                  className={`text-[11px] text-center leading-tight ${
-                    concluida ? "text-grafite-900 font-medium" : "text-grafite-400"
+                  className={`text-center text-[11px] leading-tight ${
+                    concluida ? "font-medium text-foreground" : "text-muted-foreground"
                   }`}
                 >
                   {etapa.rotulo}
                 </span>
               </div>
               {i < ETAPAS_STATUS.length - 1 && (
-                <div className={`h-px w-8 ${concluida ? "bg-grafite-600" : "bg-grafite-200"}`} />
+                <div className={`h-px w-8 ${concluida ? "bg-muted-foreground" : "bg-border"}`} />
               )}
             </div>
           );
@@ -64,32 +65,32 @@ export function StatusTimeline({
       </div>
 
       {/* Registro real de eventos — o histórico bruto, tipo log de rastreio */}
-      <div className="border-t border-grafite-100 divide-y divide-grafite-100">
+      <div className="divide-y divide-border border-t border-border">
         {historico
           .slice()
           .reverse()
           .map((evento, i) => (
             <div key={i} className="flex items-start gap-3 px-5 py-3">
-              <span className={`mt-1.5 h-1.5 w-1.5 rounded-full shrink-0 ${CORES_STATUS[evento.status]}`} />
-              <div className="flex-1 min-w-0">
-                <p className="text-sm text-grafite-900">
+              <span className={`mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full ${CORES_STATUS[evento.status]}`} />
+              <div className="min-w-0 flex-1">
+                <p className="text-sm text-foreground">
                   {ETAPAS_STATUS.find((e) => e.status === evento.status)?.rotulo ?? evento.status}
                   {evento.tentativaNumero && evento.tentativaNumero > 1 && (
-                    <span className="ml-2 text-xs text-status-aguardando codigo">
+                    <span className="codigo ml-2 text-xs text-status-aguardando">
                       tentativa {evento.tentativaNumero}
                     </span>
                   )}
                 </p>
                 {evento.observacao && (
-                  <p className="text-sm text-grafite-600 mt-0.5">{evento.observacao}</p>
+                  <p className="mt-0.5 text-sm text-muted-foreground">{evento.observacao}</p>
                 )}
               </div>
-              <span className="codigo text-xs text-grafite-400 shrink-0">
+              <span className="codigo shrink-0 text-xs text-muted-foreground">
                 {formatarData(evento.criadoEm)}
               </span>
             </div>
           ))}
       </div>
-    </div>
+    </Card>
   );
 }
