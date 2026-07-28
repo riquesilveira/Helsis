@@ -153,10 +153,12 @@ function SecaoCatalogo({ config }: { config: ConfigCatalogo }) {
   return (
     <Card className="py-0">
       <div className="flex items-center justify-between gap-3 border-b border-border px-5 py-3">
-        <h2 className="text-sm font-medium text-foreground">
+        <h2 className="flex items-center gap-2 text-sm font-medium text-foreground">
           {config.rotulo}
           {!carregando && (
-            <span className="ml-2 text-xs font-normal text-muted-foreground">{itens.length}</span>
+            <span className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1.5 text-xs font-medium text-primary-foreground">
+              {itens.length}
+            </span>
           )}
         </h2>
         <Button size="sm" onClick={abrirNovo}>

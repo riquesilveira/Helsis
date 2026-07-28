@@ -6,7 +6,6 @@ import { usuarioLogado } from "../../services/auth";
 import { OPCOES_STATUS, OrdemServico, StatusOS } from "../../types";
 import { tempoRelativo, formatarNumeroOS } from "../../utils/formatters";
 import { PageHeader } from "../../components/PageHeader";
-import { HospitalLogo } from "../../components/HospitalLogo";
 import { StatusBadge } from "../../components/StatusBadge";
 import { Card } from "../../components/shadcn/card";
 import { Button } from "../../components/shadcn/button";
@@ -252,7 +251,7 @@ export function OrdensServicoList() {
                 Ordem
               </TableHead>
               <TableHead className="px-5 text-xs font-medium text-muted-foreground">
-                Equipamento
+                Problema
               </TableHead>
               <TableHead className="px-5 text-xs font-medium text-muted-foreground">
                 Técnico
@@ -279,9 +278,8 @@ export function OrdensServicoList() {
                   <TableCell className="px-5 py-4">
                     <Link
                       to={`/ordens-servico/${os.id}`}
-                      className="flex min-w-0 items-center gap-3"
+                      className="flex min-w-0 flex-col gap-1"
                     >
-                      <HospitalLogo nome={os.cliente.nome} size={40} />
                       <div className="flex min-w-0 items-center gap-2">
                         <Badge variant="secondary" className="codigo shrink-0">
                           #{formatarNumeroOS(os.numero)}
@@ -290,12 +288,13 @@ export function OrdensServicoList() {
                           {os.cliente.nome}
                         </span>
                       </div>
+                      <span className="truncate text-xs text-muted-foreground">
+                        {os.equipamento.tipo}
+                      </span>
                     </Link>
                   </TableCell>
                   <TableCell className="px-5 py-4 text-sm text-muted-foreground">
-                    <span className="line-clamp-1">
-                      {os.equipamento.tipo} — {os.descricaoProblema}
-                    </span>
+                    <span className="line-clamp-1">{os.descricaoProblema}</span>
                   </TableCell>
                   <TableCell className="px-5 py-4 text-sm">
                     {os.funcionario?.usuario?.nome ? (

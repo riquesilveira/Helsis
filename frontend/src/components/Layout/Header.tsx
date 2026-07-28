@@ -2,7 +2,6 @@ import { Fragment } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { usuarioLogado } from "../../services/auth";
 import { SidebarTrigger } from "../shadcn/sidebar";
-import { Separator } from "../shadcn/separator";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -51,7 +50,6 @@ export function Header() {
       className="sticky top-0 z-40 flex h-16 shrink-0 items-center gap-2 border-b border-border bg-background/80 px-4 backdrop-blur-lg"
     >
       <SidebarTrigger className="-ml-1" />
-      <Separator orientation="vertical" className="mr-1 h-6" />
 
       <Breadcrumb>
         <BreadcrumbList>

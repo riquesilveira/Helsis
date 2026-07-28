@@ -1,11 +1,11 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from "recharts";
-import { ClipboardList, DollarSign, Receipt, Wallet, ArrowUpRight, ArrowDownRight, ChevronRight, LucideIcon } from "lucide-react";
+import { ChevronRight, TrendingUp, TrendingDown } from "lucide-react";
 import { api } from "../services/api";
 import { Funcionario, OrdemServico } from "../types";
 import { formatarReais, tempoRelativo, formatarNumeroOS } from "../utils/formatters";
-import { Card, CardContent, CardHeader, CardTitle } from "../components/shadcn/card";
+import { Card, CardAction, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "../components/shadcn/card";
 import { Badge } from "../components/shadcn/badge";
 import { Button } from "../components/shadcn/button";
 import { StatusBadge } from "../components/StatusBadge";
@@ -49,34 +49,48 @@ function calcularTendencia(atual: number, anterior: number): number | null {
 function CartaoMetrica({
   rotulo,
   valor,
-  icone: Icone,
   tendencia,
   to,
+  rodape = "vs. mês passado",
 }: {
   rotulo: string;
   valor: string | number;
-  icone: LucideIcon;
   tendencia?: number | null;
   to?: string;
+  rodape?: string;
 }) {
+  const temTendencia = tendencia !== null && tendencia !== undefined;
+  const subiu = temTendencia && (tendencia as number) >= 0;
   const conteudo = (
-    <Card className={`h-full p-5${to ? " transition-shadow hover:shadow-md" : ""}`}>
-      <div className="flex items-start justify-between">
-        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-muted shrink-0">
-          <Icone size={19} className="text-foreground" />
-        </div>
-        {tendencia !== null && tendencia !== undefined && (
-          <span className="inline-flex items-center gap-0.5 rounded-full bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground">
-            {tendencia >= 0 ? <ArrowUpRight size={13} /> : <ArrowDownRight size={13} />}
-            {Math.abs(tendencia).toFixed(1)}%
-          </span>
+    <Card
+      className={`@container/card h-full bg-gradient-to-t from-primary/5 to-card${
+        to ? " transition-shadow hover:shadow-md" : ""
+      }`}
+    >
+      <CardHeader>
+        <CardDescription>{rotulo}</CardDescription>
+        <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
+          {valor}
+        </CardTitle>
+        {temTendencia && (
+          <CardAction>
+            <Badge variant="outline">
+              {subiu ? <TrendingUp /> : <TrendingDown />}
+              {subiu ? "+" : "-"}
+              {Math.abs(tendencia as number).toFixed(1)}%
+            </Badge>
+          </CardAction>
         )}
-      </div>
-      <p className="mt-4 text-xs font-medium uppercase tracking-wide text-muted-foreground">{rotulo}</p>
-      <p className="codigo mt-1 text-[26px] font-semibold leading-tight text-foreground">{valor}</p>
-      {tendencia !== null && tendencia !== undefined && (
-        <p className="mt-1 text-[11px] text-muted-foreground">vs. mês passado</p>
-      )}
+      </CardHeader>
+      <CardFooter className="flex-col items-start gap-1.5 text-sm">
+        {temTendencia && (
+          <div className="line-clamp-1 flex gap-2 font-medium">
+            {subiu ? "Em alta este mês" : "Em queda este mês"}{" "}
+            {subiu ? <TrendingUp className="size-4" /> : <TrendingDown className="size-4" />}
+          </div>
+        )}
+        <div className="text-muted-foreground">{rodape}</div>
+      </CardFooter>
     </Card>
   );
   return to ? <Link to={to} className="block h-full">{conteudo}</Link> : conteudo;
@@ -236,23 +250,25 @@ export function Dashboard() {
       <PageHeader titulo="Painel" subtitulo="Visão geral da operação neste mês." />
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <CartaoMetrica rotulo="Tickets abertos" valor={abertas.length} icone={ClipboardList} to="/ordens-servico" />
+        <CartaoMetrica
+          rotulo="Tickets abertos"
+          valor={abertas.length}
+          to="/ordens-servico"
+          rodape="Aguardando atendimento"
+        />
         <CartaoMetrica
           rotulo="Faturamento do mês"
           valor={formatarReais(faturamentoMes)}
-          icone={DollarSign}
           tendencia={calcularTendencia(faturamentoMes, faturamentoMesPassado)}
         />
         <CartaoMetrica
           rotulo="Ticket médio do mês"
           valor={formatarReais(ticketMedioMes)}
-          icone={Receipt}
           tendencia={calcularTendencia(ticketMedioMes, ticketMedioMesPassado)}
         />
         <CartaoMetrica
           rotulo="Despesas mensais"
           valor={formatarReais(despesasMes)}
-          icone={Wallet}
           tendencia={calcularTendencia(despesasMes, despesasMesPassado)}
         />
       </div>
