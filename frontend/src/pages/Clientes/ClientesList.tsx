@@ -69,8 +69,8 @@ export function ClientesList() {
   // Autocomplete de cidade (IBGE) — cacheia a lista na primeira busca
   const [sugestoesCidade, setSugestoesCidade] = useState<MunicipioIBGE[]>([]);
   const [cidadeFocada, setCidadeFocada] = useState(false);
-  const cacheMunicipios = useRef<MunicipioIBGE[]>();
-  const timerCidade = useRef<ReturnType<typeof setTimeout>>();
+  const cacheMunicipios = useRef<MunicipioIBGE[]>(undefined);
+  const timerCidade = useRef<ReturnType<typeof setTimeout>>(undefined);
 
   // Pré-carrega os municípios assim que o modal abre
   useEffect(() => {
