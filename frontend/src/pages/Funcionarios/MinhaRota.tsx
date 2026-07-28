@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import { api } from "../../services/api";
 import { RotaFuncionario } from "../../types";
 import { CartaoVisitaRota } from "../../components/CartaoVisitaRota";
+import { PageHeader } from "../../components/PageHeader";
+import { Input } from "../../components/shadcn/input";
 import { usuarioLogado } from "../../services/auth";
 
 function hojeISO() {
@@ -31,31 +33,29 @@ export function MinhaRota() {
 
   return (
     <div className="space-y-6 max-w-2xl">
-      <div>
-        <h1 className="text-xl font-semibold text-grafite-900">Minha rota</h1>
-        <p className="text-sm text-grafite-600 mt-1">
-          {usuario ? `Olá, ${usuario.nome.split(" ")[0]}.` : ""} Seus atendimentos por dia.
-        </p>
-      </div>
+      <PageHeader
+        titulo="Minha rota"
+        subtitulo={`${usuario ? `Olá, ${usuario.nome.split(" ")[0]}. ` : ""}Seus atendimentos por dia.`}
+      />
 
       <div className="flex items-center gap-3">
-        <input
+        <Input
           type="date"
           value={data}
           onChange={(e) => setData(e.target.value)}
-          className="border border-grafite-200 rounded-md px-3 py-1.5 text-sm focus:outline-hidden focus:ring-2 focus:ring-teal-500"
+          className="w-auto"
         />
-        <span className="text-sm text-grafite-500 capitalize">{dataFormatada}</span>
+        <span className="text-sm text-muted-foreground capitalize">{dataFormatada}</span>
       </div>
 
       <div>
-        <h2 className="text-sm font-medium text-grafite-900 mb-3">Rota do dia</h2>
+        <h2 className="text-sm font-medium text-foreground mb-3">Rota do dia</h2>
         <div className="space-y-3">
           {rota?.agendadasParaData.map((os) => (
             <CartaoVisitaRota key={os.id} os={os} />
           ))}
           {rota && rota.agendadasParaData.length === 0 && (
-            <p className="text-sm text-grafite-500 bg-white border border-grafite-200 rounded-lg px-4 py-4">
+            <p className="text-sm text-muted-foreground bg-card border border-border rounded-lg px-4 py-4">
               Nenhuma visita agendada para esse dia.
             </p>
           )}
@@ -63,7 +63,7 @@ export function MinhaRota() {
       </div>
 
       <div>
-        <h2 className="text-sm font-medium text-grafite-900 mb-3">
+        <h2 className="text-sm font-medium text-foreground mb-3">
           Outras OS em aberto (sem data ou de outros dias)
         </h2>
         <div className="space-y-3">
@@ -71,7 +71,7 @@ export function MinhaRota() {
             <CartaoVisitaRota key={os.id} os={os} />
           ))}
           {rota && rota.outrasEmAberto.length === 0 && (
-            <p className="text-sm text-grafite-500 bg-white border border-grafite-200 rounded-lg px-4 py-4">
+            <p className="text-sm text-muted-foreground bg-card border border-border rounded-lg px-4 py-4">
               Nenhuma outra OS em aberto no momento.
             </p>
           )}

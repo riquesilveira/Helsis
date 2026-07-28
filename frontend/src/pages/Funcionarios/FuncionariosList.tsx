@@ -1,12 +1,27 @@
 import { FormEvent, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { Plus } from "lucide-react";
+import { Plus, X } from "lucide-react";
 import { api } from "../../services/api";
 import { Funcionario } from "../../types";
-import { Campo, classeInput, Modal } from "../../components/Modal";
-import { PageHeader } from "../../components/ui/PageHeader";
-import { Card } from "../../components/ui/Card";
-import { Button, classeBotao } from "../../components/ui/Button";
+import { PageHeader } from "../../components/PageHeader";
+import { Card } from "../../components/shadcn/card";
+import { Button } from "../../components/shadcn/button";
+import { Badge } from "../../components/shadcn/badge";
+import { Input } from "../../components/shadcn/input";
+import { Label } from "../../components/shadcn/label";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "../../components/shadcn/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../../components/shadcn/select";
 
 /** Formata centavos como moeda brasileira: 350000 → "3.500,00" */
 function formatarMoeda(valor: string): string {
@@ -160,290 +175,317 @@ export function FuncionariosList() {
         subtitulo="Técnicos e colaboradores da operação."
         acoes={
           <Button onClick={() => setModalAberto(true)}>
-            <Plus size={16} />
+            <Plus />
             Novo funcionário
           </Button>
         }
       />
 
-      <Card className="divide-y divide-grafite-100 overflow-hidden p-0">
+      <Card className="divide-y divide-border overflow-hidden py-0">
         {carregando && (
-          <p className="text-sm text-grafite-500 px-5 py-4">Carregando...</p>
+          <p className="px-5 py-4 text-sm text-muted-foreground">Carregando...</p>
         )}
         {!carregando && funcionarios.map((f) => (
-          <div key={f.id} className="flex items-center justify-between gap-4 px-5 py-4 transition-colors hover:bg-grafite-50">
+          <div key={f.id} className="flex items-center justify-between gap-4 px-5 py-4 transition-colors hover:bg-muted/50">
             <Link to={`/funcionarios/${f.id}`} className="flex min-w-0 flex-1 items-center gap-3">
-              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-linear-to-br from-teal-500 to-teal-700 text-sm font-semibold text-white">
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-secondary text-sm font-semibold text-secondary-foreground">
                 {f.usuario.nome.charAt(0).toUpperCase()}
               </div>
               <div className="min-w-0">
                 <div className="flex items-center gap-2">
-                  <p className="text-sm text-grafite-900 truncate">{f.usuario.nome}</p>
-                  <button
+                  <p className="truncate text-sm text-foreground">{f.usuario.nome}</p>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
                     onClick={(e) => {
                       e.preventDefault();
                       abrirModalEditar(f);
                     }}
-                    className="shrink-0 text-xs font-medium text-teal-700 hover:text-teal-800"
+                    className="h-auto shrink-0 px-2 py-0.5 text-xs"
                   >
                     Editar
-                  </button>
+                  </Button>
                 </div>
                 <div className="mt-0.5 flex items-center gap-1.5">
-                  <p className="text-xs text-grafite-500 truncate">{f.cargo}</p>
+                  <p className="truncate text-xs text-muted-foreground">{f.cargo}</p>
                   {f.usuario.papel && f.usuario.papel !== "TECNICO" && (
-                    <span className="inline-flex shrink-0 items-center rounded-full bg-teal-50 px-2 py-0.5 text-[10px] font-medium text-teal-700">
+                    <Badge variant="secondary" className="shrink-0">
                       {ROTULO_PAPEL[f.usuario.papel] ?? f.usuario.papel}
-                    </span>
+                    </Badge>
                   )}
                 </div>
               </div>
             </Link>
-            <span className="codigo text-sm text-grafite-700 shrink-0">
+            <span className="codigo shrink-0 text-sm text-foreground">
               R$ {Number(f.salarioAtual).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
             </span>
           </div>
         ))}
         {!carregando && funcionarios.length === 0 && (
-          <p className="text-sm text-grafite-500 px-5 py-4">Nenhum funcionário cadastrado.</p>
+          <p className="px-5 py-4 text-sm text-muted-foreground">Nenhum funcionário cadastrado.</p>
         )}
       </Card>
 
-      <Modal titulo="Novo funcionário" aberto={modalAberto} onFechar={() => { setModalAberto(false); setErroSubmit(null); }}>
-        <form onSubmit={handleSubmit}>
-          <Campo rotulo="Nome completo">
-            <input
-              required
-              className={classeInput}
-              value={form.nome}
-              onChange={(e) => setForm({ ...form, nome: e.target.value })}
-            />
-          </Campo>
-          <div className="grid grid-cols-2 gap-3">
-            <Campo rotulo="E-mail (login)">
-              <input
+      <Dialog open={modalAberto} onOpenChange={(aberto) => { if (!aberto) { setModalAberto(false); setErroSubmit(null); } }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Novo funcionário</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="grid gap-1.5">
+              <Label htmlFor="func-nome">Nome completo</Label>
+              <Input
+                id="func-nome"
+                required
+                value={form.nome}
+                onChange={(e) => setForm({ ...form, nome: e.target.value })}
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="grid gap-1.5">
+                <Label htmlFor="func-email">E-mail (login)</Label>
+                <Input
+                  id="func-email"
+                  required
+                  type="email"
+                  name="email"
+                  autoComplete="off"
+                  value={form.email}
+                  onChange={(e) => setForm({ ...form, email: e.target.value })}
+                />
+              </div>
+              <div className="grid gap-1.5">
+                <Label htmlFor="func-senha">Senha</Label>
+                <Input
+                  id="func-senha"
+                  required
+                  type="password"
+                  minLength={6}
+                  autoComplete="new-password"
+                  value={form.senha}
+                  onChange={(e) => setForm({ ...form, senha: e.target.value })}
+                />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="grid gap-1.5">
+                <Label htmlFor="func-cargo">Cargo</Label>
+                <Input
+                  id="func-cargo"
+                  required
+                  placeholder="Ex: Técnico, Técnico Sênior"
+                  value={form.cargo}
+                  onChange={(e) => setForm({ ...form, cargo: e.target.value })}
+                />
+              </div>
+              <div className="grid gap-1.5">
+                <Label htmlFor="func-salario">Salário</Label>
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">R$</span>
+                  <Input
+                    id="func-salario"
+                    required
+                    type="text"
+                    inputMode="numeric"
+                    placeholder="0,00"
+                    className="pl-9"
+                    value={form.salarioAtual}
+                    onChange={(e) => setForm({ ...form, salarioAtual: formatarMoeda(e.target.value) })}
+                  />
+                </div>
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="grid gap-1.5">
+                <Label htmlFor="func-admissao">Data de admissão</Label>
+                <Input
+                  id="func-admissao"
+                  required
+                  type="date"
+                  value={form.dataAdmissao}
+                  onChange={(e) => setForm({ ...form, dataAdmissao: e.target.value })}
+                />
+              </div>
+              <div className="grid gap-1.5">
+                <Label htmlFor="func-papel">Nível de acesso</Label>
+                <Select value={form.papel} onValueChange={(valor) => setForm({ ...form, papel: valor })}>
+                  <SelectTrigger id="func-papel" className="w-full">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {PAPEIS_FUNCIONARIO.map((p) => (
+                      <SelectItem key={p.valor} value={p.valor}>{p.rotulo}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div className="grid gap-1.5">
+              <Label htmlFor="func-especialidade">Especialidades</Label>
+              {especialidades.length > 0 && (
+                <div className="mb-2 flex flex-wrap gap-1.5">
+                  {especialidades.map((esp, i) => (
+                    <Badge key={i} variant="secondary" className="gap-1">
+                      {esp}
+                      <button
+                        type="button"
+                        onClick={() => removerEspecialidade(i)}
+                        className="text-muted-foreground hover:text-foreground"
+                      >
+                        <X className="size-3" />
+                      </button>
+                    </Badge>
+                  ))}
+                </div>
+              )}
+              <div className="flex gap-2">
+                <Input
+                  id="func-especialidade"
+                  placeholder="Ex: Ressonância Magnética"
+                  value={novaEspecialidade}
+                  onChange={(e) => setNovaEspecialidade(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      adicionarEspecialidade();
+                    }
+                  }}
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={adicionarEspecialidade}
+                  className="shrink-0"
+                >
+                  + Adicionar
+                </Button>
+              </div>
+            </div>
+            {erroSubmit && (
+              <p className="rounded-lg bg-danger/10 px-3 py-2 text-sm text-danger">{erroSubmit}</p>
+            )}
+            <Button type="submit" disabled={salvando} className="w-full">
+              {salvando ? "Salvando..." : "Cadastrar funcionário"}
+            </Button>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={modalEditar} onOpenChange={(aberto) => { if (!aberto) { setModalEditar(false); setErroEdit(null); } }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Editar funcionário</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={salvarEdicao} className="space-y-4">
+            <div className="grid gap-1.5">
+              <Label htmlFor="edit-nome">Nome completo</Label>
+              <Input
+                id="edit-nome"
+                required
+                value={editForm.nome}
+                onChange={(e) => setEditForm({ ...editForm, nome: e.target.value })}
+              />
+            </div>
+            <div className="grid gap-1.5">
+              <Label htmlFor="edit-email">E-mail</Label>
+              <Input
+                id="edit-email"
                 required
                 type="email"
-                name="email"
-                autoComplete="off"
-                className={classeInput}
-                value={form.email}
-                onChange={(e) => setForm({ ...form, email: e.target.value })}
+                value={editForm.email}
+                onChange={(e) => setEditForm({ ...editForm, email: e.target.value })}
               />
-            </Campo>
-            <Campo rotulo="Senha">
-              <input
-                required
-                type="password"
-                minLength={6}
-                autoComplete="new-password"
-                className={classeInput}
-                value={form.senha}
-                onChange={(e) => setForm({ ...form, senha: e.target.value })}
-              />
-            </Campo>
-          </div>
-          <div className="grid grid-cols-2 gap-3">
-            <Campo rotulo="Cargo">
-              <input
-                required
-                placeholder="Ex: Técnico, Técnico Sênior"
-                className={classeInput}
-                value={form.cargo}
-                onChange={(e) => setForm({ ...form, cargo: e.target.value })}
-              />
-            </Campo>
-            <Campo rotulo="Salário">
-              <div className="relative">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-grafite-500">R$</span>
-                <input
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="grid gap-1.5">
+                <Label htmlFor="edit-cargo">Cargo</Label>
+                <Input
+                  id="edit-cargo"
                   required
-                  type="text"
-                  inputMode="numeric"
-                  placeholder="0,00"
-                  className={`${classeInput} pl-9`}
-                  value={form.salarioAtual}
-                  onChange={(e) => setForm({ ...form, salarioAtual: formatarMoeda(e.target.value) })}
+                  value={editForm.cargo}
+                  onChange={(e) => setEditForm({ ...editForm, cargo: e.target.value })}
                 />
               </div>
-            </Campo>
-          </div>
-          <div className="grid grid-cols-2 gap-3">
-            <Campo rotulo="Data de admissão">
-              <input
-                required
-                type="date"
-                className={classeInput}
-                value={form.dataAdmissao}
-                onChange={(e) => setForm({ ...form, dataAdmissao: e.target.value })}
-              />
-            </Campo>
-            <Campo rotulo="Nível de acesso">
-              <select
-                className={classeInput}
-                value={form.papel}
-                onChange={(e) => setForm({ ...form, papel: e.target.value })}
-              >
-                {PAPEIS_FUNCIONARIO.map((p) => (
-                  <option key={p.valor} value={p.valor}>{p.rotulo}</option>
-                ))}
-              </select>
-            </Campo>
-          </div>
-          <Campo rotulo="Especialidades">
-            {especialidades.length > 0 && (
-              <div className="flex flex-wrap gap-1.5 mb-2">
-                {especialidades.map((esp, i) => (
-                  <span
-                    key={i}
-                    className="inline-flex items-center gap-1 bg-teal-50 text-teal-700 text-xs font-medium px-2.5 py-1 rounded-full"
-                  >
-                    {esp}
-                    <button
-                      type="button"
-                      onClick={() => removerEspecialidade(i)}
-                      className="text-teal-400 hover:text-teal-700"
-                    >
-                      ✕
-                    </button>
-                  </span>
-                ))}
+              <div className="grid gap-1.5">
+                <Label htmlFor="edit-salario">Salário</Label>
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">R$</span>
+                  <Input
+                    id="edit-salario"
+                    required
+                    type="text"
+                    inputMode="numeric"
+                    className="pl-9"
+                    value={editForm.salarioAtual}
+                    onChange={(e) => setEditForm({ ...editForm, salarioAtual: formatarMoeda(e.target.value) })}
+                  />
+                </div>
               </div>
-            )}
-            <div className="flex gap-2">
-              <input
-                placeholder="Ex: Ressonância Magnética"
-                className={classeInput}
-                value={novaEspecialidade}
-                onChange={(e) => setNovaEspecialidade(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") {
-                    e.preventDefault();
-                    adicionarEspecialidade();
-                  }
-                }}
-              />
-              <button
-                type="button"
-                onClick={adicionarEspecialidade}
-                className="shrink-0 text-sm font-medium text-teal-600 hover:text-teal-700 rounded-md px-3 py-2 transition-colors"
-              >
-                + Adicionar
-              </button>
             </div>
-          </Campo>
-          {erroSubmit && (
-            <p className="text-xs text-red-500 mb-3">{erroSubmit}</p>
-          )}
-          <button type="submit" disabled={salvando} className={`${classeBotao("primary")} mt-2 w-full`}>
-            {salvando ? "Salvando..." : "Cadastrar funcionário"}
-          </button>
-        </form>
-      </Modal>
-
-      <Modal titulo="Editar funcionário" aberto={modalEditar} onFechar={() => { setModalEditar(false); setErroEdit(null); }}>
-        <form onSubmit={salvarEdicao}>
-          <Campo rotulo="Nome completo">
-            <input
-              required
-              className={classeInput}
-              value={editForm.nome}
-              onChange={(e) => setEditForm({ ...editForm, nome: e.target.value })}
-            />
-          </Campo>
-          <Campo rotulo="E-mail">
-            <input
-              required
-              type="email"
-              className={classeInput}
-              value={editForm.email}
-              onChange={(e) => setEditForm({ ...editForm, email: e.target.value })}
-            />
-          </Campo>
-          <div className="grid grid-cols-2 gap-3">
-            <Campo rotulo="Cargo">
-              <input
-                required
-                className={classeInput}
-                value={editForm.cargo}
-                onChange={(e) => setEditForm({ ...editForm, cargo: e.target.value })}
-              />
-            </Campo>
-            <Campo rotulo="Salário">
-              <div className="relative">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-grafite-500">R$</span>
-                <input
-                  required
-                  type="text"
-                  inputMode="numeric"
-                  className={`${classeInput} pl-9`}
-                  value={editForm.salarioAtual}
-                  onChange={(e) => setEditForm({ ...editForm, salarioAtual: formatarMoeda(e.target.value) })}
+            <div className="grid gap-1.5">
+              <Label htmlFor="edit-papel">Nível de acesso</Label>
+              <Select value={editForm.papel} onValueChange={(valor) => setEditForm({ ...editForm, papel: valor })}>
+                <SelectTrigger id="edit-papel" className="w-full">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {PAPEIS_FUNCIONARIO.map((p) => (
+                    <SelectItem key={p.valor} value={p.valor}>{p.rotulo}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="grid gap-1.5">
+              <Label htmlFor="edit-especialidade">Especialidades</Label>
+              {editEspecialidades.length > 0 && (
+                <div className="mb-2 flex flex-wrap gap-1.5">
+                  {editEspecialidades.map((esp, i) => (
+                    <Badge key={i} variant="secondary" className="gap-1">
+                      {esp}
+                      <button
+                        type="button"
+                        onClick={() => setEditEspecialidades((prev) => prev.filter((_, j) => j !== i))}
+                        className="text-muted-foreground hover:text-foreground"
+                      >
+                        <X className="size-3" />
+                      </button>
+                    </Badge>
+                  ))}
+                </div>
+              )}
+              <div className="flex gap-2">
+                <Input
+                  id="edit-especialidade"
+                  placeholder="Ex: Ressonância Magnética"
+                  value={novaEditEsp}
+                  onChange={(e) => setNovaEditEsp(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      adicionarEditEsp();
+                    }
+                  }}
                 />
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={adicionarEditEsp}
+                  className="shrink-0"
+                >
+                  + Adicionar
+                </Button>
               </div>
-            </Campo>
-          </div>
-          <Campo rotulo="Nível de acesso">
-            <select
-              className={classeInput}
-              value={editForm.papel}
-              onChange={(e) => setEditForm({ ...editForm, papel: e.target.value })}
-            >
-              {PAPEIS_FUNCIONARIO.map((p) => (
-                <option key={p.valor} value={p.valor}>{p.rotulo}</option>
-              ))}
-            </select>
-          </Campo>
-          <Campo rotulo="Especialidades">
-            {editEspecialidades.length > 0 && (
-              <div className="flex flex-wrap gap-1.5 mb-2">
-                {editEspecialidades.map((esp, i) => (
-                  <span
-                    key={i}
-                    className="inline-flex items-center gap-1 bg-teal-50 text-teal-700 text-xs font-medium px-2.5 py-1 rounded-full"
-                  >
-                    {esp}
-                    <button
-                      type="button"
-                      onClick={() => setEditEspecialidades((prev) => prev.filter((_, j) => j !== i))}
-                      className="text-teal-400 hover:text-teal-700"
-                    >
-                      ✕
-                    </button>
-                  </span>
-                ))}
-              </div>
-            )}
-            <div className="flex gap-2">
-              <input
-                placeholder="Ex: Ressonância Magnética"
-                className={classeInput}
-                value={novaEditEsp}
-                onChange={(e) => setNovaEditEsp(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") {
-                    e.preventDefault();
-                    adicionarEditEsp();
-                  }
-                }}
-              />
-              <button
-                type="button"
-                onClick={adicionarEditEsp}
-                className="shrink-0 text-sm font-medium text-teal-600 hover:text-teal-700 rounded-md px-3 py-2 transition-colors"
-              >
-                + Adicionar
-              </button>
             </div>
-          </Campo>
-          {erroEdit && (
-            <p className="text-xs text-red-500 mb-3">{erroEdit}</p>
-          )}
-          <button type="submit" disabled={salvandoEdit} className={`${classeBotao("primary")} mt-2 w-full`}>
-            {salvandoEdit ? "Salvando..." : "Salvar alterações"}
-          </button>
-        </form>
-      </Modal>
+            {erroEdit && (
+              <p className="rounded-lg bg-danger/10 px-3 py-2 text-sm text-danger">{erroEdit}</p>
+            )}
+            <Button type="submit" disabled={salvandoEdit} className="w-full">
+              {salvandoEdit ? "Salvando..." : "Salvar alterações"}
+            </Button>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

@@ -1,10 +1,37 @@
 import { FormEvent, useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, X } from "lucide-react";
 import { api } from "../../services/api";
 import { DesempenhoFuncionario, Funcionario, TipoComissao } from "../../types";
-import { Campo, classeInput, Modal } from "../../components/Modal";
 import { formatarReais } from "../../utils/formatters";
+import { Button } from "../../components/shadcn/button";
+import { Badge } from "../../components/shadcn/badge";
+import { Input } from "../../components/shadcn/input";
+import { Label } from "../../components/shadcn/label";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "../../components/shadcn/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "../../components/shadcn/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../../components/shadcn/select";
+
+// Sentinela para o Select do shadcn (que não aceita value=""); mapeia de/para
+// o estado "" (sem comissão) sem alterar o que é enviado à API.
+const SEM_COMISSAO = "NENHUMA";
 
 function formatarMoeda(valor: string): string {
   const apenas = valor.replace(/\D/g, "");
@@ -17,14 +44,14 @@ function moedaParaNumero(valor: string): number {
   return Number(valor.replace(/\./g, "").replace(",", "."));
 }
 
-function CartaoMetrica({ rotulo, valor, destaque }: { rotulo: string; valor: string; destaque?: boolean }) {
+function CartaoMetrica({ rotulo, valor }: { rotulo: string; valor: string }) {
   return (
-    <div className="bg-white border border-grafite-200 rounded-lg p-5">
-      <p className="text-xs text-grafite-500">{rotulo}</p>
-      <p className={`codigo text-2xl font-semibold mt-1 ${destaque ? "text-teal-600" : "text-grafite-900"}`}>
-        {valor}
-      </p>
-    </div>
+    <Card size="sm">
+      <CardContent>
+        <p className="text-xs text-muted-foreground">{rotulo}</p>
+        <p className="codigo mt-1 text-2xl font-semibold text-foreground">{valor}</p>
+      </CardContent>
+    </Card>
   );
 }
 
@@ -112,13 +139,13 @@ export function FuncionarioDesempenho() {
     }
   }
 
-  if (!desempenho || !funcionario) return <p className="text-sm text-grafite-500">Carregando...</p>;
+  if (!desempenho || !funcionario) return <p className="text-sm text-muted-foreground">Carregando...</p>;
 
   return (
     <div className="space-y-6 max-w-3xl">
       <Link
         to="/funcionarios"
-        className="inline-flex items-center gap-1.5 text-sm text-grafite-500 hover:text-grafite-900 transition-colors"
+        className="inline-flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
       >
         <ArrowLeft size={16} />
         Equipe & desempenho
@@ -127,27 +154,24 @@ export function FuncionarioDesempenho() {
       <div className="flex items-start justify-between">
         <div>
           <div className="flex items-center gap-2">
-            <h1 className="text-xl font-semibold text-grafite-900">{desempenho.nome}</h1>
-            <button
-              onClick={abrirModalEditar}
-              className="text-xs font-medium text-teal-700 hover:text-teal-800"
-            >
+            <h1 className="text-xl font-semibold text-foreground">{desempenho.nome}</h1>
+            <Button variant="link" size="sm" className="h-auto px-0 py-0 text-xs" onClick={abrirModalEditar}>
               Editar
-            </button>
+            </Button>
           </div>
-          <p className="text-sm text-grafite-600 mt-1">{desempenho.cargo}</p>
+          <p className="mt-1 text-sm text-muted-foreground">{desempenho.cargo}</p>
         </div>
         <div className="flex items-center gap-4">
-          <Link to={`/funcionarios/${id}/resumo`} className="text-xs font-medium text-teal-700 hover:text-teal-800">
-            Resumo mensal (contracheque) →
-          </Link>
-          <Link to={`/funcionarios/${id}/rota`} className="text-xs font-medium text-teal-700 hover:text-teal-800">
-            Ver rota do dia →
-          </Link>
+          <Button asChild variant="link" size="sm" className="h-auto px-0 py-0 text-xs">
+            <Link to={`/funcionarios/${id}/resumo`}>Resumo mensal (contracheque) →</Link>
+          </Button>
+          <Button asChild variant="link" size="sm" className="h-auto px-0 py-0 text-xs">
+            <Link to={`/funcionarios/${id}/rota`}>Ver rota do dia →</Link>
+          </Button>
         </div>
       </div>
 
-      <p className="text-xs text-grafite-500 max-w-md">
+      <p className="max-w-md text-xs text-muted-foreground">
         Essas métricas são calculadas a partir do histórico real de ordens de serviço —
         é a base objetiva usada para avaliar pedidos de aumento.
       </p>
@@ -156,7 +180,6 @@ export function FuncionarioDesempenho() {
         <CartaoMetrica
           rotulo="Taxa de acerto na 1ª visita"
           valor={`${Math.round(desempenho.taxaResolucaoPrimeiraTentativa * 100)}%`}
-          destaque
         />
         <CartaoMetrica rotulo="OS concluídas" valor={String(desempenho.totalOrdensConcluidas)} />
         <CartaoMetrica
@@ -182,156 +205,168 @@ export function FuncionarioDesempenho() {
       </div>
 
       <div>
-        <h2 className="text-sm font-medium text-grafite-900 mb-3">Remuneração</h2>
+        <h2 className="mb-3 text-sm font-medium text-foreground">Remuneração</h2>
         <div className="grid grid-cols-2 gap-4">
-          <div className="bg-white border border-grafite-200 rounded-lg p-5">
-            <p className="text-xs text-grafite-500">Salário atual</p>
-            <p className="codigo text-xl font-semibold text-grafite-900 mt-1">
-              {formatarReais(funcionario.salarioAtual)}
-            </p>
-          </div>
-          <div className="bg-white border border-grafite-200 rounded-lg p-5">
-            <p className="text-xs text-grafite-500">Comissão acumulada (atendimentos concluídos)</p>
-            <p className="codigo text-xl font-semibold text-teal-600 mt-1">
-              {formatarReais(desempenho.comissaoAcumulada)}
-            </p>
-          </div>
+          <Card size="sm">
+            <CardContent>
+              <p className="text-xs text-muted-foreground">Salário atual</p>
+              <p className="codigo mt-1 text-xl font-semibold text-foreground">
+                {formatarReais(funcionario.salarioAtual)}
+              </p>
+            </CardContent>
+          </Card>
+          <Card size="sm">
+            <CardContent>
+              <p className="text-xs text-muted-foreground">Comissão acumulada (atendimentos concluídos)</p>
+              <p className="codigo mt-1 text-xl font-semibold text-foreground">
+                {formatarReais(desempenho.comissaoAcumulada)}
+              </p>
+            </CardContent>
+          </Card>
         </div>
       </div>
 
-      <div className="bg-white border border-grafite-200 rounded-lg p-5 max-w-md">
-        <h2 className="text-sm font-medium text-grafite-900 mb-1">Configurar comissão</h2>
-        <p className="text-xs text-grafite-500 mb-4">
-          A comissão incide só sobre o valor de mão de obra de cada atendimento — nunca sobre peças.
-        </p>
-        <form onSubmit={salvarComissao}>
-          <Campo rotulo="Tipo de comissão">
-            <select
-              className={classeInput}
-              value={tipoComissao}
-              onChange={(e) => setTipoComissao(e.target.value as "" | TipoComissao)}
-            >
-              <option value="">Nenhuma (só salário fixo)</option>
-              <option value="PERCENTUAL">Percentual sobre a mão de obra</option>
-              <option value="FIXO">Valor fixo por atendimento concluído</option>
-            </select>
-          </Campo>
-          {tipoComissao && (
-            <Campo rotulo={tipoComissao === "PERCENTUAL" ? "Percentual (%)" : "Valor fixo (R$)"}>
-              <input
-                type="number"
-                min={0}
-                step="0.01"
-                required
-                className={classeInput}
-                value={valorComissao}
-                onChange={(e) => setValorComissao(e.target.value)}
-              />
-            </Campo>
-          )}
-          <button
-            type="submit"
-            disabled={salvandoComissao}
-            className="bg-teal-600 hover:bg-teal-700 text-white text-sm font-medium rounded-md px-4 py-2 transition-colors disabled:opacity-60"
-          >
-            {salvandoComissao ? "Salvando..." : "Salvar comissão"}
-          </button>
-        </form>
-      </div>
-
-      <Modal titulo="Editar funcionário" aberto={modalEditar} onFechar={() => setModalEditar(false)}>
-        <form onSubmit={salvarEdicao}>
-          <Campo rotulo="Nome completo">
-            <input
-              required
-              className={classeInput}
-              value={editForm.nome}
-              onChange={(e) => setEditForm({ ...editForm, nome: e.target.value })}
-            />
-          </Campo>
-          <Campo rotulo="E-mail">
-            <input
-              required
-              type="email"
-              className={classeInput}
-              value={editForm.email}
-              onChange={(e) => setEditForm({ ...editForm, email: e.target.value })}
-            />
-          </Campo>
-          <div className="grid grid-cols-2 gap-3">
-            <Campo rotulo="Cargo">
-              <input
-                required
-                className={classeInput}
-                value={editForm.cargo}
-                onChange={(e) => setEditForm({ ...editForm, cargo: e.target.value })}
-              />
-            </Campo>
-            <Campo rotulo="Salário">
-              <div className="relative">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-grafite-500">R$</span>
-                <input
+      <Card className="max-w-md">
+        <CardHeader>
+          <CardTitle className="text-sm">Configurar comissão</CardTitle>
+          <CardDescription className="text-xs">
+            A comissão incide só sobre o valor de mão de obra de cada atendimento — nunca sobre peças.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={salvarComissao} className="space-y-4">
+            <div className="grid gap-1.5">
+              <Label htmlFor="tipo-comissao">Tipo de comissão</Label>
+              <Select
+                value={tipoComissao === "" ? SEM_COMISSAO : tipoComissao}
+                onValueChange={(v) => setTipoComissao(v === SEM_COMISSAO ? "" : (v as TipoComissao))}
+              >
+                <SelectTrigger id="tipo-comissao" className="w-full">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value={SEM_COMISSAO}>Nenhuma (só salário fixo)</SelectItem>
+                  <SelectItem value="PERCENTUAL">Percentual sobre a mão de obra</SelectItem>
+                  <SelectItem value="FIXO">Valor fixo por atendimento concluído</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            {tipoComissao && (
+              <div className="grid gap-1.5">
+                <Label htmlFor="valor-comissao">
+                  {tipoComissao === "PERCENTUAL" ? "Percentual (%)" : "Valor fixo (R$)"}
+                </Label>
+                <Input
+                  id="valor-comissao"
+                  type="number"
+                  min={0}
+                  step="0.01"
                   required
-                  type="text"
-                  inputMode="numeric"
-                  className={`${classeInput} pl-9`}
-                  value={editForm.salarioAtual}
-                  onChange={(e) => setEditForm({ ...editForm, salarioAtual: formatarMoeda(e.target.value) })}
+                  value={valorComissao}
+                  onChange={(e) => setValorComissao(e.target.value)}
                 />
               </div>
-            </Campo>
-          </div>
-          <Campo rotulo="Especialidades">
-            {editEspecialidades.length > 0 && (
-              <div className="flex flex-wrap gap-1.5 mb-2">
-                {editEspecialidades.map((esp, i) => (
-                  <span
-                    key={i}
-                    className="inline-flex items-center gap-1 bg-teal-50 text-teal-700 text-xs font-medium px-2.5 py-1 rounded-full"
-                  >
-                    {esp}
-                    <button
-                      type="button"
-                      onClick={() => setEditEspecialidades((prev) => prev.filter((_, j) => j !== i))}
-                      className="text-teal-400 hover:text-teal-700"
-                    >
-                      ✕
-                    </button>
-                  </span>
-                ))}
-              </div>
             )}
-            <div className="flex gap-2">
-              <input
-                placeholder="Ex: Ressonância Magnética"
-                className={classeInput}
-                value={novaEsp}
-                onChange={(e) => setNovaEsp(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") {
-                    e.preventDefault();
-                    adicionarEsp();
-                  }
-                }}
+            <Button type="submit" disabled={salvandoComissao}>
+              {salvandoComissao ? "Salvando..." : "Salvar comissão"}
+            </Button>
+          </form>
+        </CardContent>
+      </Card>
+
+      <Dialog open={modalEditar} onOpenChange={(aberto) => { if (!aberto) setModalEditar(false); }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Editar funcionário</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={salvarEdicao} className="space-y-4">
+            <div className="grid gap-1.5">
+              <Label htmlFor="edit-nome">Nome completo</Label>
+              <Input
+                id="edit-nome"
+                required
+                value={editForm.nome}
+                onChange={(e) => setEditForm({ ...editForm, nome: e.target.value })}
               />
-              <button
-                type="button"
-                onClick={adicionarEsp}
-                className="shrink-0 text-sm font-medium text-teal-600 hover:text-teal-700 rounded-md px-3 py-2 transition-colors"
-              >
-                + Adicionar
-              </button>
             </div>
-          </Campo>
-          <button
-            type="submit"
-            disabled={salvandoEdit}
-            className="w-full mt-2 bg-teal-600 hover:bg-teal-700 text-white text-sm font-medium rounded-md py-2 transition-colors disabled:opacity-60"
-          >
-            {salvandoEdit ? "Salvando..." : "Salvar alterações"}
-          </button>
-        </form>
-      </Modal>
+            <div className="grid gap-1.5">
+              <Label htmlFor="edit-email">E-mail</Label>
+              <Input
+                id="edit-email"
+                required
+                type="email"
+                value={editForm.email}
+                onChange={(e) => setEditForm({ ...editForm, email: e.target.value })}
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="grid gap-1.5">
+                <Label htmlFor="edit-cargo">Cargo</Label>
+                <Input
+                  id="edit-cargo"
+                  required
+                  value={editForm.cargo}
+                  onChange={(e) => setEditForm({ ...editForm, cargo: e.target.value })}
+                />
+              </div>
+              <div className="grid gap-1.5">
+                <Label htmlFor="edit-salario">Salário</Label>
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">R$</span>
+                  <Input
+                    id="edit-salario"
+                    required
+                    type="text"
+                    inputMode="numeric"
+                    className="pl-9"
+                    value={editForm.salarioAtual}
+                    onChange={(e) => setEditForm({ ...editForm, salarioAtual: formatarMoeda(e.target.value) })}
+                  />
+                </div>
+              </div>
+            </div>
+            <div className="grid gap-1.5">
+              <Label>Especialidades</Label>
+              {editEspecialidades.length > 0 && (
+                <div className="flex flex-wrap gap-1.5">
+                  {editEspecialidades.map((esp, i) => (
+                    <Badge key={i} variant="secondary" className="gap-1">
+                      {esp}
+                      <button
+                        type="button"
+                        onClick={() => setEditEspecialidades((prev) => prev.filter((_, j) => j !== i))}
+                        className="text-muted-foreground transition-colors hover:text-foreground"
+                        aria-label={`Remover ${esp}`}
+                      >
+                        <X className="size-3" />
+                      </button>
+                    </Badge>
+                  ))}
+                </div>
+              )}
+              <div className="flex gap-2">
+                <Input
+                  placeholder="Ex: Ressonância Magnética"
+                  value={novaEsp}
+                  onChange={(e) => setNovaEsp(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      adicionarEsp();
+                    }
+                  }}
+                />
+                <Button type="button" variant="ghost" onClick={adicionarEsp} className="shrink-0">
+                  + Adicionar
+                </Button>
+              </div>
+            </div>
+            <Button type="submit" disabled={salvandoEdit} className="w-full">
+              {salvandoEdit ? "Salvando..." : "Salvar alterações"}
+            </Button>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
