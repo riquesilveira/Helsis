@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from "recharts";
+import { AreaChart, Area, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from "recharts";
 import { ChevronRight, ClipboardList, DollarSign, Receipt, Wallet, LucideIcon } from "lucide-react";
 import { api } from "../services/api";
 import { Funcionario, OrdemServico } from "../types";
@@ -131,31 +131,50 @@ function GraficoFaturamento({ dados }: { dados: { dia: string; valor: number }[]
 
 function DespesasPorTipo({ dados }: { dados: { tipo: string; valor: number }[] }) {
   const total = dados.reduce((soma, d) => soma + d.valor, 0);
+  const temDados = dados.some((d) => d.valor > 0);
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Despesas por tipo no mês</CardTitle>
+    <Card className="gap-2">
+      <CardHeader className="flex flex-row items-center justify-between space-y-0">
+        <CardTitle className="text-sm font-medium">Despesas por tipo no mês</CardTitle>
+        <span className="codigo text-sm font-bold tabular-nums text-foreground">
+          {formatarReais(total)}
+        </span>
       </CardHeader>
-      <CardContent className="space-y-4">
-        {dados.map((d) => {
-          const pct = total > 0 ? (d.valor / total) * 100 : 0;
-          return (
-            <div key={d.tipo}>
-              <div className="flex justify-between text-sm mb-1.5">
-                <span className="text-foreground">{d.tipo}</span>
-                <span className="codigo font-medium text-foreground">{formatarReais(d.valor)}</span>
-              </div>
-              <div className="h-2 bg-muted rounded-full overflow-hidden">
-                <div
-                  className="h-full rounded-full bg-foreground transition-all"
-                  style={{ width: `${pct}%` }}
-                />
-              </div>
-            </div>
-          );
-        })}
-        {dados.every((d) => d.valor === 0) && (
-          <p className="text-sm text-muted-foreground">Nenhuma despesa registrada este mês.</p>
+      <CardContent>
+        {temDados ? (
+          <ResponsiveContainer width="100%" height={240}>
+            <BarChart data={dados} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
+              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--border)" />
+              <XAxis
+                dataKey="tipo"
+                tick={{ fontSize: 11, fill: "var(--muted-foreground)" }}
+                axisLine={false}
+                tickLine={false}
+                interval={0}
+                tickFormatter={(t: string) => (t.length > 8 ? `${t.slice(0, 7)}…` : t)}
+              />
+              <YAxis
+                tick={{ fontSize: 11, fill: "var(--muted-foreground)" }}
+                axisLine={false}
+                tickLine={false}
+                tickFormatter={(v: number) => (v >= 1000 ? `R$${Math.round(v / 1000)}k` : `R$${v}`)}
+                width={48}
+              />
+              <Tooltip
+                cursor={{ fill: "var(--muted)" }}
+                formatter={(value: number) => [formatarReais(value), "Despesa"]}
+                contentStyle={{
+                  borderRadius: 12,
+                  border: "1px solid var(--border)",
+                  boxShadow: "0 8px 24px rgba(18,24,31,0.12)",
+                  fontSize: 12,
+                }}
+              />
+              <Bar dataKey="valor" fill="var(--foreground)" radius={[4, 4, 0, 0]} maxBarSize={44} />
+            </BarChart>
+          </ResponsiveContainer>
+        ) : (
+          <p className="text-xs text-muted-foreground">Nenhuma despesa registrada este mês.</p>
         )}
       </CardContent>
     </Card>
