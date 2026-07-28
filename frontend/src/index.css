@@ -131,6 +131,22 @@
     font-variant-numeric: tabular-nums;
   }
 }
+
+/* Impressão: o AppShell (sidebar + header) some e o conteúdo ocupa a página
+   inteira — preserva o comportamento `print:hidden` do layout antigo. */
+@media print {
+  [data-slot="sidebar"],
+  [data-slot="sidebar-gap"],
+  [data-slot="sidebar-rail"],
+  [data-slot="app-header"] {
+    display: none !important;
+  }
+  [data-slot="sidebar-inset"] {
+    margin: 0 !important;
+    box-shadow: none !important;
+    background: #fff !important;
+  }
+}
 /*
   ---break---
 */
@@ -204,14 +220,17 @@
   --chart-4: oklch(0.371 0 0);
   --chart-5: oklch(0.269 0 0);
   --radius: 0.625rem;
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
+  /* Sidebar clara e monocromática (padrão do template ref-ui: sidebar = fundo),
+     ancorada na nossa escala grafite. Item ativo usa a primária cheia
+     (grafite-900), hover usa o cinza muito claro (grafite-100). */
+  --sidebar: #ffffff;                     /* branco puro, separada do conteúdo pela borda */
+  --sidebar-foreground: #1b232c;          /* grafite-900 */
+  --sidebar-primary: #1b232c;             /* grafite-900 — item ativo (pílula cheia) */
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #edf1f4;              /* grafite-100 — hover */
+  --sidebar-accent-foreground: #1b232c;   /* grafite-900 */
+  --sidebar-border: #d3dae0;              /* grafite-200 — hairline */
+  --sidebar-ring: #26313c;                /* grafite-800 */
 }
 /*
   ---break---

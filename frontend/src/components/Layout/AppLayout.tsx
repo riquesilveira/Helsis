@@ -1,15 +1,23 @@
 import { Outlet } from "react-router-dom";
-import { Sidebar } from "./Sidebar";
+import { SidebarInset, SidebarProvider } from "../shadcn/sidebar";
+import { TooltipProvider } from "../shadcn/tooltip";
+import { AppSidebar } from "./AppSidebar";
+import { Header } from "./Header";
 
 export function AppLayout() {
   return (
-    <div className="flex min-h-screen">
-      <Sidebar />
-      <main className="flex-1 p-6 md:p-8 print:p-0 print:bg-white">
-        <div className="mx-auto max-w-6xl">
-          <Outlet />
-        </div>
-      </main>
-    </div>
+    <SidebarProvider>
+      <TooltipProvider>
+        <AppSidebar />
+        <SidebarInset className="bg-grafite-50 print:bg-white">
+          <Header />
+          <main className="flex-1 p-4 md:p-6 print:p-0">
+            <div className="mx-auto w-full max-w-6xl print:max-w-none">
+              <Outlet />
+            </div>
+          </main>
+        </SidebarInset>
+      </TooltipProvider>
+    </SidebarProvider>
   );
 }
