@@ -7,21 +7,9 @@ export type StatusOS =
   | "CONCLUIDO"
   | "CANCELADO";
 
-export const ETAPAS_STATUS: { status: StatusOS; rotulo: string }[] = [
-  { status: "RECEBIDO", rotulo: "Recebido" },
-  { status: "DIAGNOSTICO", rotulo: "Diagnóstico" },
-  { status: "AGUARDANDO_PECA", rotulo: "Aguardando peça" },
-  { status: "EM_REPARO", rotulo: "Em reparo" },
-  { status: "AGUARDANDO_VALIDACAO", rotulo: "Aguardando validação" },
-  { status: "CONCLUIDO", rotulo: "Concluído" },
-];
-
-// Todas as opções que fazem sentido escolher ao AVANÇAR o status de uma OS
-// (inclui CANCELADO, que não aparece na trilha visual da timeline).
-export const OPCOES_STATUS: { status: StatusOS; rotulo: string }[] = [
-  ...ETAPAS_STATUS,
-  { status: "CANCELADO", rotulo: "Cancelado" },
-];
+// Os rótulos/ordem/ativação das etapas agora são configuráveis por empresa e
+// vêm do backend via `useEtapasStatus` (com fallback estático em ETAPAS_PADRAO,
+// em src/hooks/useEtapasStatus.tsx). Não redeclare listas de etapas aqui.
 
 export type TipoOS = "CORRETIVA" | "PREVENTIVA";
 

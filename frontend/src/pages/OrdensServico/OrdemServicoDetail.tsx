@@ -25,13 +25,13 @@ import {
   Funcionario,
   NotificacaoItem,
   OrdemServico,
-  OPCOES_STATUS,
   PecaCatalogo,
   Sla,
   Solucao,
   StatusOS,
   TipoAnexo,
 } from "../../types";
+import { useEtapasStatus } from "../../hooks/useEtapasStatus";
 import { StatusTimeline } from "../../components/StatusTimeline";
 import { TipoBadge } from "../../components/StatusBadge";
 import { usuarioLogado } from "../../services/auth";
@@ -127,6 +127,7 @@ function SlaBadge({ sla }: { sla?: Sla }) {
 export function OrdemServicoDetail() {
   const { id } = useParams();
   const usuario = usuarioLogado();
+  const { opcoes } = useEtapasStatus();
   const podeVerFinanceiro = usuario?.papel === "DONO" || usuario?.papel === "GESTOR";
   // Designar/reatribuir chamado é função do Suporte (N2) para cima.
   const podeDesignar =
@@ -136,8 +137,8 @@ export function OrdemServicoDetail() {
   // Suporte (N2) para cima, então CONCLUIDO fica fora da lista para o técnico.
   const opcoesStatus =
     usuario?.papel === "TECNICO"
-      ? OPCOES_STATUS.filter((op) => op.status !== "CONCLUIDO")
-      : OPCOES_STATUS;
+      ? opcoes.filter((op) => op.status !== "CONCLUIDO")
+      : opcoes;
   const [os, setOs] = useState<OrdemServico | null>(null);
   const [pecas, setPecas] = useState<PecaCatalogo[]>([]);
   const [notificacoes, setNotificacoes] = useState<NotificacaoItem[]>([]);

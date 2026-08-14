@@ -1,15 +1,6 @@
 import { StatusOS, TipoOS } from "../types";
+import { useEtapasStatus } from "../hooks/useEtapasStatus";
 import { Badge } from "./shadcn/badge";
-
-const ROTULO_STATUS: Record<StatusOS, string> = {
-  RECEBIDO: "Recebido",
-  DIAGNOSTICO: "Em diagnóstico",
-  AGUARDANDO_PECA: "Aguardando peça",
-  EM_REPARO: "Em reparo",
-  AGUARDANDO_VALIDACAO: "Aguardando validação",
-  CONCLUIDO: "Concluído",
-  CANCELADO: "Cancelado",
-};
 
 // Fundo suave (10% da cor) + texto forte, usando os tokens de status.
 // A maioria dos estados é neutra (cinza); só as exceções/desfechos têm cor.
@@ -34,10 +25,11 @@ const PONTO_STATUS: Record<StatusOS, string> = {
 };
 
 export function StatusBadge({ status, className = "" }: { status: StatusOS; className?: string }) {
+  const { rotulo } = useEtapasStatus();
   return (
     <Badge className={`gap-1.5 border-transparent ${CLASSE_STATUS[status]} ${className}`}>
       <span className={`h-1.5 w-1.5 rounded-full ${PONTO_STATUS[status]}`} />
-      {ROTULO_STATUS[status] ?? status}
+      {rotulo(status)}
     </Badge>
   );
 }

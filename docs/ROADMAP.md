@@ -69,17 +69,23 @@ Fechou as lacunas identificadas no PRD/modulação antes de crescer escopo.
       Aceita imagem/PDF até 10 MB. ⚠️ storage local — não sobrevive a deploy
       serverless; migrar pra storage externo (S3/Blob) quando hospedar.
 
-## Fase 3 — polimento operacional
+## Fase 3 — polimento operacional ✅ concluída
 
-- [ ] **Configuração de etapas de status por empresa** — hoje a trilha
-      (`RECEBIDO → DIAGNOSTICO → ...`) é fixa no código; cada empresa que
-      usar o sistema pode ter um fluxo ligeiramente diferente.
-- [ ] **Outros provedores de notificação** (Zenvia, WhatsApp Cloud API da
-      Meta) — a interface `ProvedorNotificacao` já existe, é só implementar
-      e registrar na fábrica.
-- [ ] **Code-splitting do frontend** — o build já avisa que o bundle passou
-      de 500kB depois de adicionar `recharts`; vale `dynamic import()` nas
-      rotas menos acessadas.
+- [x] **Configuração de etapas de status por empresa** — model
+      `ConfiguracaoEtapa` (camada de customização sobre o enum `StatusOS`:
+      rótulo interno, rótulo mostrado ao cliente, ordem e ativação por etapa).
+      Módulo backend `configuracoes` (`GET /etapas` público, `PUT` Dono/Gestor,
+      auto-semeia defaults). Frontend consome via hook `useEtapasStatus`
+      (StatusBadge, StatusTimeline, abas/picker de status, cartão de rota) e
+      editor na página de Configurações (Dono/Gestor).
+- [x] **Outros provedores de notificação** — `ZenviaProvider` e
+      `WhatsAppCloudProvider` (Cloud API oficial da Meta) implementando
+      `ProvedorNotificacao`, registrados na fábrica por `NOTIFICATION_PROVIDER`
+      (`console`/`twilio`/`zenvia`/`whatsapp-cloud`). Usam `fetch` nativo, sem
+      dependência nova. Variáveis documentadas no `.env.example`.
+- [x] **Code-splitting do frontend** — rotas viram chunks separados via
+      `React.lazy`/`Suspense` no `App.tsx`, e `recharts`/react-vendor saem em
+      chunks próprios (`manualChunks` no Vite). O aviso de bundle >500kB sumiu.
 
 ## Fase 4 — exploratório / não decidido ainda
 

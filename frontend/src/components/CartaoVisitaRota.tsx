@@ -1,14 +1,6 @@
 import { Link } from "react-router-dom";
 import { OrdemServico } from "../types";
-
-const ROTULO_STATUS: Record<string, string> = {
-  RECEBIDO: "Recebido",
-  DIAGNOSTICO: "Diagnóstico",
-  AGUARDANDO_PECA: "Aguardando peça",
-  EM_REPARO: "Em reparo",
-  CONCLUIDO: "Concluído",
-  CANCELADO: "Cancelado",
-};
+import { useEtapasStatus } from "../hooks/useEtapasStatus";
 
 // Fundo suave (10%) + texto forte, via tokens de status. Estados de fluxo
 // (recebido/diagnóstico/reparo) resolvem para cinza neutro; só exceção/desfecho
@@ -29,6 +21,7 @@ const COR_STATUS: Record<string, string> = {
  * foi feito (último evento + peças trocadas).
  */
 export function CartaoVisitaRota({ os }: { os: OrdemServico }) {
+  const { rotulo } = useEtapasStatus();
   const ultimoEvento =
     os.statusHistoricos.length > 0 ? os.statusHistoricos[os.statusHistoricos.length - 1] : null;
 
@@ -51,7 +44,7 @@ export function CartaoVisitaRota({ os }: { os: OrdemServico }) {
           <span
             className={`codigo rounded-full px-2 py-0.5 text-[11px] font-medium ${COR_STATUS[os.statusAtual]}`}
           >
-            {ROTULO_STATUS[os.statusAtual]}
+            {rotulo(os.statusAtual)}
           </span>
           <span className="codigo text-[10px] text-muted-foreground">
             {os.tipo === "PREVENTIVA" ? "preventiva" : "corretiva"}
@@ -64,7 +57,7 @@ export function CartaoVisitaRota({ os }: { os: OrdemServico }) {
           {ultimoEvento && (
             <p className="text-xs text-muted-foreground">
               <span className="text-muted-foreground">Feito até agora: </span>
-              {ultimoEvento.observacao ?? ROTULO_STATUS[ultimoEvento.status]}
+              {ultimoEvento.observacao ?? rotulo(ultimoEvento.status)}
             </p>
           )}
           {os.pecasTrocadas && os.pecasTrocadas.length > 0 && (
