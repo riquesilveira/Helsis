@@ -10,6 +10,11 @@ const equipamentoSchema = z.object({
   numeroSerie: z.string().optional(),
   localInstalacao: z.string().optional(),
   frequenciaManutencaoMeses: z.number().int().positive().nullable().optional(),
+  // Dados regulatórios (nicho de imagem médica)
+  registroAnvisa: z.string().nullable().optional(),
+  responsavelTecnico: z.string().nullable().optional(),
+  dataUltimaCalibracao: z.coerce.date().nullable().optional(),
+  validadeCalibracao: z.coerce.date().nullable().optional(),
 });
 
 export async function listar(req: Request, res: Response) {

@@ -48,6 +48,11 @@ export interface Equipamento {
   frequenciaManutencaoMeses?: number | null;
   ultimaManutencaoPreventiva?: string | null;
   proximaManutencaoPreventiva?: string | null;
+  // Dados regulatórios (nicho de imagem médica)
+  registroAnvisa?: string | null;
+  responsavelTecnico?: string | null;
+  dataUltimaCalibracao?: string | null;
+  validadeCalibracao?: string | null;
 }
 
 export interface EquipamentoCatalogoItem {
@@ -114,6 +119,52 @@ export interface DeslocamentoItem {
   diasViagem?: number | null;
 }
 
+export type TipoAnexo = "FOTO" | "LAUDO" | "OUTRO";
+
+export interface AnexoItem {
+  id: string;
+  tipo: TipoAnexo;
+  url: string; // caminho relativo servido pelo backend (/uploads/...)
+  nomeArquivo: string;
+  tamanhoBytes?: number | null;
+  descricao?: string | null;
+  criadoEm: string;
+}
+
+// Status de SLA contratual de uma OS (calculado no backend a partir do
+// contrato aplicável ao cliente/equipamento).
+export type StatusSla =
+  | "SEM_CONTRATO"
+  | "NO_PRAZO"
+  | "ATRASADO"
+  | "CUMPRIDO"
+  | "DESCUMPRIDO";
+
+export interface Sla {
+  status: StatusSla;
+  slaHorasResposta: number | null;
+  prazoResposta: string | null;
+  respondidoEm: string | null;
+  horasRestantes: number | null;
+  contratoId: string | null;
+}
+
+// Contrato de manutenção com SLA (por cliente e, opcionalmente, equipamento).
+export interface Contrato {
+  id: string;
+  clienteId: string;
+  equipamentoId?: string | null;
+  numero?: string | null;
+  slaHorasResposta: number;
+  vigenciaInicio: string;
+  vigenciaFim?: string | null;
+  ativo: boolean;
+  observacoes?: string | null;
+  criadoEm: string;
+  cliente?: Cliente;
+  equipamento?: Equipamento | null;
+}
+
 // Diagnóstico codificado (Causa / Defeito / Solução) — catálogo padronizado
 // escolhido por dropdown no fechamento do chamado.
 export interface Causa {
@@ -163,6 +214,8 @@ export interface OrdemServico {
   statusHistoricos: StatusHistoricoItem[];
   pecasTrocadas?: PecaTrocadaItem[];
   deslocamentos?: DeslocamentoItem[];
+  anexos?: AnexoItem[];
+  sla?: Sla;
 }
 
 export interface RotaFuncionario {

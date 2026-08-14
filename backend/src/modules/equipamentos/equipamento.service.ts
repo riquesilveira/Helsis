@@ -9,6 +9,10 @@ export interface EquipamentoInput {
   numeroSerie?: string;
   localInstalacao?: string;
   frequenciaManutencaoMeses?: number | null;
+  registroAnvisa?: string | null;
+  responsavelTecnico?: string | null;
+  dataUltimaCalibracao?: Date | null;
+  validadeCalibracao?: Date | null;
 }
 
 export function somarMeses(data: Date, meses: number): Date {

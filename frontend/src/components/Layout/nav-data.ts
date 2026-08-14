@@ -7,6 +7,7 @@ import {
   Users,
   UsersRound,
   Stethoscope,
+  ScrollText,
   type LucideIcon,
 } from "lucide-react";
 
@@ -51,6 +52,7 @@ export const NAV_GROUPS: NavGroupConfig[] = [
     titulo: "Gestão",
     itens: [
       { to: "/funcionarios", rotulo: "Equipe & desempenho", restritoA: ["DONO", "GESTOR"], icone: UsersRound },
+      { to: "/contratos", rotulo: "Contratos & SLA", restritoA: ["DONO", "GESTOR"], icone: ScrollText },
       { to: "/catalogo-diagnostico", rotulo: "Catálogo de diagnóstico", restritoA: ["DONO", "GESTOR"], icone: Stethoscope },
       { to: "/folha-de-ponto", rotulo: "Folha de ponto", restritoA: ["DONO", "GESTOR", "SUPORTE", "TECNICO"], icone: Clock },
     ],

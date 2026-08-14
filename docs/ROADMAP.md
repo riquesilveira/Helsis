@@ -37,28 +37,37 @@ Especificamente, já está pronto:
 Removido nesta fase (não é lacuna, foi decisão): pedido de reavaliação
 salarial / página "Desempenho e evolução".
 
-## Fase 1 — sugerida como próxima
+## Fase 1 — ✅ concluída
 
-Prioridade: fechar lacunas que já foram identificadas no PRD/modulação
-antes de crescer escopo.
+Fechou as lacunas identificadas no PRD/modulação antes de crescer escopo.
 
-- [ ] **Decidir a diferença real entre Dono e Gestor** (hoje são idênticos).
-      Se não houver diferença desejada, documentar isso como intencional
-      em vez de deixar como lacuna.
-- [ ] **Tela de "sem permissão"** pra quando alguém acessa uma rota
-      restrita direto pela URL, em vez de travar em "Carregando...".
-- [ ] **Formulário de deslocamento na interface** (hoje só existe no banco
-      e no seed) — passagem, hospedagem, alimentação, direto na tela da OS.
+- [x] **Diferença real entre Dono e Gestor** — resolvida virando uma
+      hierarquia de 4 papéis (`DONO`/`GESTOR`/`SUPORTE`/`TECNICO`),
+      diferenciados de fato no backend via `autorizar(...)` por rota (ex:
+      abrir OS é do Suporte pra cima; conclusão/validação idem; fechamento
+      financeiro só Dono/Gestor).
+- [x] **Tela de "sem permissão"** — `SemPermissao.tsx`, usada pelo
+      `RotaProtegidaPorPapel` no `App.tsx` quando o papel não bate.
+- [x] **Formulário de deslocamento na interface** — CRUD completo (modal na
+      tela da OS + rotas backend restritas a Dono/Gestor).
 
-## Fase 2 — dados que faltam pro nicho
+## Fase 2 — dados que faltam pro nicho ✅ concluída
 
-- [ ] **Dados regulatórios do equipamento**: registro ANVISA, certificado
-      de calibração, responsável técnico. Importante pro nicho de imagem
-      médica e ainda não está no modelo de dados.
-- [ ] **Contratos de manutenção com SLA**: tempo de resposta contratual por
-      cliente/equipamento, pra saber se um atendimento estourou o prazo.
-- [ ] **Upload de fotos/laudos** na OS (ex: foto da peça trocada, laudo de
-      calibração).
+- [x] **Dados regulatórios do equipamento**: `registroAnvisa`,
+      `responsavelTecnico`, `dataUltimaCalibracao`, `validadeCalibracao` no
+      Equipamento. Form em `ClienteDetail` (seção "Dados regulatórios") e
+      alerta de calibração vencida/vencendo no card do equipamento.
+- [x] **Contratos de manutenção com SLA**: model `Contrato`
+      (cliente + equipamento opcional, `slaHorasResposta`, vigência, ativo).
+      Módulo backend `contratos` (CRUD, gestão restrita a Dono/Gestor) e
+      página `Contratos & SLA`. Cada OS traz um objeto `sla` calculado
+      (`NO_PRAZO`/`ATRASADO`/`CUMPRIDO`/`DESCUMPRIDO`/`SEM_CONTRATO`),
+      exibido como badge no detalhe e na lista de OS.
+- [x] **Upload de fotos/laudos** na OS: model `Anexo`, binário salvo em
+      `backend/uploads/os-<id>/` via `multer`, servido em `/uploads`.
+      Seção "Anexos" na tela da OS (upload, thumbnail, download, excluir).
+      Aceita imagem/PDF até 10 MB. ⚠️ storage local — não sobrevive a deploy
+      serverless; migrar pra storage externo (S3/Blob) quando hospedar.
 
 ## Fase 3 — polimento operacional
 

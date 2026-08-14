@@ -74,6 +74,7 @@ model Funcionario {
   pecasTrocadas    PecaTrocada[]
   deslocamentos    Deslocamento[]
   registrosPonto   RegistroPonto[]
+  anexos           Anexo[]
 
   @@map("funcionarios")
 }
@@ -97,6 +98,7 @@ model Cliente {
 
   equipamentos  Equipamento[]
   ordensServico OrdemServico[]
+  contratos     Contrato[]
 
   @@map("clientes")
 }
@@ -116,6 +118,15 @@ model Equipamento {
   localInstalacao String? // endereço/setor onde o equipamento está instalado
   criadoEm     DateTime @default(now())
 
+  // Dados regulatórios — obrigatórios no nicho de imagem médica. Todos
+  // opcionais no modelo (nem todo equipamento antigo terá tudo cadastrado),
+  // mas a UI incentiva o preenchimento. validadeCalibracao alimenta um
+  // alerta de "calibração vencida" análogo ao da manutenção preventiva.
+  registroAnvisa       String? // nº de registro/notificação ANVISA do equipamento
+  responsavelTecnico   String? // nome do RT responsável pelo equipamento
+  dataUltimaCalibracao DateTime?
+  validadeCalibracao   DateTime? // vencimento do certificado de calibração
+
   // Plano de manutenção preventiva. Se frequenciaManutencaoMeses for nulo,
   // esse equipamento não tem manutenção preventiva agendada (só corretiva).
   frequenciaManutencaoMeses    Int?
@@ -123,6 +134,7 @@ model Equipamento {
   proximaManutencaoPreventiva  DateTime?
 
   ordensServico OrdemServico[]
+  contratos     Contrato[]
 
   @@map("equipamentos")
 }
@@ -138,6 +150,35 @@ model EquipamentoCatalogo {
 
   @@unique([tipo, marca, modelo])
   @@map("equipamentos_catalogo")
+}
+
+// ----------------------------------------------------------------------------
+// CONTRATO DE MANUTENÇÃO (SLA)
+// ----------------------------------------------------------------------------
+// Define o prazo de resposta contratual (SLA) por cliente e, opcionalmente,
+// por equipamento específico. Quando equipamentoId é nulo, o contrato vale
+// para todos os equipamentos do cliente. slaHorasResposta é o tempo máximo,
+// em horas, entre a abertura da OS e o primeiro atendimento — é o que a OS
+// usa pra sinalizar se estourou o prazo. vigenciaFim nula = contrato aberto.
+
+model Contrato {
+  id               String       @id @default(uuid())
+  clienteId        String
+  cliente          Cliente      @relation(fields: [clienteId], references: [id])
+  equipamentoId    String?
+  equipamento      Equipamento? @relation(fields: [equipamentoId], references: [id])
+  numero           String? // identificador do contrato (ex: nº interno)
+  slaHorasResposta Int // prazo de resposta contratual, em horas
+  vigenciaInicio   DateTime
+  vigenciaFim      DateTime? // nula = sem data de término
+  ativo            Boolean      @default(true)
+  observacoes      String?
+  criadoEm         DateTime     @default(now())
+  atualizadoEm     DateTime     @updatedAt
+
+  @@index([clienteId])
+  @@index([equipamentoId])
+  @@map("contratos")
 }
 
 // ----------------------------------------------------------------------------
@@ -211,6 +252,7 @@ model OrdemServico {
   pecasTrocadas    PecaTrocada[]
   deslocamentos    Deslocamento[]
   notificacoes     Notificacao[]
+  anexos           Anexo[]
 
   @@map("ordens_servico")
 }
@@ -358,6 +400,37 @@ model Deslocamento {
   criadoEm         DateTime        @default(now())
 
   @@map("deslocamentos")
+}
+
+// ----------------------------------------------------------------------------
+// ANEXOS DA OS (fotos, laudos)
+// ----------------------------------------------------------------------------
+// Arquivos vinculados a uma OS — foto da peça trocada, laudo de calibração,
+// etc. O binário é salvo em disco (backend/uploads/) e o campo `url` guarda
+// o caminho relativo servido estaticamente em /uploads/... Guardamos também
+// quem anexou (funcionarioId) pra trilha de auditoria.
+
+enum TipoAnexo {
+  FOTO
+  LAUDO
+  OUTRO
+}
+
+model Anexo {
+  id             String       @id @default(uuid())
+  ordemServicoId String
+  ordemServico   OrdemServico @relation(fields: [ordemServicoId], references: [id])
+  funcionarioId  String?
+  funcionario    Funcionario? @relation(fields: [funcionarioId], references: [id])
+  tipo           TipoAnexo    @default(FOTO)
+  url            String // caminho relativo servido em /uploads/...
+  nomeArquivo    String // nome original do arquivo enviado
+  tamanhoBytes   Int?
+  descricao      String?
+  criadoEm       DateTime     @default(now())
+
+  @@index([ordemServicoId])
+  @@map("anexos")
 }
 
 // ----------------------------------------------------------------------------

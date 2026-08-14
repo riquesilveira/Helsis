@@ -11,6 +11,7 @@ import {
   Pencil,
   Phone,
   Plus,
+  ShieldCheck,
   type LucideIcon,
 } from "lucide-react";
 import { api } from "../../services/api";
@@ -41,11 +42,41 @@ const EQUIPAMENTO_VAZIO = {
   numeroSerie: "",
   localInstalacao: "",
   frequenciaManutencaoMeses: "",
+  registroAnvisa: "",
+  responsavelTecnico: "",
+  dataUltimaCalibracao: "",
+  validadeCalibracao: "",
 };
+
+// ISO (ou null) → "yyyy-mm-dd" para <input type="date">; "" quando ausente.
+function paraInputDate(iso?: string | null) {
+  return iso ? iso.slice(0, 10) : "";
+}
 
 function formatarProximaData(iso?: string | null) {
   if (!iso) return null;
   return new Date(iso).toLocaleDateString("pt-BR");
+}
+
+// Status da calibração a partir da data de validade: vencida, vencendo em
+// até 30 dias, ou em dia. Espelha a lógica de "próxima" da preventiva.
+function statusCalibracao(validade?: string | null): {
+  rotulo: string;
+  classe: string;
+} | null {
+  if (!validade) return null;
+  const venc = new Date(validade);
+  const hoje = new Date();
+  const em30 = new Date(hoje);
+  em30.setDate(em30.getDate() + 30);
+  const data = venc.toLocaleDateString("pt-BR");
+  if (venc < hoje) {
+    return { rotulo: `Calibração vencida em ${data}`, classe: "text-red-600 dark:text-red-400" };
+  }
+  if (venc <= em30) {
+    return { rotulo: `Calibração vence em ${data}`, classe: "text-amber-600 dark:text-amber-400" };
+  }
+  return { rotulo: `Calibração válida até ${data}`, classe: "text-muted-foreground" };
 }
 
 function normalizar(texto: string) {
@@ -144,6 +175,10 @@ export function ClienteDetail() {
       numeroSerie: eq.numeroSerie ?? "",
       localInstalacao: eq.localInstalacao ?? "",
       frequenciaManutencaoMeses: eq.frequenciaManutencaoMeses ? String(eq.frequenciaManutencaoMeses) : "",
+      registroAnvisa: eq.registroAnvisa ?? "",
+      responsavelTecnico: eq.responsavelTecnico ?? "",
+      dataUltimaCalibracao: paraInputDate(eq.dataUltimaCalibracao),
+      validadeCalibracao: paraInputDate(eq.validadeCalibracao),
     });
     limparBusca();
     setEditandoId(eq.id);
@@ -161,6 +196,12 @@ export function ClienteDetail() {
           : editandoId
           ? null // edição: campo limpo pelo usuário deve remover a preventiva
           : undefined, // criação: campo vazio simplesmente não é enviado
+        // Regulatório: string vazia vira null (limpa o campo). Datas vazias
+        // precisam ser null — "" não é uma data válida no backend.
+        registroAnvisa: form.registroAnvisa || null,
+        responsavelTecnico: form.responsavelTecnico || null,
+        dataUltimaCalibracao: form.dataUltimaCalibracao || null,
+        validadeCalibracao: form.validadeCalibracao || null,
       };
       if (editandoId) {
         await api.put(`/equipamentos/${editandoId}`, dados);
@@ -246,6 +287,22 @@ export function ClienteDetail() {
                   </p>
                 ) : (
                   <p className="mt-1 text-[11px] text-muted-foreground">Sem manutenção preventiva agendada</p>
+                )}
+                {(() => {
+                  const calib = statusCalibracao(eq.validadeCalibracao);
+                  return calib ? (
+                    <p className={`mt-1 flex items-center gap-1 text-[11px] font-medium ${calib.classe}`}>
+                      <ShieldCheck size={12} className="shrink-0" />
+                      {calib.rotulo}
+                    </p>
+                  ) : null;
+                })()}
+                {(eq.registroAnvisa || eq.responsavelTecnico) && (
+                  <p className="mt-1 text-[11px] text-muted-foreground truncate">
+                    {eq.registroAnvisa ? `ANVISA ${eq.registroAnvisa}` : ""}
+                    {eq.registroAnvisa && eq.responsavelTecnico ? " · " : ""}
+                    {eq.responsavelTecnico ? `RT: ${eq.responsavelTecnico}` : ""}
+                  </p>
                 )}
               </div>
             </div>
@@ -463,6 +520,54 @@ export function ClienteDetail() {
                 Deixe em branco se esse equipamento só tem manutenção corretiva (sob demanda).
               </span>
             </div>
+
+            {/* Dados regulatórios — importantes no nicho de imagem médica */}
+            <div className="space-y-4 rounded-lg border border-border bg-muted/30 p-4">
+              <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                Dados regulatórios
+              </p>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="grid gap-1.5">
+                  <Label htmlFor="eq-anvisa">Registro ANVISA</Label>
+                  <Input
+                    id="eq-anvisa"
+                    placeholder="Ex: 80145900123"
+                    value={form.registroAnvisa}
+                    onChange={(e) => setForm({ ...form, registroAnvisa: e.target.value })}
+                  />
+                </div>
+                <div className="grid gap-1.5">
+                  <Label htmlFor="eq-rt">Responsável técnico</Label>
+                  <Input
+                    id="eq-rt"
+                    placeholder="Ex: Eng. Ana Souza (CREA 12345)"
+                    value={form.responsavelTecnico}
+                    onChange={(e) => setForm({ ...form, responsavelTecnico: e.target.value })}
+                  />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="grid gap-1.5">
+                  <Label htmlFor="eq-calib">Última calibração</Label>
+                  <Input
+                    id="eq-calib"
+                    type="date"
+                    value={form.dataUltimaCalibracao}
+                    onChange={(e) => setForm({ ...form, dataUltimaCalibracao: e.target.value })}
+                  />
+                </div>
+                <div className="grid gap-1.5">
+                  <Label htmlFor="eq-validade">Validade da calibração</Label>
+                  <Input
+                    id="eq-validade"
+                    type="date"
+                    value={form.validadeCalibracao}
+                    onChange={(e) => setForm({ ...form, validadeCalibracao: e.target.value })}
+                  />
+                </div>
+              </div>
+            </div>
+
             <Button type="submit" disabled={salvando} className="mt-2 w-full">
               {salvando ? "Salvando..." : editandoId ? "Salvar alterações" : "Cadastrar equipamento"}
             </Button>

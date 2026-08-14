@@ -17,6 +17,7 @@ import { AcompanharOS } from "./pages/ClientePortal/AcompanharOS";
 import { Configuracoes } from "./pages/Configuracoes";
 import { FolhaDePonto } from "./pages/FolhaDePonto/FolhaDePonto";
 import { CatalogoDiagnostico } from "./pages/Diagnostico/CatalogoDiagnostico";
+import { ContratosList } from "./pages/Contratos/ContratosList";
 import { SemPermissao } from "./pages/SemPermissao";
 import { usuarioLogado } from "./services/auth";
 
@@ -124,6 +125,14 @@ export default function App() {
           element={
             <RotaProtegidaPorPapel papeis={["DONO", "GESTOR"]}>
               <CatalogoDiagnostico />
+            </RotaProtegidaPorPapel>
+          }
+        />
+        <Route
+          path="/contratos"
+          element={
+            <RotaProtegidaPorPapel papeis={["DONO", "GESTOR"]}>
+              <ContratosList />
             </RotaProtegidaPorPapel>
           }
         />

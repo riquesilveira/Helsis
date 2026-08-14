@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { asyncHandler } from "../../utils/asyncHandler";
 import { autenticar, autorizar } from "../../middlewares/auth.middleware";
+import { uploadAnexo } from "../../lib/uploads";
 import * as osController from "./ordemServico.controller";
 
 const router = Router();
@@ -58,6 +59,20 @@ router.delete(
   "/:id/deslocamentos/:deslocamentoId",
   autorizar("DONO", "GESTOR"),
   asyncHandler(osController.excluirDeslocamento)
+);
+
+// Anexos (fotos/laudos) — qualquer papel interno pode anexar/remover na OS.
+// A leitura vem embutida no detalhe da OS (GET /:id).
+router.post(
+  "/:id/anexos",
+  autorizar("DONO", "GESTOR", "SUPORTE", "TECNICO"),
+  uploadAnexo.single("arquivo"),
+  asyncHandler(osController.registrarAnexo)
+);
+router.delete(
+  "/:id/anexos/:anexoId",
+  autorizar("DONO", "GESTOR", "SUPORTE", "TECNICO"),
+  asyncHandler(osController.excluirAnexo)
 );
 
 export default router;

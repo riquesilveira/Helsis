@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import { ZodError } from "zod";
 import { Prisma } from "@prisma/client";
+import { MulterError } from "multer";
 import { AppError } from "../utils/AppError";
 
 export function errorMiddleware(
@@ -12,6 +13,14 @@ export function errorMiddleware(
 ) {
   if (err instanceof AppError) {
     return res.status(err.statusCode).json({ erro: err.message });
+  }
+
+  if (err instanceof MulterError) {
+    const mensagem =
+      err.code === "LIMIT_FILE_SIZE"
+        ? "Arquivo muito grande. O limite é de 10 MB."
+        : "Não foi possível enviar o arquivo. Tente novamente.";
+    return res.status(400).json({ erro: mensagem });
   }
 
   if (err instanceof ZodError) {

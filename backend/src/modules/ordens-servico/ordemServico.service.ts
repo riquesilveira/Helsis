@@ -3,6 +3,7 @@ import { prisma } from "../../lib/prisma";
 import { AppError } from "../../utils/AppError";
 import { notificarClienteSobreStatus } from "../notificacoes/notificacao.service";
 import { registrarManutencaoPreventivaConcluida, somarMeses } from "../equipamentos/equipamento.service";
+import { anexarSlaEmLista, resolverSlaDaOS } from "../contratos/contrato.service";
 
 export interface CriarOSInput {
   clienteId: string;
@@ -85,13 +86,13 @@ function filtrosBusca(query: {
   return where;
 }
 
-export function listarOrdensServico(query: {
+export async function listarOrdensServico(query: {
   status?: StatusOS;
   clienteId?: string;
   funcionarioId?: string;
   tipo?: TipoOS;
 }) {
-  return prisma.ordemServico.findMany({
+  const ordens = await prisma.ordemServico.findMany({
     where: filtrosBusca(query),
     include: {
       cliente: true,
@@ -99,9 +100,13 @@ export function listarOrdensServico(query: {
       funcionario: { include: { usuario: true } },
       pecasTrocadas: { include: { pecaCatalogo: true } },
       deslocamentos: true,
+      // status resumido só pra distinguir CUMPRIDO/DESCUMPRIDO do SLA sem N+1
+      statusHistoricos: { select: { status: true, criadoEm: true } },
     },
     orderBy: { criadoEm: "desc" },
   });
+  // Anexa o status de SLA a cada OS com uma única consulta de contratos.
+  return anexarSlaEmLista(ordens);
 }
 
 export async function buscarOrdemServicoPorId(id: string) {
@@ -114,6 +119,7 @@ export async function buscarOrdemServicoPorId(id: string) {
       statusHistoricos: { orderBy: { criadoEm: "asc" } },
       pecasTrocadas: { include: { pecaCatalogo: true } },
       deslocamentos: true,
+      anexos: { orderBy: { criadoEm: "desc" } },
       causa: true,
       defeito: true,
       solucao: true,
@@ -121,7 +127,10 @@ export async function buscarOrdemServicoPorId(id: string) {
   });
 
   if (!os) throw new AppError("Ordem de serviço não encontrada.", 404);
-  return os;
+
+  // SLA contratual do atendimento (null-safe: SEM_CONTRATO quando não há).
+  const sla = await resolverSlaDaOS(os);
+  return { ...os, sla };
 }
 
 /**
@@ -394,6 +403,43 @@ export async function excluirDeslocamento(deslocamentoId: string, ordemServicoId
   }
 
   return prisma.deslocamento.delete({ where: { id: deslocamentoId } });
+}
+
+// ----------------------------------------------------------------------------
+// ANEXOS (fotos, laudos) — binário em disco, metadados no banco
+// ----------------------------------------------------------------------------
+
+export interface RegistrarAnexoInput {
+  tipo?: "FOTO" | "LAUDO" | "OUTRO";
+  url: string;
+  nomeArquivo: string;
+  tamanhoBytes?: number;
+  descricao?: string;
+  funcionarioId?: string | null;
+}
+
+export async function registrarAnexo(osId: string, dados: RegistrarAnexoInput) {
+  await buscarOrdemServicoPorId(osId);
+  return prisma.anexo.create({
+    data: {
+      ordemServicoId: osId,
+      tipo: dados.tipo ?? "FOTO",
+      url: dados.url,
+      nomeArquivo: dados.nomeArquivo,
+      tamanhoBytes: dados.tamanhoBytes,
+      descricao: dados.descricao,
+      funcionarioId: dados.funcionarioId ?? undefined,
+    },
+  });
+}
+
+export async function excluirAnexo(anexoId: string, ordemServicoId: string) {
+  const anexo = await prisma.anexo.findUnique({ where: { id: anexoId } });
+  if (!anexo || anexo.ordemServicoId !== ordemServicoId) {
+    throw new AppError("Anexo não encontrado nesta ordem de serviço.", 404);
+  }
+  await prisma.anexo.delete({ where: { id: anexoId } });
+  return anexo; // devolve pra caller remover o arquivo físico
 }
 
 /**

@@ -2,6 +2,7 @@ import express from "express";
 import cors from "cors";
 import routes from "./routes";
 import { errorMiddleware } from "./middlewares/error.middleware";
+import { UPLOADS_DIR, UPLOADS_ROUTE } from "./lib/uploads";
 import "./lib/prisma"; // garante que o override de Decimal.toJSON seja aplicado
 
 export const app = express();
@@ -13,6 +14,9 @@ app.use(cors({
 app.use(express.json());
 
 app.get("/health", (_req, res) => res.json({ status: "ok" }));
+
+// Anexos de OS servidos estaticamente (fotos/laudos salvos em backend/uploads).
+app.use(UPLOADS_ROUTE, express.static(UPLOADS_DIR));
 
 app.use("/api", routes);
 

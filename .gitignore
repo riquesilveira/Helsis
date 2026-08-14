@@ -6,6 +6,9 @@ backend.env
 *.log
 .DS_Store
 
+# Anexos de OS enviados em runtime (fotos/laudos) — binários locais
+backend/uploads/
+
 .vercel
 
 # Notas locais do assistente (memória de sessão) — não versionar

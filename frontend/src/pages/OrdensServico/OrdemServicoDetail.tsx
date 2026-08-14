@@ -1,8 +1,24 @@
-import { FormEvent, useEffect, useState } from "react";
+import { FormEvent, useEffect, useRef, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import { ArrowLeft, Car, Pencil, Plane, Plus, X } from "lucide-react";
+import {
+  AlertTriangle,
+  ArrowLeft,
+  Car,
+  CheckCircle2,
+  FileText,
+  Image as ImageIcon,
+  Paperclip,
+  Pencil,
+  Plane,
+  Plus,
+  Timer,
+  Trash2,
+  Upload,
+  X,
+} from "lucide-react";
 import { api } from "../../services/api";
 import {
+  AnexoItem,
   Causa,
   Defeito,
   DeslocamentoItem,
@@ -11,8 +27,10 @@ import {
   OrdemServico,
   OPCOES_STATUS,
   PecaCatalogo,
+  Sla,
   Solucao,
   StatusOS,
+  TipoAnexo,
 } from "../../types";
 import { StatusTimeline } from "../../components/StatusTimeline";
 import { TipoBadge } from "../../components/StatusBadge";
@@ -50,6 +68,61 @@ const ROTULO_MODALIDADE: Record<OrdemServico["modalidade"], string> = {
   OFICINA: "Oficina",
   REMOTO: "Suporte remoto",
 };
+
+// Os anexos são servidos pelo backend na raiz (/uploads/...), fora do /api.
+// Deriva a base removendo o sufixo /api da baseURL do axios.
+const ARQUIVO_BASE = (
+  import.meta.env.VITE_API_URL ||
+  (import.meta.env.PROD ? "https://helsis-backend.onrender.com/api" : "http://localhost:3333/api")
+).replace(/\/api\/?$/, "");
+
+function urlArquivoAnexo(url: string) {
+  return `${ARQUIVO_BASE}${url}`;
+}
+
+const ROTULO_TIPO_ANEXO: Record<TipoAnexo, string> = {
+  FOTO: "Foto",
+  LAUDO: "Laudo",
+  OUTRO: "Outro",
+};
+
+// Badge de SLA a partir do status calculado no backend. SEM_CONTRATO não
+// renderiza nada (não há prazo contratual pra esse cliente/equipamento).
+function SlaBadge({ sla }: { sla?: Sla }) {
+  if (!sla || sla.status === "SEM_CONTRATO") return null;
+
+  const config = {
+    NO_PRAZO: { rotulo: "Dentro do SLA", Icone: Timer, classe: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400" },
+    CUMPRIDO: { rotulo: "SLA cumprido", Icone: CheckCircle2, classe: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400" },
+    ATRASADO: { rotulo: "SLA estourado", Icone: AlertTriangle, classe: "bg-red-500/10 text-red-600 dark:text-red-400" },
+    DESCUMPRIDO: { rotulo: "SLA descumprido", Icone: AlertTriangle, classe: "bg-red-500/10 text-red-600 dark:text-red-400" },
+  }[sla.status];
+
+  const { Icone } = config;
+  const detalhe =
+    sla.status === "NO_PRAZO" && sla.horasRestantes != null
+      ? ` · faltam ${Math.max(0, Math.round(sla.horasRestantes))}h`
+      : "";
+  const prazo = sla.prazoResposta
+    ? ` (limite ${new Date(sla.prazoResposta).toLocaleString("pt-BR", {
+        day: "2-digit",
+        month: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit",
+      })})`
+    : "";
+
+  return (
+    <span
+      className={`inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-xs font-medium ${config.classe}`}
+      title={`SLA de ${sla.slaHorasResposta}h${prazo}`}
+    >
+      <Icone size={12} className="shrink-0" />
+      {config.rotulo}
+      {detalhe}
+    </span>
+  );
+}
 
 export function OrdemServicoDetail() {
   const { id } = useParams();
@@ -130,6 +203,13 @@ export function OrdemServicoDetail() {
   const [valorMaoDeObra, setValorMaoDeObra] = useState("");
   const [valorComissao, setValorComissao] = useState("");
   const [salvandoFinanceiro, setSalvandoFinanceiro] = useState(false);
+
+  // anexos (fotos/laudos)
+  const [enviandoAnexo, setEnviandoAnexo] = useState(false);
+  const [tipoAnexo, setTipoAnexo] = useState<TipoAnexo>("FOTO");
+  const [erroAnexo, setErroAnexo] = useState<string | null>(null);
+  const inputAnexoRef = useRef<HTMLInputElement>(null);
+  const [anexoParaExcluir, setAnexoParaExcluir] = useState<AnexoItem | null>(null);
 
   function carregar() {
     api.get(`/ordens-servico/${id}`).then((r) => {
@@ -394,6 +474,38 @@ export function OrdemServicoDetail() {
     }
   }
 
+  async function handleUploadAnexo(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setErroAnexo(null);
+    setEnviandoAnexo(true);
+    try {
+      const fd = new FormData();
+      fd.append("arquivo", file);
+      fd.append("tipo", tipoAnexo);
+      await api.post(`/ordens-servico/${id}/anexos`, fd);
+      carregar();
+    } catch (err: any) {
+      setErroAnexo(
+        err?.response?.data?.erro ?? "Não foi possível enviar o anexo. Tente novamente."
+      );
+    } finally {
+      setEnviandoAnexo(false);
+      if (inputAnexoRef.current) inputAnexoRef.current.value = "";
+    }
+  }
+
+  async function confirmarExclusaoAnexo() {
+    if (!anexoParaExcluir) return;
+    try {
+      await api.delete(`/ordens-servico/${id}/anexos/${anexoParaExcluir.id}`);
+      setAnexoParaExcluir(null);
+      carregar();
+    } catch (err: any) {
+      setErroAnexo(err?.response?.data?.erro ?? "Não foi possível excluir o anexo.");
+    }
+  }
+
   if (!os) return <p className="text-sm text-muted-foreground">Carregando...</p>;
 
   const semTecnico = !os.funcionario;
@@ -428,6 +540,11 @@ export function OrdemServicoDetail() {
           {" · "}
           {ROTULO_MODALIDADE[os.modalidade]}
         </p>
+        {os.sla && os.sla.status !== "SEM_CONTRATO" && (
+          <div className="mt-2">
+            <SlaBadge sla={os.sla} />
+          </div>
+        )}
       </div>
 
       <Card>
@@ -836,6 +953,104 @@ export function OrdemServicoDetail() {
         </CardContent>
       </Card>
 
+      {/* Anexos (fotos/laudos) */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Anexos</CardTitle>
+          <CardAction>
+            <div className="flex items-center gap-2">
+              <Select value={tipoAnexo} onValueChange={(v) => setTipoAnexo(v as TipoAnexo)}>
+                <SelectTrigger className="h-8 w-[110px]">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="FOTO">Foto</SelectItem>
+                  <SelectItem value="LAUDO">Laudo</SelectItem>
+                  <SelectItem value="OUTRO">Outro</SelectItem>
+                </SelectContent>
+              </Select>
+              <input
+                ref={inputAnexoRef}
+                type="file"
+                accept="image/*,application/pdf"
+                className="hidden"
+                onChange={handleUploadAnexo}
+              />
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => inputAnexoRef.current?.click()}
+                disabled={enviandoAnexo}
+              >
+                <Upload />
+                {enviandoAnexo ? "Enviando..." : "Anexar"}
+              </Button>
+            </div>
+          </CardAction>
+        </CardHeader>
+        <CardContent>
+          {erroAnexo && <p className="text-xs text-danger mb-3">{erroAnexo}</p>}
+          {(os.anexos ?? []).length === 0 ? (
+            <p className="text-sm text-muted-foreground py-1">
+              Nenhum anexo. Envie fotos da peça/equipamento ou laudos (imagem ou PDF, até 10 MB).
+            </p>
+          ) : (
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+              {(os.anexos ?? []).map((anexo) => {
+                const ehImagem = /\.(png|jpe?g|webp|heic)$/i.test(anexo.url);
+                return (
+                  <div
+                    key={anexo.id}
+                    className="group relative overflow-hidden rounded-lg border border-border bg-muted/30"
+                  >
+                    <a
+                      href={urlArquivoAnexo(anexo.url)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="block"
+                    >
+                      {ehImagem ? (
+                        <img
+                          src={urlArquivoAnexo(anexo.url)}
+                          alt={anexo.nomeArquivo}
+                          className="h-28 w-full object-cover"
+                        />
+                      ) : (
+                        <div className="flex h-28 w-full items-center justify-center text-muted-foreground">
+                          <FileText size={32} />
+                        </div>
+                      )}
+                      <div className="flex items-center gap-1.5 px-2.5 py-2">
+                        {ehImagem ? (
+                          <ImageIcon size={12} className="shrink-0 text-muted-foreground" />
+                        ) : (
+                          <Paperclip size={12} className="shrink-0 text-muted-foreground" />
+                        )}
+                        <span className="truncate text-xs text-foreground" title={anexo.nomeArquivo}>
+                          {anexo.nomeArquivo}
+                        </span>
+                      </div>
+                    </a>
+                    <span className="absolute left-1.5 top-1.5 rounded bg-background/80 px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground backdrop-blur">
+                      {ROTULO_TIPO_ANEXO[anexo.tipo]}
+                    </span>
+                    <Button
+                      variant="ghost"
+                      size="icon-sm"
+                      onClick={() => setAnexoParaExcluir(anexo)}
+                      className="absolute right-1.5 top-1.5 bg-background/80 text-danger opacity-0 backdrop-blur transition-opacity hover:text-danger group-hover:opacity-100"
+                      title="Excluir anexo"
+                    >
+                      <Trash2 />
+                    </Button>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
       {/* Fechamento financeiro — editável só por dono/gestor (é quem decide o
           valor cobrado e a comissão). O técnico vê uma versão só leitura,
           pra ter transparência sobre quanto vai receber, sem poder alterar. */}
@@ -1219,6 +1434,37 @@ export function OrdemServicoDetail() {
             <Button
               type="button"
               onClick={confirmarExclusaoDeslocamento}
+              className="bg-danger text-white hover:bg-danger/90"
+            >
+              Excluir
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Modal de confirmação de exclusão de anexo */}
+      <Dialog
+        open={anexoParaExcluir !== null}
+        onOpenChange={(aberto) => {
+          if (!aberto) setAnexoParaExcluir(null);
+        }}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Excluir anexo</DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-muted-foreground">
+            Tem certeza que deseja excluir{" "}
+            <span className="font-medium text-foreground">{anexoParaExcluir?.nomeArquivo}</span>?
+            Essa ação não pode ser desfeita.
+          </p>
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={() => setAnexoParaExcluir(null)}>
+              Cancelar
+            </Button>
+            <Button
+              type="button"
+              onClick={confirmarExclusaoAnexo}
               className="bg-danger text-white hover:bg-danger/90"
             >
               Excluir

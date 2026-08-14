@@ -21,7 +21,13 @@
 | `ordens-servico` | Fluxo completo de OS: status, peça trocada, fechamento financeiro | `listarOrdensServico` inclui `pecasTrocadas` e `deslocamentos` — necessário pro painel calcular faturamento/despesas sem N chamadas extras |
 | `pecas` | Catálogo de peças (com preço padrão) | |
 | `desempenho` | Métricas por técnico, ranking, **resumo mensal (contracheque)** | `resumo-mensal` precisa vir antes de `/:id` no router, mesmo motivo do módulo de equipamentos |
+| `contratos` | CRUD de contratos de manutenção + **cálculo de SLA por OS** | Gestão restrita a Dono/Gestor; leitura liberada a todos os papéis internos. Expõe `resolverSlaDaOS`/`anexarSlaEmLista`, consumidos pelo módulo `ordens-servico` pra anexar o objeto `sla` a cada OS |
 | `notificacoes` | Envio ao cliente via provider plugável | Sem controller/rota própria — chamado internamente por `ordens-servico` no create/update de status. Provider escolhido por `NOTIFICATION_PROVIDER` no `.env` (`console` ou `twilio`) |
+
+Anexos de OS (fotos/laudos) não têm módulo próprio: vivem dentro de
+`ordens-servico` (como os deslocamentos). O binário é recebido via `multer`
+(config em `src/lib/uploads.ts`), salvo em `backend/uploads/os-<id>/` e
+servido estaticamente em `/uploads`. Só metadados vão pro banco (`Anexo`).
 
 Módulo removido nesta fase: **`pedidos-aumento`** (era a antiga "solicitação
 de reavaliação salarial" / página "Desempenho e evolução"). Removido por
@@ -43,6 +49,7 @@ futuro, é um módulo novo, não uma restauração.
 | `/funcionarios/:id` | `FuncionarioDesempenho` | Dono/Gestor |
 | `/funcionarios/:id/rota` | `RotaFuncionario` | Dono/Gestor |
 | `/funcionarios/:id/resumo` | `ResumoMensalFuncionario` | Dono/Gestor — layout com CSS de impressão (`print:hidden` na sidebar) |
+| `/contratos` | `ContratosList` | Dono/Gestor — CRUD de contratos + SLA |
 | `/minha-rota` | `MinhaRota` | Técnico (resolve o próprio id via usuário logado) |
 | `/acompanhar/:id` | `AcompanharOS` | público, sem login |
 
@@ -56,7 +63,21 @@ Isso é uma lacuna conhecida, não uma decisão.
 
 `Usuario` (1:1) `Funcionario` — `Cliente` (1:N) `Equipamento` — `Equipamento`
 (1:N) `OrdemServico` — `OrdemServico` (1:N) `StatusHistorico`, `PecaTrocada`,
-`Deslocamento`, `Notificacao` — `PecaCatalogo` (1:N) `PecaTrocada`.
+`Deslocamento`, `Notificacao`, `Anexo` — `PecaCatalogo` (1:N) `PecaTrocada` —
+`Cliente`/`Equipamento` (1:N) `Contrato`.
+
+Entidades da Fase 2 (nicho de imagem médica):
+
+- `Equipamento` ganhou campos regulatórios: `registroAnvisa`,
+  `responsavelTecnico`, `dataUltimaCalibracao`, `validadeCalibracao` (o
+  frontend calcula "calibração vencida/vencendo" a partir da validade,
+  espelhando a lógica da preventiva).
+- `Contrato` — SLA de resposta contratual (`slaHorasResposta`) por cliente e,
+  opcionalmente, por equipamento (nulo = vale pra todos os equipamentos do
+  cliente). Precedência na resolução: contrato do equipamento vence contrato
+  geral do cliente; só conta se ativo e dentro da vigência.
+- `Anexo` — foto/laudo de uma OS. `url` guarda o caminho relativo servido em
+  `/uploads/...`; o binário fica em disco, não no banco.
 
 Campos que existem por causa de uma decisão de negócio específica, não óbvia
 só olhando o schema:

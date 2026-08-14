@@ -5,6 +5,7 @@ import * as osService from "./ordemServico.service";
 import { buscarFuncionarioPorUsuarioId } from "../funcionarios/funcionario.service";
 import { listarNotificacoes } from "../notificacoes/notificacao.service";
 import { AppError } from "../../utils/AppError";
+import { removerArquivoAnexo, urlRelativaAnexo } from "../../lib/uploads";
 
 const criarOSSchema = z.object({
   clienteId: z.string().uuid(),
@@ -211,4 +212,52 @@ export async function excluirDeslocamento(req: Request, res: Response) {
 
 export async function notificacoes(req: Request, res: Response) {
   res.json(await listarNotificacoes(req.params.id));
+}
+
+// ----------------------------------------------------------------------------
+// Anexos (fotos/laudos). O binário chega via multipart (multer) e já foi
+// salvo em disco pelo middleware quando este handler roda; aqui só gravamos
+// os metadados. Campos textuais (tipo/descricao) vêm no form-data.
+// ----------------------------------------------------------------------------
+
+const registrarAnexoSchema = z.object({
+  tipo: z.enum(["FOTO", "LAUDO", "OUTRO"]).optional(),
+  descricao: z.string().optional(),
+});
+
+export async function registrarAnexo(req: Request, res: Response) {
+  if (!req.file) throw new AppError("Nenhum arquivo enviado.", 400);
+
+  try {
+    const { tipo, descricao } = registrarAnexoSchema.parse(req.body);
+
+    // Quem anexou — só se o usuário tiver perfil de funcionário (DONO pode não ter).
+    let funcionarioId: string | null = null;
+    try {
+      const funcionario = await buscarFuncionarioPorUsuarioId(req.usuario!.id);
+      funcionarioId = funcionario.id;
+    } catch {
+      funcionarioId = null;
+    }
+
+    const anexo = await osService.registrarAnexo(req.params.id, {
+      tipo,
+      url: urlRelativaAnexo(req.params.id, req.file.filename),
+      nomeArquivo: req.file.originalname,
+      tamanhoBytes: req.file.size,
+      descricao,
+      funcionarioId,
+    });
+    res.status(201).json(anexo);
+  } catch (err) {
+    // Falhou depois do upload (OS inexistente, validação) — remove o órfão do disco.
+    removerArquivoAnexo(urlRelativaAnexo(req.params.id, req.file.filename));
+    throw err;
+  }
+}
+
+export async function excluirAnexo(req: Request, res: Response) {
+  const anexo = await osService.excluirAnexo(req.params.anexoId, req.params.id);
+  removerArquivoAnexo(anexo.url);
+  res.status(204).end();
 }
