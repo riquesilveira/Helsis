@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { AreaChart, Area, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from "recharts";
+import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from "recharts";
 import { ChevronRight, ClipboardList, DollarSign, Receipt, Wallet, LucideIcon } from "lucide-react";
 import { api } from "../services/api";
 import { Funcionario, OrdemServico } from "../types";
@@ -129,52 +129,54 @@ function GraficoFaturamento({ dados }: { dados: { dia: string; valor: number }[]
   );
 }
 
+function SegmentBar({ ratio, segmentos = 24 }: { ratio: number; segmentos?: number }) {
+  const preenchidos = Math.round(Math.min(Math.max(ratio, 0), 1) * segmentos);
+  return (
+    <div className="flex h-3 items-stretch justify-between">
+      {Array.from({ length: segmentos }).map((_, i) => {
+        const ativo = i < preenchidos;
+        // preenchimento escurece em gradiente conforme avança; vazias ficam claras
+        const opacidade = ativo ? 0.35 + 0.65 * ((i + 1) / preenchidos) : 1;
+        return (
+          <div
+            key={i}
+            className={`w-[3px] rounded-full transition-colors ${ativo ? "bg-foreground" : "bg-muted"}`}
+            style={ativo ? { opacity: opacidade } : undefined}
+          />
+        );
+      })}
+    </div>
+  );
+}
+
 function DespesasPorTipo({ dados }: { dados: { tipo: string; valor: number }[] }) {
-  const total = dados.reduce((soma, d) => soma + d.valor, 0);
-  const temDados = dados.some((d) => d.valor > 0);
+  const itens = dados.filter((d) => d.valor > 0).sort((a, b) => b.valor - a.valor);
+  const maior = itens[0]?.valor ?? 0;
   return (
     <Card className="gap-2">
-      <CardHeader className="flex flex-row items-center justify-between space-y-0">
-        <CardTitle className="text-sm font-medium">Despesas por tipo no mês</CardTitle>
-        <span className="codigo text-sm font-bold tabular-nums text-foreground">
-          {formatarReais(total)}
-        </span>
+      <CardHeader>
+        <CardTitle>Despesas por tipo no mês</CardTitle>
       </CardHeader>
       <CardContent>
-        {temDados ? (
-          <ResponsiveContainer width="100%" height={240}>
-            <BarChart data={dados} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
-              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--border)" />
-              <XAxis
-                dataKey="tipo"
-                tick={{ fontSize: 11, fill: "var(--muted-foreground)" }}
-                axisLine={false}
-                tickLine={false}
-                interval={0}
-                tickFormatter={(t: string) => (t.length > 8 ? `${t.slice(0, 7)}…` : t)}
-              />
-              <YAxis
-                tick={{ fontSize: 11, fill: "var(--muted-foreground)" }}
-                axisLine={false}
-                tickLine={false}
-                tickFormatter={(v: number) => (v >= 1000 ? `R$${Math.round(v / 1000)}k` : `R$${v}`)}
-                width={48}
-              />
-              <Tooltip
-                cursor={{ fill: "var(--muted)" }}
-                formatter={(value: number) => [formatarReais(value), "Despesa"]}
-                contentStyle={{
-                  borderRadius: 12,
-                  border: "1px solid var(--border)",
-                  boxShadow: "0 8px 24px rgba(18,24,31,0.12)",
-                  fontSize: 12,
-                }}
-              />
-              <Bar dataKey="valor" fill="var(--foreground)" radius={[4, 4, 0, 0]} maxBarSize={44} />
-            </BarChart>
-          </ResponsiveContainer>
+        {itens.length > 0 ? (
+          <div className="flex h-[240px] flex-col justify-between py-1">
+            {itens.map((d) => {
+              const ratio = maior > 0 ? d.valor / maior : 0;
+              return (
+                <div key={d.tipo} className="space-y-1.5">
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-muted-foreground">{d.tipo}</span>
+                    <span className="codigo font-medium tabular-nums text-foreground">{formatarReais(d.valor)}</span>
+                  </div>
+                  <SegmentBar ratio={ratio} />
+                </div>
+              );
+            })}
+          </div>
         ) : (
-          <p className="text-xs text-muted-foreground">Nenhuma despesa registrada este mês.</p>
+          <p className="flex h-[240px] items-center text-xs text-muted-foreground">
+            Nenhuma despesa registrada este mês.
+          </p>
         )}
       </CardContent>
     </Card>
