@@ -1,4 +1,5 @@
-import { ETAPAS_STATUS, StatusHistoricoItem, StatusOS } from "../types";
+import { StatusHistoricoItem, StatusOS } from "../types";
+import { useEtapasStatus } from "../hooks/useEtapasStatus";
 import { Card } from "./shadcn/card";
 
 const CORES_STATUS: Record<StatusOS, string> = {
@@ -32,13 +33,14 @@ export function StatusTimeline({
   historico: StatusHistoricoItem[];
   statusAtual: StatusOS;
 }) {
-  const indiceAtual = ETAPAS_STATUS.findIndex((e) => e.status === statusAtual);
+  const { etapasTrilha, rotulo } = useEtapasStatus();
+  const indiceAtual = etapasTrilha.findIndex((e) => e.status === statusAtual);
 
   return (
     <Card className="gap-0 py-0">
       {/* Trilho de etapas padrão (o "quanto falta") */}
       <div className="flex items-center overflow-x-auto px-5 pt-5 pb-4">
-        {ETAPAS_STATUS.map((etapa, i) => {
+        {etapasTrilha.map((etapa, i) => {
           const concluida = i <= indiceAtual && statusAtual !== "CANCELADO";
           return (
             <div key={etapa.status} className="flex shrink-0 items-center">
@@ -56,7 +58,7 @@ export function StatusTimeline({
                   {etapa.rotulo}
                 </span>
               </div>
-              {i < ETAPAS_STATUS.length - 1 && (
+              {i < etapasTrilha.length - 1 && (
                 <div className={`h-px w-8 ${concluida ? "bg-muted-foreground" : "bg-border"}`} />
               )}
             </div>
@@ -74,7 +76,7 @@ export function StatusTimeline({
               <span className={`mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full ${CORES_STATUS[evento.status]}`} />
               <div className="min-w-0 flex-1">
                 <p className="text-sm text-foreground">
-                  {ETAPAS_STATUS.find((e) => e.status === evento.status)?.rotulo ?? evento.status}
+                  {rotulo(evento.status)}
                   {evento.tentativaNumero && evento.tentativaNumero > 1 && (
                     <span className="codigo ml-2 text-xs text-status-aguardando">
                       tentativa {evento.tentativaNumero}

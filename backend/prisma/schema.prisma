@@ -203,6 +203,28 @@ enum ModalidadeAtendimento {
   REMOTO           // suporte remoto (quando aplicável)
 }
 
+// Customização das etapas de status por empresa. O ENUM StatusOS continua
+// sendo a fonte da verdade das etapas que existem no sistema (o dado é sempre
+// gravado como enum, nunca como texto livre — nada de dado dessincronizado).
+// Esta tabela é uma CAMADA de customização em cima do enum: cada linha
+// corresponde a um valor do enum e guarda como aquela etapa aparece nesta
+// instância — o rótulo interno, o rótulo mostrado ao cliente, a ordem na
+// trilha e se ela está ativa (ou seja, se aparece como opção ao avançar uma
+// OS). Ficar inativa NÃO apaga nada: OS antigas naquele status continuam
+// renderizando normalmente (com o rótulo configurado). É o que permite cada
+// empresa ter um fluxo ligeiramente diferente sem migração de dados.
+model ConfiguracaoEtapa {
+  id            String   @id @default(uuid())
+  status        StatusOS @unique
+  rotulo        String   // rótulo interno (ex: "Em diagnóstico")
+  rotuloCliente String   // frase mostrada ao cliente na notificação/portal
+  ordem         Int      // posição na trilha visual (0-based)
+  ativo         Boolean  @default(true)
+  atualizadoEm  DateTime @updatedAt
+
+  @@map("configuracao_etapas")
+}
+
 enum TipoOS {
   CORRETIVA   // aberta por causa de um problema relatado
   PREVENTIVA  // manutenção agendada, sem problema relatado

@@ -9,6 +9,7 @@ import desempenhoRoutes from "../modules/desempenho/desempenho.routes";
 import diagnosticoRoutes from "../modules/diagnostico/diagnostico.routes";
 import pontoRoutes from "../modules/ponto/ponto.routes";
 import contratoRoutes from "../modules/contratos/contrato.routes";
+import configuracaoRoutes from "../modules/configuracoes/configuracao.routes";
 
 const router = Router();
 
@@ -22,5 +23,6 @@ router.use("/desempenho", desempenhoRoutes);
 router.use("/diagnostico", diagnosticoRoutes);
 router.use("/ponto", pontoRoutes);
 router.use("/contratos", contratoRoutes);
+router.use("/configuracoes", configuracaoRoutes);
 
 export default router;

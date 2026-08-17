@@ -3,7 +3,8 @@ import { Link } from "react-router-dom";
 import { ChevronRight, Plus, Search, UserRound } from "lucide-react";
 import { api } from "../../services/api";
 import { usuarioLogado } from "../../services/auth";
-import { OPCOES_STATUS, OrdemServico, StatusOS } from "../../types";
+import { OrdemServico, StatusOS } from "../../types";
+import { useEtapasStatus } from "../../hooks/useEtapasStatus";
 import { tempoRelativo, formatarNumeroOS } from "../../utils/formatters";
 import { PageHeader } from "../../components/PageHeader";
 import { StatusBadge } from "../../components/StatusBadge";
@@ -64,12 +65,16 @@ function normalizar(texto: string) {
   return texto.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
 }
 
-const ABAS_STATUS: { chave: StatusOS | "todos"; rotulo: string }[] = [
-  { chave: "todos", rotulo: "Todos" },
-  ...OPCOES_STATUS.map((op) => ({ chave: op.status, rotulo: op.rotulo })),
-];
-
 export function OrdensServicoList() {
+  const { opcoes } = useEtapasStatus();
+  const abasStatus = useMemo<{ chave: StatusOS | "todos"; rotulo: string }[]>(
+    () => [
+      { chave: "todos", rotulo: "Todos" },
+      ...opcoes.map((op) => ({ chave: op.status, rotulo: op.rotulo })),
+    ],
+    [opcoes]
+  );
+
   const [ordens, setOrdens] = useState<OrdemServico[]>([]);
   const [carregando, setCarregando] = useState(true);
   const [statusFiltro, setStatusFiltro] = useState<StatusOS | "todos">("todos");
@@ -90,12 +95,12 @@ export function OrdensServicoList() {
 
   const contagemPorStatus = useMemo(() => {
     const contagem = {} as Record<StatusOS | "todos", number>;
-    ABAS_STATUS.forEach((aba) => {
+    abasStatus.forEach((aba) => {
       contagem[aba.chave] =
         aba.chave === "todos" ? ordens.length : ordens.filter((o) => o.statusAtual === aba.chave).length;
     });
     return contagem;
-  }, [ordens]);
+  }, [ordens, abasStatus]);
 
   const tecnicos = useMemo(() => {
     const mapa = new Map<string, string>();
@@ -146,7 +151,7 @@ export function OrdensServicoList() {
       />
 
       <div className="flex items-center gap-1 overflow-x-auto border-b border-border">
-        {ABAS_STATUS.map((aba) => (
+        {abasStatus.map((aba) => (
           <button
             key={aba.chave}
             onClick={() => setStatusFiltro(aba.chave)}

@@ -3,58 +3,71 @@ import { prisma } from "../../lib/prisma";
 import { ProvedorNotificacao } from "./notificacao.types";
 import { ConsoleProvider } from "./providers/console.provider";
 import { formatarNumeroOS } from "../../utils/formatarNumeroOS";
-
-const ROTULOS_STATUS: Record<StatusOS, string> = {
-  RECEBIDO: "Recebemos seu chamado",
-  DIAGNOSTICO: "Seu equipamento está em diagnóstico",
-  AGUARDANDO_PECA: "Aguardando chegada de peça",
-  EM_REPARO: "Seu equipamento está em reparo",
-  AGUARDANDO_VALIDACAO: "O reparo foi finalizado e está passando pela validação final",
-  CONCLUIDO: "O reparo foi concluído e o equipamento já está liberado para uso",
-  CANCELADO: "O atendimento foi cancelado",
-};
+import { obterRotulosCliente } from "../configuracoes/configuracao.service";
 
 let provedorCache: ProvedorNotificacao | null = null;
 
 /**
  * Escolhe o provedor com base na variável de ambiente NOTIFICATION_PROVIDER.
  * Padrão é "console" (modo simulado) — assim o sistema funciona sem nenhuma
- * credencial configurada. Para produção, defina NOTIFICATION_PROVIDER=twilio
- * e as credenciais correspondentes no .env.
+ * credencial configurada. Para produção, defina NOTIFICATION_PROVIDER com um
+ * dos valores abaixo e as credenciais correspondentes no .env:
+ *   - "twilio"         SMS/WhatsApp via Twilio
+ *   - "zenvia"         SMS/WhatsApp via Zenvia (gateway BR)
+ *   - "whatsapp-cloud" WhatsApp oficial via Cloud API da Meta
+ *   - "console"        modo simulado (padrão) — só imprime no log
  *
- * O import da Twilio é feito de forma preguiçosa (só quando o provedor é
- * realmente "twilio") para o sistema não exigir as variáveis de ambiente da
- * Twilio quando estiver rodando em modo simulado.
+ * O import de cada provedor real é feito de forma preguiçosa (só quando aquele
+ * provedor é o escolhido) para o sistema não exigir as variáveis de ambiente
+ * de um provedor que não está em uso quando roda em modo simulado.
  */
 function obterProvedor(): ProvedorNotificacao {
   if (provedorCache) return provedorCache;
 
-  const nomeProvedor = process.env.NOTIFICATION_PROVIDER || "console";
+  const nomeProvedor = (process.env.NOTIFICATION_PROVIDER || "console").toLowerCase();
 
-  if (nomeProvedor === "twilio") {
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
-    const { TwilioProvider } = require("./providers/twilio.provider");
-    provedorCache = new TwilioProvider();
-  } else {
-    provedorCache = new ConsoleProvider();
+  switch (nomeProvedor) {
+    case "twilio": {
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
+      const { TwilioProvider } = require("./providers/twilio.provider");
+      provedorCache = new TwilioProvider();
+      break;
+    }
+    case "zenvia": {
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
+      const { ZenviaProvider } = require("./providers/zenvia.provider");
+      provedorCache = new ZenviaProvider();
+      break;
+    }
+    case "whatsapp-cloud": {
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
+      const { WhatsAppCloudProvider } = require("./providers/whatsappCloud.provider");
+      provedorCache = new WhatsAppCloudProvider();
+      break;
+    }
+    default:
+      provedorCache = new ConsoleProvider();
   }
 
   return provedorCache as ProvedorNotificacao;
 }
 
-function montarMensagem(os: {
-  id: string;
-  numero: number;
-  statusAtual: StatusOS;
-  equipamento: { tipo: string };
-}): string {
+function montarMensagem(
+  os: {
+    id: string;
+    numero: number;
+    statusAtual: StatusOS;
+    equipamento: { tipo: string };
+  },
+  rotulosCliente: Record<StatusOS, string>
+): string {
   const linkAcompanhamento = `${process.env.FRONTEND_URL || "http://localhost:5173"}/acompanhar/${
     os.id
   }`;
 
   return [
     `Atendimento nº ${formatarNumeroOS(os.numero)} — ${os.equipamento.tipo}`,
-    ROTULOS_STATUS[os.statusAtual] + ".",
+    rotulosCliente[os.statusAtual] + ".",
     `Acompanhe em tempo real: ${linkAcompanhamento}`,
   ].join("\n");
 }
@@ -74,7 +87,8 @@ export async function notificarClienteSobreStatus(osId: string) {
   if (!os || !os.cliente.telefone) return;
 
   const canal = (process.env.NOTIFICATION_CHANNEL as CanalNotificacao) || CanalNotificacao.WHATSAPP;
-  const mensagem = montarMensagem(os);
+  const rotulosCliente = await obterRotulosCliente();
+  const mensagem = montarMensagem(os, rotulosCliente);
 
   let resultado: { sucesso: boolean; erro?: string };
   try {

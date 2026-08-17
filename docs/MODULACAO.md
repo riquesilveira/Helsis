@@ -22,7 +22,8 @@
 | `pecas` | Catálogo de peças (com preço padrão) | |
 | `desempenho` | Métricas por técnico, ranking, **resumo mensal (contracheque)** | `resumo-mensal` precisa vir antes de `/:id` no router, mesmo motivo do módulo de equipamentos |
 | `contratos` | CRUD de contratos de manutenção + **cálculo de SLA por OS** | Gestão restrita a Dono/Gestor; leitura liberada a todos os papéis internos. Expõe `resolverSlaDaOS`/`anexarSlaEmLista`, consumidos pelo módulo `ordens-servico` pra anexar o objeto `sla` a cada OS |
-| `notificacoes` | Envio ao cliente via provider plugável | Sem controller/rota própria — chamado internamente por `ordens-servico` no create/update de status. Provider escolhido por `NOTIFICATION_PROVIDER` no `.env` (`console` ou `twilio`) |
+| `notificacoes` | Envio ao cliente via provider plugável | Sem controller/rota própria — chamado internamente por `ordens-servico` no create/update de status. Provider escolhido por `NOTIFICATION_PROVIDER` no `.env`: `console` (simulado), `twilio`, `zenvia` ou `whatsapp-cloud`. A frase mostrada ao cliente por status vem da config de etapas (`configuracoes`), com fallback embutido |
+| `configuracoes` | Customização do fluxo de etapas de status por empresa | `GET /configuracoes/etapas` é **público** (o portal do cliente também usa os rótulos); `PUT` restrito a Dono/Gestor. Camada sobre o enum `StatusOS` — não troca o enum. Auto-semeia os defaults na primeira leitura (upsert), então não depende de rodar o seed contra produção |
 
 Anexos de OS (fotos/laudos) não têm módulo próprio: vivem dentro de
 `ordens-servico` (como os deslocamentos). O binário é recebido via `multer`
@@ -79,6 +80,17 @@ Entidades da Fase 2 (nicho de imagem médica):
 - `Anexo` — foto/laudo de uma OS. `url` guarda o caminho relativo servido em
   `/uploads/...`; o binário fica em disco, não no banco.
 
+Entidades da Fase 3 (polimento operacional):
+
+- `ConfiguracaoEtapa` — uma linha por valor do enum `StatusOS`, guardando como
+  aquela etapa aparece nesta instância: `rotulo` (interno), `rotuloCliente`
+  (frase na notificação/portal), `ordem` (posição na trilha) e `ativo` (se
+  aparece como opção ao avançar uma OS). É uma **camada de customização** sobre
+  o enum — o dado da OS continua gravado como enum, nunca como texto livre.
+  Desativar uma etapa não apaga nada: OS antigas naquele status seguem
+  renderizando. Entrada (`RECEBIDO`) e desfechos (`CONCLUIDO`/`CANCELADO`) são
+  sempre ativos.
+
 Campos que existem por causa de uma decisão de negócio específica, não óbvia
 só olhando o schema:
 
@@ -92,11 +104,13 @@ só olhando o schema:
 - `Funcionario.tipoComissao` / `valorComissao` — nulo é um estado válido
   (técnico só-salário, sem comissão).
 - `StatusOS` hoje é: `RECEBIDO`, `DIAGNOSTICO`, `AGUARDANDO_PECA`,
-  `EM_REPARO`, `CONCLUIDO`, `CANCELADO`. `EM_TESTE` e `ENTREGUE` existiram e
-  foram removidos — juntar "teste" dentro de "em reparo" e não ter uma
-  etapa de "entrega" separada de "concluído" fazia mais sentido pro modelo
-  de atendimento no local do cliente (sem uma etapa de "retirada" como
-  numa oficina).
+  `EM_REPARO`, `AGUARDANDO_VALIDACAO`, `CONCLUIDO`, `CANCELADO`. `EM_TESTE` e
+  `ENTREGUE` existiram e foram removidos — juntar "teste" dentro de "em reparo"
+  e não ter uma etapa de "entrega" separada de "concluído" fazia mais sentido
+  pro modelo de atendimento no local do cliente (sem uma etapa de "retirada"
+  como numa oficina). O enum é fixo, mas os **rótulos, a ordem e a ativação**
+  de cada etapa são customizáveis por empresa via `ConfiguracaoEtapa` (módulo
+  `configuracoes`, consumido no frontend pelo hook `useEtapasStatus`).
 
 ## Padrões que se repetem (vale seguir em código novo)
 
