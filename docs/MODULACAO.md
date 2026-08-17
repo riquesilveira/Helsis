@@ -27,8 +27,14 @@
 
 Anexos de OS (fotos/laudos) não têm módulo próprio: vivem dentro de
 `ordens-servico` (como os deslocamentos). O binário é recebido via `multer`
-(config em `src/lib/uploads.ts`), salvo em `backend/uploads/os-<id>/` e
-servido estaticamente em `/uploads`. Só metadados vão pro banco (`Anexo`).
+(memoryStorage, config em `src/lib/uploads.ts`) e persistido por uma **camada
+de storage plugável** (`src/lib/storage/`, escolhida por `STORAGE_DRIVER`):
+`local` grava em `backend/uploads/os-<id>/` servido em `/uploads` (url
+relativa); `s3` grava num bucket compatível com S3 — Cloudflare R2, AWS S3,
+Backblaze, MinIO — via `aws4fetch` (url absoluta pública). Só metadados vão pro
+banco (`Anexo`); o campo `url` guarda relativa ou absoluta conforme o driver, e
+o frontend trata os dois casos. ⚠️ `local` em disco efêmero (Render free) perde
+os arquivos a cada deploy — use `s3` em produção real.
 
 Módulo removido nesta fase: **`pedidos-aumento`** (era a antiga "solicitação
 de reavaliação salarial" / página "Desempenho e evolução"). Removido por

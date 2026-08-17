@@ -2,7 +2,7 @@ import express from "express";
 import cors from "cors";
 import routes from "./routes";
 import { errorMiddleware } from "./middlewares/error.middleware";
-import { UPLOADS_DIR, UPLOADS_ROUTE } from "./lib/uploads";
+import { UPLOADS_DIR, UPLOADS_ROUTE } from "./lib/storage";
 import "./lib/prisma"; // garante que o override de Decimal.toJSON seja aplicado
 
 export const app = express();
