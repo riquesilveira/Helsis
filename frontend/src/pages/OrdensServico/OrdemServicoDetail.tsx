@@ -77,6 +77,8 @@ const ARQUIVO_BASE = (
 ).replace(/\/api\/?$/, "");
 
 function urlArquivoAnexo(url: string) {
+  // Storage S3/R2 grava url absoluta; disco local grava relativa (/uploads/...).
+  if (/^https?:\/\//.test(url)) return url;
   return `${ARQUIVO_BASE}${url}`;
 }
 

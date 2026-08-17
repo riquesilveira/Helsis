@@ -5,7 +5,7 @@ import * as osService from "./ordemServico.service";
 import { buscarFuncionarioPorUsuarioId } from "../funcionarios/funcionario.service";
 import { listarNotificacoes } from "../notificacoes/notificacao.service";
 import { AppError } from "../../utils/AppError";
-import { removerArquivoAnexo, urlRelativaAnexo } from "../../lib/uploads";
+import { obterArmazenamento } from "../../lib/storage";
 
 const criarOSSchema = z.object({
   clienteId: z.string().uuid(),
@@ -215,9 +215,10 @@ export async function notificacoes(req: Request, res: Response) {
 }
 
 // ----------------------------------------------------------------------------
-// Anexos (fotos/laudos). O binário chega via multipart (multer) e já foi
-// salvo em disco pelo middleware quando este handler roda; aqui só gravamos
-// os metadados. Campos textuais (tipo/descricao) vêm no form-data.
+// Anexos (fotos/laudos). O binário chega via multipart (multer memoryStorage,
+// em req.file.buffer) e é persistido pela camada de storage (disco local ou
+// bucket S3, conforme STORAGE_DRIVER); aqui gravamos os metadados. Campos
+// textuais (tipo/descricao) vêm no form-data.
 // ----------------------------------------------------------------------------
 
 const registrarAnexoSchema = z.object({
@@ -228,21 +229,29 @@ const registrarAnexoSchema = z.object({
 export async function registrarAnexo(req: Request, res: Response) {
   if (!req.file) throw new AppError("Nenhum arquivo enviado.", 400);
 
+  const { tipo, descricao } = registrarAnexoSchema.parse(req.body);
+
+  // Quem anexou — só se o usuário tiver perfil de funcionário (DONO pode não ter).
+  let funcionarioId: string | null = null;
   try {
-    const { tipo, descricao } = registrarAnexoSchema.parse(req.body);
+    const funcionario = await buscarFuncionarioPorUsuarioId(req.usuario!.id);
+    funcionarioId = funcionario.id;
+  } catch {
+    funcionarioId = null;
+  }
 
-    // Quem anexou — só se o usuário tiver perfil de funcionário (DONO pode não ter).
-    let funcionarioId: string | null = null;
-    try {
-      const funcionario = await buscarFuncionarioPorUsuarioId(req.usuario!.id);
-      funcionarioId = funcionario.id;
-    } catch {
-      funcionarioId = null;
-    }
+  // Persiste o binário primeiro (precisamos da url pra gravar no banco).
+  const armazenamento = obterArmazenamento();
+  const { url } = await armazenamento.salvar(req.params.id, {
+    buffer: req.file.buffer,
+    nomeOriginal: req.file.originalname,
+    mimetype: req.file.mimetype,
+  });
 
+  try {
     const anexo = await osService.registrarAnexo(req.params.id, {
       tipo,
-      url: urlRelativaAnexo(req.params.id, req.file.filename),
+      url,
       nomeArquivo: req.file.originalname,
       tamanhoBytes: req.file.size,
       descricao,
@@ -250,14 +259,14 @@ export async function registrarAnexo(req: Request, res: Response) {
     });
     res.status(201).json(anexo);
   } catch (err) {
-    // Falhou depois do upload (OS inexistente, validação) — remove o órfão do disco.
-    removerArquivoAnexo(urlRelativaAnexo(req.params.id, req.file.filename));
+    // Falhou ao gravar o metadado (OS inexistente etc.) — remove o binário órfão.
+    await armazenamento.remover(url);
     throw err;
   }
 }
 
 export async function excluirAnexo(req: Request, res: Response) {
   const anexo = await osService.excluirAnexo(req.params.anexoId, req.params.id);
-  removerArquivoAnexo(anexo.url);
+  await obterArmazenamento().remover(anexo.url);
   res.status(204).end();
 }
