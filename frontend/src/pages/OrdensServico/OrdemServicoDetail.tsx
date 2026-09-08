@@ -610,7 +610,7 @@ export function OrdemServicoDetail() {
       </div>
 
       <Card>
-        <CardHeader>
+        <CardHeader className="border-b">
           <CardTitle>Notificações enviadas ao cliente</CardTitle>
         </CardHeader>
         <CardContent>
@@ -688,7 +688,7 @@ export function OrdemServicoDetail() {
       {/* Atualizar status */}
       {os.statusAtual !== "CONCLUIDO" && os.statusAtual !== "CANCELADO" && (
         <Card>
-          <CardHeader>
+          <CardHeader className="border-b">
             <CardTitle>Atualizar status</CardTitle>
           </CardHeader>
           <CardContent>
@@ -795,7 +795,7 @@ export function OrdemServicoDetail() {
 
       {/* Peças trocadas */}
       <Card>
-        <CardHeader>
+        <CardHeader className="border-b">
           <CardTitle>Peças trocadas</CardTitle>
           <CardAction>
             <Button
@@ -854,7 +854,7 @@ export function OrdemServicoDetail() {
 
       {/* Deslocamentos (viagens) */}
       <Card>
-        <CardHeader>
+        <CardHeader className="border-b">
           <CardTitle>Deslocamentos</CardTitle>
           {podeVerFinanceiro && (
             <CardAction>
@@ -958,7 +958,7 @@ export function OrdemServicoDetail() {
 
       {/* Anexos (fotos/laudos) */}
       <Card>
-        <CardHeader>
+        <CardHeader className="border-b">
           <CardTitle>Anexos</CardTitle>
           <CardAction>
             <div className="flex items-center gap-2">
@@ -1059,7 +1059,7 @@ export function OrdemServicoDetail() {
           pra ter transparência sobre quanto vai receber, sem poder alterar. */}
       {podeVerFinanceiro ? (
         <Card>
-          <CardHeader>
+          <CardHeader className="border-b">
             <CardTitle>Fechamento financeiro</CardTitle>
           </CardHeader>
           <CardContent>
@@ -1124,7 +1124,7 @@ export function OrdemServicoDetail() {
       ) : (
         os.valorMaoDeObra != null && (
           <Card>
-            <CardHeader>
+            <CardHeader className="border-b">
               <CardTitle>Fechamento financeiro deste atendimento</CardTitle>
             </CardHeader>
             <CardContent>

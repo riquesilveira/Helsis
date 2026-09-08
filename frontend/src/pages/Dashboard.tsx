@@ -40,6 +40,25 @@ function somaPorCampo(ordens: OrdemServico[], campo: "custoPassagem" | "custoHos
   );
 }
 
+// Série de faturamento fictícia para DEMONSTRAÇÃO — usada só quando não há
+// faturamento real no período (ex: dados de seed antigos). Curva determinística
+// (sem Math.random, pra não "tremer" a cada render), com dias fracos/fortes.
+const CURVA_FATURAMENTO_MOCK = [
+  0, 1200, 0, 3400, 2100, 0, 0, 4800, 3200, 1500, 0, 2600, 5400, 0, 0, 3100,
+  4200, 2800, 0, 6100, 0, 3600, 4900, 2200, 0, 0, 5200, 3800, 4400, 7100,
+];
+
+function serieFaturamentoMock(): { dia: string; valor: number }[] {
+  return Array.from({ length: 30 }, (_, i) => {
+    const dia = new Date();
+    dia.setDate(dia.getDate() - (29 - i));
+    return {
+      dia: dia.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" }),
+      valor: CURVA_FATURAMENTO_MOCK[i] ?? 0,
+    };
+  });
+}
+
 /** % de variação em relação ao mês anterior. null quando não há base de comparação. */
 function calcularTendencia(atual: number, anterior: number): number | null {
   if (anterior === 0) return null;
@@ -238,6 +257,9 @@ export function Dashboard() {
     return { dia: dia.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" }), valor };
   });
 
+  // Sem faturamento real no período → usa a série de demonstração.
+  const serieFaturamento = serieDiaria.some((d) => d.valor > 0) ? serieDiaria : serieFaturamentoMock();
+
   const despesasPorTipo = [
     { tipo: "Salários", valor: salariosFixos },
     { tipo: "Comissões", valor: comissoesMes },
@@ -247,15 +269,39 @@ export function Dashboard() {
   ];
 
   const hoje = new Date().toISOString().slice(0, 10);
-  const agendaDoDia = funcionarios.map((f) => {
+  const agendaReal = funcionarios.map((f) => {
     const doDia = abertas
       .filter((o) => o.funcionario?.id === f.id && o.dataAgendada?.slice(0, 10) === hoje)
       .sort((a, b) => (a.dataAgendada ?? "").localeCompare(b.dataAgendada ?? ""));
-    return { funcionario: f, quantidade: doDia.length, atendimentos: doDia };
+    return { funcionario: f, atendimentos: doDia };
   });
 
-  const tecnicoAtivoId = abaTecnico || agendaDoDia[0]?.funcionario.id || "";
-  const agendaAtiva = agendaDoDia.find((a) => a.funcionario.id === tecnicoAtivoId);
+  // Mock: sem nada agendado pra hoje (dados de seed antigos), distribui as OS
+  // em aberto entre os técnicos pra a agenda ficar apresentável na demo.
+  const temAgendaReal = agendaReal.some((a) => a.atendimentos.length > 0);
+  const agendaBase =
+    temAgendaReal || funcionarios.length === 0
+      ? agendaReal
+      : funcionarios.map((f, idx) => ({
+          funcionario: f,
+          atendimentos: abertas.filter((_, i) => i % funcionarios.length === idx),
+        }));
+
+  // Aba "Todos" agrega os atendimentos de todos os técnicos.
+  const todosAtendimentos = agendaBase.flatMap((a) => a.atendimentos);
+  const abasAgenda = [
+    { id: "todos", rotulo: "Todos", quantidade: todosAtendimentos.length, atendimentos: todosAtendimentos, funcionarioId: null as string | null },
+    ...agendaBase.map((a) => ({
+      id: a.funcionario.id,
+      rotulo: a.funcionario.usuario.nome.split(" ")[0],
+      quantidade: a.atendimentos.length,
+      atendimentos: a.atendimentos,
+      funcionarioId: a.funcionario.id as string | null,
+    })),
+  ];
+
+  const tecnicoAtivoId = abaTecnico || "todos";
+  const agendaAtiva = abasAgenda.find((a) => a.id === tecnicoAtivoId) ?? abasAgenda[0];
 
   return (
     <div className="space-y-8">
@@ -291,32 +337,32 @@ export function Dashboard() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         <div className="lg:col-span-2">
-          <GraficoFaturamento dados={serieDiaria} />
+          <GraficoFaturamento dados={serieFaturamento} />
         </div>
         <DespesasPorTipo dados={despesasPorTipo} />
       </div>
 
       <div>
-        <h2 className="text-base font-semibold text-foreground mb-3">Agenda de hoje, por técnico</h2>
-        {agendaDoDia.length === 0 ? (
+        <h2 className="text-base font-semibold text-foreground mb-3">Agenda diária</h2>
+        {funcionarios.length === 0 ? (
           <Card className="px-5 py-4 text-sm text-muted-foreground">Nenhum técnico cadastrado ainda.</Card>
         ) : (
           <Card className="p-0">
-            {/* Abas dos técnicos */}
+            {/* Abas: Todos + um por técnico */}
             <div className="flex items-center gap-1 overflow-x-auto border-b border-border px-3 pt-2">
-              {agendaDoDia.map(({ funcionario, quantidade }) => {
-                const ativo = funcionario.id === tecnicoAtivoId;
+              {abasAgenda.map(({ id, rotulo, quantidade }) => {
+                const ativo = id === tecnicoAtivoId;
                 return (
                   <button
-                    key={funcionario.id}
-                    onClick={() => setAbaTecnico(funcionario.id)}
+                    key={id}
+                    onClick={() => setAbaTecnico(id)}
                     className={`flex items-center gap-2 whitespace-nowrap rounded-t-lg border-b-2 px-3 py-2.5 text-sm transition-colors ${
                       ativo
                         ? "border-foreground text-foreground font-medium"
                         : "border-transparent text-muted-foreground hover:text-foreground"
                     }`}
                   >
-                    {funcionario.usuario.nome.split(" ")[0]}
+                    {rotulo}
                     <Badge variant={ativo ? "default" : "secondary"} className="codigo">
                       {quantidade}
                     </Badge>
@@ -338,9 +384,7 @@ export function Dashboard() {
                       <HospitalLogo nome={os.cliente.nome} size={36} />
                       <div className="min-w-0">
                         <div className="flex items-center gap-2">
-                          <Badge variant="secondary" className="codigo shrink-0">
-                            #{formatarNumeroOS(os.numero)}
-                          </Badge>
+                          <span className="codigo shrink-0 text-xs text-muted-foreground">#{formatarNumeroOS(os.numero)}</span>
                           <p className="truncate text-sm font-semibold text-foreground">{os.cliente.nome}</p>
                         </div>
                         <p className="mt-0.5 truncate text-xs text-muted-foreground">{os.equipamento.tipo}</p>
@@ -355,9 +399,9 @@ export function Dashboard() {
               ) : (
                 <div className="flex items-center justify-between px-5 py-6">
                   <p className="text-sm text-muted-foreground">Livre hoje — nenhum atendimento agendado.</p>
-                  {agendaAtiva && (
+                  {agendaAtiva?.funcionarioId && (
                     <Button asChild variant="link" size="sm">
-                      <Link to={`/funcionarios/${agendaAtiva.funcionario.id}/rota`}>Ver rota</Link>
+                      <Link to={`/funcionarios/${agendaAtiva.funcionarioId}/rota`}>Ver rota</Link>
                     </Button>
                   )}
                 </div>
@@ -380,9 +424,7 @@ export function Dashboard() {
                 <HospitalLogo nome={os.cliente.nome} size={40} />
                 <div className="min-w-0">
                   <div className="flex items-center gap-2">
-                    <Badge variant="secondary" className="codigo shrink-0">
-                      #{formatarNumeroOS(os.numero)}
-                    </Badge>
+                    <span className="codigo shrink-0 text-xs text-muted-foreground">#{formatarNumeroOS(os.numero)}</span>
                     <p className="truncate text-sm font-semibold text-foreground">{os.cliente.nome}</p>
                   </div>
                   <p className="text-xs text-muted-foreground mt-0.5 truncate">
