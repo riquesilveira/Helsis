@@ -150,20 +150,25 @@ function SegmentBar({ ratio, segmentos = 24 }: { ratio: number; segmentos?: numb
 }
 
 function DespesasPorTipo({ dados }: { dados: { tipo: string; valor: number }[] }) {
-  const itens = dados.filter((d) => d.valor > 0).sort((a, b) => b.valor - a.valor);
+  // Mostra todas as categorias (mesmo as zeradas, de forma discreta) pra o card
+  // ficar sempre equilibrado — no começo do mês, quando só há salário lançado,
+  // uma única barra "boiando" no topo passava impressão de tela quebrada.
+  const itens = [...dados].sort((a, b) => b.valor - a.valor);
   const maior = itens[0]?.valor ?? 0;
+  const temAlgumGasto = maior > 0;
   return (
     <Card className="gap-2">
       <CardHeader>
-        <CardTitle>Despesas por tipo no mês</CardTitle>
+        <CardTitle>Gastos por categorias</CardTitle>
       </CardHeader>
       <CardContent>
-        {itens.length > 0 ? (
+        {temAlgumGasto ? (
           <div className="flex h-[240px] flex-col justify-between py-1">
             {itens.map((d) => {
               const ratio = maior > 0 ? d.valor / maior : 0;
+              const zerado = d.valor <= 0;
               return (
-                <div key={d.tipo} className="space-y-1.5">
+                <div key={d.tipo} className={`space-y-1.5${zerado ? " opacity-45" : ""}`}>
                   <div className="flex items-center justify-between text-sm">
                     <span className="text-muted-foreground">{d.tipo}</span>
                     <span className="codigo font-medium tabular-nums text-foreground">{formatarReais(d.valor)}</span>
@@ -175,7 +180,7 @@ function DespesasPorTipo({ dados }: { dados: { tipo: string; valor: number }[] }
           </div>
         ) : (
           <p className="flex h-[240px] items-center text-xs text-muted-foreground">
-            Nenhuma despesa registrada este mês.
+            Nenhum gasto registrado este mês.
           </p>
         )}
       </CardContent>
