@@ -4,14 +4,11 @@ import {
   ComposedChart,
   Area,
   Line,
-  BarChart,
-  Bar,
   XAxis,
   YAxis,
   Tooltip,
   ResponsiveContainer,
   CartesianGrid,
-  Cell,
 } from "recharts";
 import { ChevronRight, ClipboardList, DollarSign, Receipt, Wallet, LucideIcon } from "lucide-react";
 import { api } from "../services/api";
@@ -173,11 +170,11 @@ function GraficoFaturamento({ dados }: { dados: { dia: string; valor: number; va
               <pattern
                 id="hachuraFaturamento"
                 patternUnits="userSpaceOnUse"
-                width="6"
-                height="6"
+                width="7"
+                height="7"
                 patternTransform="rotate(45)"
               >
-                <line x1="0" y1="0" x2="0" y2="6" stroke="var(--muted-foreground)" strokeOpacity="0.35" strokeWidth="1" />
+                <line x1="0" y1="0" x2="0" y2="7" stroke="var(--muted-foreground)" strokeOpacity="0.22" strokeWidth="1" />
               </pattern>
             </defs>
             <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--border)" />
@@ -202,16 +199,7 @@ function GraficoFaturamento({ dados }: { dados: { dia: string; valor: number; va
               ]}
               contentStyle={ESTILO_TOOLTIP}
             />
-            {/* Período anterior (tracejado) desenhado antes pra ficar atrás da área */}
-            <Line
-              type="stepAfter"
-              dataKey="valorAnterior"
-              name="valorAnterior"
-              stroke="var(--foreground)"
-              strokeWidth={2}
-              strokeDasharray="5 4"
-              dot={false}
-            />
+            {/* Área hachurada (este período) ao fundo */}
             <Area
               type="stepAfter"
               dataKey="valor"
@@ -222,6 +210,16 @@ function GraficoFaturamento({ dados }: { dados: { dia: string; valor: number; va
               dot={false}
               activeDot={{ r: 3 }}
             />
+            {/* Período anterior (tracejado) por cima, como na referência */}
+            <Line
+              type="stepAfter"
+              dataKey="valorAnterior"
+              name="valorAnterior"
+              stroke="var(--foreground)"
+              strokeWidth={2}
+              strokeDasharray="6 4"
+              dot={false}
+            />
           </ComposedChart>
         </ResponsiveContainer>
       </CardContent>
@@ -231,7 +229,8 @@ function GraficoFaturamento({ dados }: { dados: { dia: string; valor: number; va
 
 function GastosPorCategoria({ dados }: { dados: { tipo: string; valor: number }[] }) {
   const itens = [...dados].sort((a, b) => b.valor - a.valor);
-  const temAlgumGasto = (itens[0]?.valor ?? 0) > 0;
+  const maior = itens[0]?.valor ?? 0;
+  const temAlgumGasto = maior > 0;
   return (
     <Card>
       <CardHeader className="border-b">
@@ -239,41 +238,25 @@ function GastosPorCategoria({ dados }: { dados: { tipo: string; valor: number }[
       </CardHeader>
       <CardContent>
         {temAlgumGasto ? (
-          <ResponsiveContainer width="100%" height={232}>
-            <BarChart data={itens} layout="vertical" margin={{ top: 4, right: 16, left: 8, bottom: 0 }} barCategoryGap="24%">
-              <CartesianGrid horizontal={false} strokeDasharray="3 3" stroke="var(--border)" />
-              <XAxis
-                type="number"
-                tickFormatter={reaisCompacto}
-                tick={{ fontSize: 11, fill: "var(--muted-foreground)" }}
-                axisLine={false}
-                tickLine={false}
-              />
-              <YAxis
-                type="category"
-                dataKey="tipo"
-                width={104}
-                interval={0}
-                tick={{ fontSize: 12, fill: "var(--muted-foreground)" }}
-                axisLine={false}
-                tickLine={false}
-              />
-              <Tooltip
-                cursor={{ fill: "var(--muted)", opacity: 0.4 }}
-                formatter={(value: number) => [formatarReais(value), "Gasto"]}
-                contentStyle={ESTILO_TOOLTIP}
-              />
-              <Bar dataKey="valor" radius={[0, 6, 6, 0]} barSize={18}>
-                {itens.map((d, i) => (
-                  <Cell
-                    key={d.tipo}
-                    fill={i === 0 ? "var(--foreground)" : "var(--muted-foreground)"}
-                    fillOpacity={i === 0 ? 1 : 0.55}
-                  />
-                ))}
-              </Bar>
-            </BarChart>
-          </ResponsiveContainer>
+          <div className="flex h-[232px] flex-col justify-center gap-4">
+            {itens.map((d, i) => {
+              const largura = maior > 0 ? Math.max((d.valor / maior) * 100, 2) : 0;
+              return (
+                <div key={d.tipo} className="grid grid-cols-[88px_1fr_auto] items-center gap-3">
+                  <span className="truncate text-sm text-muted-foreground">{d.tipo}</span>
+                  <div className="h-2.5 overflow-hidden rounded-full bg-muted">
+                    <div
+                      className="h-full rounded-full bg-foreground"
+                      style={{ width: `${largura}%`, opacity: i === 0 ? 1 : 0.5 }}
+                    />
+                  </div>
+                  <span className="codigo w-16 text-right text-xs tabular-nums text-foreground">
+                    {reaisCompacto(d.valor)}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
         ) : (
           <p className="flex h-[232px] items-center text-xs text-muted-foreground">
             Nenhum gasto registrado este mês.
@@ -364,7 +347,7 @@ export function Dashboard() {
   const despesasPorTipo = [
     { tipo: "Salários", valor: salariosFixos },
     { tipo: "Comissões", valor: semGastosVariaveis ? GASTOS_MOCK.comissoes : comissoesMes },
-    { tipo: "Passagem aérea", valor: semGastosVariaveis ? GASTOS_MOCK.passagem : somaPorCampo(concluidasNoMes, "custoPassagem") },
+    { tipo: "Passagem", valor: semGastosVariaveis ? GASTOS_MOCK.passagem : somaPorCampo(concluidasNoMes, "custoPassagem") },
     { tipo: "Hotel", valor: semGastosVariaveis ? GASTOS_MOCK.hotel : somaPorCampo(concluidasNoMes, "custoHospedagem") },
     { tipo: "Alimentação", valor: semGastosVariaveis ? GASTOS_MOCK.alimentacao : somaPorCampo(concluidasNoMes, "custoAlimentacao") },
   ];
