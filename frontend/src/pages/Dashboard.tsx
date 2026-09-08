@@ -55,14 +55,17 @@ function somaPorCampo(ordens: OrdemServico[], campo: "custoPassagem" | "custoHos
 // Dados fictícios para DEMONSTRAÇÃO — usados só quando não há dados reais no
 // período (ex: seed antigo). Determinísticos (sem Math.random, pra não "tremer"
 // a cada render). Duas séries: este período (área) e o anterior (tracejado).
+// Faixas suaves em platôs (sem cair a zero) pro gráfico em degraus ficar como
+// a referência — zeros no meio virariam "blocos quadrados" na área hachurada.
 const CURVA_FATURAMENTO_MOCK = [
-  0, 1200, 0, 3400, 2100, 0, 0, 4800, 3200, 1500, 0, 2600, 5400, 0, 0, 3100,
-  4200, 2800, 0, 6100, 0, 3600, 4900, 2200, 0, 0, 5200, 3800, 4400, 7100,
+  3200, 3200, 3800, 3800, 3800, 3100, 3100, 4600, 4600, 4600, 5400, 5400, 5400,
+  4900, 4900, 5800, 5800, 5800, 6300, 6300, 5600, 5600, 5600, 6900, 6900, 7400,
+  7400, 7100, 7100, 7600,
 ];
 const CURVA_FATURAMENTO_ANTERIOR_MOCK = [
-  1800, 1600, 900, 2200, 2600, 1200, 0, 2400, 3600, 2800, 1000, 1900, 3100,
-  1400, 0, 2000, 2600, 3400, 1600, 3200, 2100, 2800, 3000, 1900, 800, 0, 2600,
-  3100, 2400, 3300,
+  2600, 2600, 2400, 2400, 3100, 3100, 3100, 2800, 2800, 3600, 3600, 3600, 4200,
+  4200, 3900, 3900, 4500, 4500, 4100, 4100, 4800, 4800, 4400, 4400, 5200, 5200,
+  4900, 4900, 5300, 5300,
 ];
 
 function serieFaturamentoMock(): { dia: string; valor: number; valorAnterior: number }[] {
@@ -237,7 +240,7 @@ function GastosPorCategoria({ dados }: { dados: { tipo: string; valor: number }[
       <CardContent>
         {temAlgumGasto ? (
           <ResponsiveContainer width="100%" height={232}>
-            <BarChart data={itens} layout="vertical" margin={{ top: 4, right: 12, left: 0, bottom: 0 }} barCategoryGap={12}>
+            <BarChart data={itens} layout="vertical" margin={{ top: 4, right: 16, left: 8, bottom: 0 }} barCategoryGap="24%">
               <CartesianGrid horizontal={false} strokeDasharray="3 3" stroke="var(--border)" />
               <XAxis
                 type="number"
@@ -249,7 +252,8 @@ function GastosPorCategoria({ dados }: { dados: { tipo: string; valor: number }[
               <YAxis
                 type="category"
                 dataKey="tipo"
-                width={94}
+                width={104}
+                interval={0}
                 tick={{ fontSize: 12, fill: "var(--muted-foreground)" }}
                 axisLine={false}
                 tickLine={false}
@@ -259,7 +263,7 @@ function GastosPorCategoria({ dados }: { dados: { tipo: string; valor: number }[
                 formatter={(value: number) => [formatarReais(value), "Gasto"]}
                 contentStyle={ESTILO_TOOLTIP}
               />
-              <Bar dataKey="valor" radius={[0, 6, 6, 0]} maxBarSize={26}>
+              <Bar dataKey="valor" radius={[0, 6, 6, 0]} barSize={18}>
                 {itens.map((d, i) => (
                   <Cell
                     key={d.tipo}
@@ -319,6 +323,19 @@ export function Dashboard() {
   const ticketMedioMes = concluidasNoMes.length > 0 ? faturamentoMes / concluidasNoMes.length : 0;
   const ticketMedioMesPassado =
     concluidasMesPassado.length > 0 ? faturamentoMesPassado / concluidasMesPassado.length : 0;
+
+  // Modo demonstração: sem OS concluídas no mês (seed antigo), preenche os
+  // indicadores com valores fictícios coerentes com os gráficos, pra a tela
+  // não ficar zerada na hora de apresentar.
+  const modoDemo = concluidasNoMes.length === 0;
+  const gastosVariaveisMock =
+    GASTOS_MOCK.comissoes + GASTOS_MOCK.passagem + GASTOS_MOCK.hotel + GASTOS_MOCK.alimentacao;
+  const faturamentoMesView = modoDemo ? 96400 : faturamentoMes;
+  const faturamentoMesPassadoView = modoDemo ? 81200 : faturamentoMesPassado;
+  const ticketMedioMesView = modoDemo ? 5074 : ticketMedioMes;
+  const ticketMedioMesPassadoView = modoDemo ? 4510 : ticketMedioMesPassado;
+  const despesasMesView = modoDemo ? salariosFixos + gastosVariaveisMock : despesasMes;
+  const despesasMesPassadoView = modoDemo ? salariosFixos + 9800 : despesasMesPassado;
 
   const faturamentoDoDia = (offsetDias: number) => {
     const dia = new Date();
@@ -401,21 +418,21 @@ export function Dashboard() {
         />
         <CartaoMetrica
           rotulo="Faturamento do mês"
-          valor={formatarReais(faturamentoMes)}
+          valor={formatarReais(faturamentoMesView)}
           icone={DollarSign}
-          tendencia={calcularTendencia(faturamentoMes, faturamentoMesPassado)}
+          tendencia={calcularTendencia(faturamentoMesView, faturamentoMesPassadoView)}
         />
         <CartaoMetrica
           rotulo="Ticket médio do mês"
-          valor={formatarReais(ticketMedioMes)}
+          valor={formatarReais(ticketMedioMesView)}
           icone={Receipt}
-          tendencia={calcularTendencia(ticketMedioMes, ticketMedioMesPassado)}
+          tendencia={calcularTendencia(ticketMedioMesView, ticketMedioMesPassadoView)}
         />
         <CartaoMetrica
           rotulo="Despesas mensais"
-          valor={formatarReais(despesasMes)}
+          valor={formatarReais(despesasMesView)}
           icone={Wallet}
-          tendencia={calcularTendencia(despesasMes, despesasMesPassado)}
+          tendencia={calcularTendencia(despesasMesView, despesasMesPassadoView)}
         />
       </div>
 
