@@ -1,11 +1,23 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from "recharts";
+import {
+  ComposedChart,
+  Area,
+  Line,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  Tooltip,
+  ResponsiveContainer,
+  CartesianGrid,
+  Cell,
+} from "recharts";
 import { ChevronRight, ClipboardList, DollarSign, Receipt, Wallet, LucideIcon } from "lucide-react";
 import { api } from "../services/api";
 import { Funcionario, OrdemServico } from "../types";
 import { formatarReais, tempoRelativo, formatarNumeroOS } from "../utils/formatters";
-import { Card, CardContent, CardHeader, CardTitle } from "../components/shadcn/card";
+import { Card, CardAction, CardContent, CardHeader, CardTitle } from "../components/shadcn/card";
 import { Badge } from "../components/shadcn/badge";
 import { Button } from "../components/shadcn/button";
 import { StatusBadge } from "../components/StatusBadge";
@@ -40,23 +52,43 @@ function somaPorCampo(ordens: OrdemServico[], campo: "custoPassagem" | "custoHos
   );
 }
 
-// Série de faturamento fictícia para DEMONSTRAÇÃO — usada só quando não há
-// faturamento real no período (ex: dados de seed antigos). Curva determinística
-// (sem Math.random, pra não "tremer" a cada render), com dias fracos/fortes.
+// Dados fictícios para DEMONSTRAÇÃO — usados só quando não há dados reais no
+// período (ex: seed antigo). Determinísticos (sem Math.random, pra não "tremer"
+// a cada render). Duas séries: este período (área) e o anterior (tracejado).
 const CURVA_FATURAMENTO_MOCK = [
   0, 1200, 0, 3400, 2100, 0, 0, 4800, 3200, 1500, 0, 2600, 5400, 0, 0, 3100,
   4200, 2800, 0, 6100, 0, 3600, 4900, 2200, 0, 0, 5200, 3800, 4400, 7100,
 ];
+const CURVA_FATURAMENTO_ANTERIOR_MOCK = [
+  1800, 1600, 900, 2200, 2600, 1200, 0, 2400, 3600, 2800, 1000, 1900, 3100,
+  1400, 0, 2000, 2600, 3400, 1600, 3200, 2100, 2800, 3000, 1900, 800, 0, 2600,
+  3100, 2400, 3300,
+];
 
-function serieFaturamentoMock(): { dia: string; valor: number }[] {
+function serieFaturamentoMock(): { dia: string; valor: number; valorAnterior: number }[] {
   return Array.from({ length: 30 }, (_, i) => {
     const dia = new Date();
     dia.setDate(dia.getDate() - (29 - i));
     return {
       dia: dia.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" }),
       valor: CURVA_FATURAMENTO_MOCK[i] ?? 0,
+      valorAnterior: CURVA_FATURAMENTO_ANTERIOR_MOCK[i] ?? 0,
     };
   });
+}
+
+// Gastos fictícios das categorias variáveis (o salário é real e vem dos dados).
+const GASTOS_MOCK = {
+  comissoes: 4280,
+  passagem: 3760,
+  hotel: 2540,
+  alimentacao: 1490,
+};
+
+/** Formata valores em reais de forma compacta pros eixos (ex: R$5,4k). */
+function reaisCompacto(v: number): string {
+  if (v >= 1000) return `R$${(v / 1000).toLocaleString("pt-BR", { maximumFractionDigits: 1 })}k`;
+  return `R$${v}`;
 }
 
 /** % de variação em relação ao mês anterior. null quando não há base de comparação. */
@@ -101,20 +133,49 @@ function CartaoMetrica({
   return to ? <Link to={to} className="block h-full">{conteudo}</Link> : conteudo;
 }
 
-function GraficoFaturamento({ dados }: { dados: { dia: string; valor: number }[] }) {
+const ESTILO_TOOLTIP = {
+  borderRadius: 12,
+  border: "1px solid var(--border)",
+  boxShadow: "0 8px 24px rgba(18,24,31,0.12)",
+  fontSize: 12,
+} as const;
+
+function GraficoFaturamento({ dados }: { dados: { dia: string; valor: number; valorAnterior: number }[] }) {
   return (
     <Card>
-      <CardHeader>
+      <CardHeader className="border-b">
         <CardTitle>Faturamento nos últimos 30 dias</CardTitle>
+        <CardAction>
+          <span className="rounded-lg border border-border px-2.5 py-1 text-xs text-muted-foreground">
+            Últimos 30 dias
+          </span>
+        </CardAction>
       </CardHeader>
       <CardContent>
-        <ResponsiveContainer width="100%" height={240}>
-          <AreaChart data={dados} margin={{ top: 5, right: 8, left: 0, bottom: 0 }}>
+        <div className="mb-3 flex items-center gap-4 text-xs text-muted-foreground">
+          <span className="flex items-center gap-1.5">
+            <span className="inline-block h-2.5 w-3.5 rounded-sm bg-muted-foreground/25 ring-1 ring-muted-foreground/40" />
+            Este período
+          </span>
+          <span className="flex items-center gap-1.5">
+            <svg width="18" height="6" aria-hidden>
+              <line x1="0" y1="3" x2="18" y2="3" stroke="var(--foreground)" strokeWidth="2" strokeDasharray="4 3" />
+            </svg>
+            Período anterior
+          </span>
+        </div>
+        <ResponsiveContainer width="100%" height={220}>
+          <ComposedChart data={dados} margin={{ top: 5, right: 8, left: 0, bottom: 0 }}>
             <defs>
-              <linearGradient id="corFaturamento" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="var(--foreground)" stopOpacity={0.2} />
-                <stop offset="95%" stopColor="var(--foreground)" stopOpacity={0} />
-              </linearGradient>
+              <pattern
+                id="hachuraFaturamento"
+                patternUnits="userSpaceOnUse"
+                width="6"
+                height="6"
+                patternTransform="rotate(45)"
+              >
+                <line x1="0" y1="0" x2="0" y2="6" stroke="var(--muted-foreground)" strokeOpacity="0.35" strokeWidth="1" />
+              </pattern>
             </defs>
             <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--border)" />
             <XAxis
@@ -128,77 +189,89 @@ function GraficoFaturamento({ dados }: { dados: { dia: string; valor: number }[]
               tick={{ fontSize: 11, fill: "var(--muted-foreground)" }}
               axisLine={false}
               tickLine={false}
-              tickFormatter={(v) => `R$${v}`}
-              width={54}
+              tickFormatter={reaisCompacto}
+              width={52}
             />
             <Tooltip
-              formatter={(value: number) => [formatarReais(value), "Faturamento"]}
-              contentStyle={{
-                borderRadius: 12,
-                border: "1px solid var(--border)",
-                boxShadow: "0 8px 24px rgba(18,24,31,0.12)",
-                fontSize: 12,
-              }}
+              formatter={(value: number, name) => [
+                formatarReais(value),
+                name === "valor" ? "Este período" : "Período anterior",
+              ]}
+              contentStyle={ESTILO_TOOLTIP}
             />
-            <Area type="monotone" dataKey="valor" stroke="var(--foreground)" strokeWidth={2.5} fill="url(#corFaturamento)" />
-          </AreaChart>
+            {/* Período anterior (tracejado) desenhado antes pra ficar atrás da área */}
+            <Line
+              type="stepAfter"
+              dataKey="valorAnterior"
+              name="valorAnterior"
+              stroke="var(--foreground)"
+              strokeWidth={2}
+              strokeDasharray="5 4"
+              dot={false}
+            />
+            <Area
+              type="stepAfter"
+              dataKey="valor"
+              name="valor"
+              stroke="var(--muted-foreground)"
+              strokeWidth={2}
+              fill="url(#hachuraFaturamento)"
+              dot={false}
+              activeDot={{ r: 3 }}
+            />
+          </ComposedChart>
         </ResponsiveContainer>
       </CardContent>
     </Card>
   );
 }
 
-function SegmentBar({ ratio, segmentos = 24 }: { ratio: number; segmentos?: number }) {
-  const preenchidos = Math.round(Math.min(Math.max(ratio, 0), 1) * segmentos);
-  return (
-    <div className="flex h-3 items-stretch justify-between">
-      {Array.from({ length: segmentos }).map((_, i) => {
-        const ativo = i < preenchidos;
-        // preenchimento escurece em gradiente conforme avança; vazias ficam claras
-        const opacidade = ativo ? 0.35 + 0.65 * ((i + 1) / preenchidos) : 1;
-        return (
-          <div
-            key={i}
-            className={`w-[3px] rounded-full transition-colors ${ativo ? "bg-foreground" : "bg-muted"}`}
-            style={ativo ? { opacity: opacidade } : undefined}
-          />
-        );
-      })}
-    </div>
-  );
-}
-
-function DespesasPorTipo({ dados }: { dados: { tipo: string; valor: number }[] }) {
-  // Mostra todas as categorias (mesmo as zeradas, de forma discreta) pra o card
-  // ficar sempre equilibrado — no começo do mês, quando só há salário lançado,
-  // uma única barra "boiando" no topo passava impressão de tela quebrada.
+function GastosPorCategoria({ dados }: { dados: { tipo: string; valor: number }[] }) {
   const itens = [...dados].sort((a, b) => b.valor - a.valor);
-  const maior = itens[0]?.valor ?? 0;
-  const temAlgumGasto = maior > 0;
+  const temAlgumGasto = (itens[0]?.valor ?? 0) > 0;
   return (
-    <Card className="gap-2">
-      <CardHeader>
+    <Card>
+      <CardHeader className="border-b">
         <CardTitle>Gastos por categorias</CardTitle>
       </CardHeader>
       <CardContent>
         {temAlgumGasto ? (
-          <div className="flex h-[240px] flex-col justify-between py-1">
-            {itens.map((d) => {
-              const ratio = maior > 0 ? d.valor / maior : 0;
-              const zerado = d.valor <= 0;
-              return (
-                <div key={d.tipo} className={`space-y-1.5${zerado ? " opacity-45" : ""}`}>
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="text-muted-foreground">{d.tipo}</span>
-                    <span className="codigo font-medium tabular-nums text-foreground">{formatarReais(d.valor)}</span>
-                  </div>
-                  <SegmentBar ratio={ratio} />
-                </div>
-              );
-            })}
-          </div>
+          <ResponsiveContainer width="100%" height={232}>
+            <BarChart data={itens} layout="vertical" margin={{ top: 4, right: 12, left: 0, bottom: 0 }} barCategoryGap={12}>
+              <CartesianGrid horizontal={false} strokeDasharray="3 3" stroke="var(--border)" />
+              <XAxis
+                type="number"
+                tickFormatter={reaisCompacto}
+                tick={{ fontSize: 11, fill: "var(--muted-foreground)" }}
+                axisLine={false}
+                tickLine={false}
+              />
+              <YAxis
+                type="category"
+                dataKey="tipo"
+                width={94}
+                tick={{ fontSize: 12, fill: "var(--muted-foreground)" }}
+                axisLine={false}
+                tickLine={false}
+              />
+              <Tooltip
+                cursor={{ fill: "var(--muted)", opacity: 0.4 }}
+                formatter={(value: number) => [formatarReais(value), "Gasto"]}
+                contentStyle={ESTILO_TOOLTIP}
+              />
+              <Bar dataKey="valor" radius={[0, 6, 6, 0]} maxBarSize={26}>
+                {itens.map((d, i) => (
+                  <Cell
+                    key={d.tipo}
+                    fill={i === 0 ? "var(--foreground)" : "var(--muted-foreground)"}
+                    fillOpacity={i === 0 ? 1 : 0.55}
+                  />
+                ))}
+              </Bar>
+            </BarChart>
+          </ResponsiveContainer>
         ) : (
-          <p className="flex h-[240px] items-center text-xs text-muted-foreground">
+          <p className="flex h-[232px] items-center text-xs text-muted-foreground">
             Nenhum gasto registrado este mês.
           </p>
         )}
@@ -247,25 +320,36 @@ export function Dashboard() {
   const ticketMedioMesPassado =
     concluidasMesPassado.length > 0 ? faturamentoMesPassado / concluidasMesPassado.length : 0;
 
+  const faturamentoDoDia = (offsetDias: number) => {
+    const dia = new Date();
+    dia.setDate(dia.getDate() - offsetDias);
+    const chave = dia.toISOString().slice(0, 10);
+    return ordens
+      .filter((o) => o.dataConclusao?.slice(0, 10) === chave)
+      .reduce((soma, o) => soma + valorTotal(o), 0);
+  };
+
   const serieDiaria = Array.from({ length: 30 }, (_, i) => {
     const dia = new Date();
     dia.setDate(dia.getDate() - (29 - i));
-    const chave = dia.toISOString().slice(0, 10);
-    const valor = ordens
-      .filter((o) => o.dataConclusao?.slice(0, 10) === chave)
-      .reduce((soma, o) => soma + valorTotal(o), 0);
-    return { dia: dia.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" }), valor };
+    return {
+      dia: dia.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" }),
+      valor: faturamentoDoDia(29 - i), // este período
+      valorAnterior: faturamentoDoDia(29 - i + 30), // 30 dias antes
+    };
   });
 
   // Sem faturamento real no período → usa a série de demonstração.
   const serieFaturamento = serieDiaria.some((d) => d.valor > 0) ? serieDiaria : serieFaturamentoMock();
 
+  // Sem OS concluídas no mês (seed antigo) → usa gastos variáveis de demonstração.
+  const semGastosVariaveis = concluidasNoMes.length === 0;
   const despesasPorTipo = [
     { tipo: "Salários", valor: salariosFixos },
-    { tipo: "Comissões", valor: comissoesMes },
-    { tipo: "Passagem aérea", valor: somaPorCampo(concluidasNoMes, "custoPassagem") },
-    { tipo: "Hotel", valor: somaPorCampo(concluidasNoMes, "custoHospedagem") },
-    { tipo: "Alimentação", valor: somaPorCampo(concluidasNoMes, "custoAlimentacao") },
+    { tipo: "Comissões", valor: semGastosVariaveis ? GASTOS_MOCK.comissoes : comissoesMes },
+    { tipo: "Passagem aérea", valor: semGastosVariaveis ? GASTOS_MOCK.passagem : somaPorCampo(concluidasNoMes, "custoPassagem") },
+    { tipo: "Hotel", valor: semGastosVariaveis ? GASTOS_MOCK.hotel : somaPorCampo(concluidasNoMes, "custoHospedagem") },
+    { tipo: "Alimentação", valor: semGastosVariaveis ? GASTOS_MOCK.alimentacao : somaPorCampo(concluidasNoMes, "custoAlimentacao") },
   ];
 
   const hoje = new Date().toISOString().slice(0, 10);
@@ -339,7 +423,7 @@ export function Dashboard() {
         <div className="lg:col-span-2">
           <GraficoFaturamento dados={serieFaturamento} />
         </div>
-        <DespesasPorTipo dados={despesasPorTipo} />
+        <GastosPorCategoria dados={despesasPorTipo} />
       </div>
 
       <div>
