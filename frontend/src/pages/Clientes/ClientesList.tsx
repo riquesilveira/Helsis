@@ -214,7 +214,7 @@ export function ClientesList() {
         />
       </div>
 
-      <Card className="py-0">
+      <Card className="hidden py-0 md:block">
         <Table>
           <TableHeader>
             <TableRow className="border-border hover:bg-transparent">
@@ -292,6 +292,61 @@ export function ClientesList() {
           </TableBody>
         </Table>
       </Card>
+
+      {/* Lista em cards para mobile */}
+      <div className="space-y-3 md:hidden">
+        {carregando && (
+          <Card className="p-4 text-sm text-muted-foreground">Carregando...</Card>
+        )}
+        {!carregando &&
+          clientesFiltrados.map((c) => (
+            <Card key={c.id} className="p-0">
+              <Link to={`/clientes/${c.id}`} className="block space-y-3 p-4">
+                <div className="flex min-w-0 items-center gap-3">
+                  <HospitalLogo nome={c.nome} size={40} />
+                  <span className="min-w-0 truncate text-sm font-semibold text-foreground">
+                    {c.nome}
+                  </span>
+                </div>
+                <div className="grid gap-2 text-sm">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-muted-foreground">Telefone</span>
+                    <span className="min-w-0 truncate text-right text-foreground">
+                      {c.telefone}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-muted-foreground">Cidade</span>
+                    <span className="min-w-0 truncate text-right text-foreground">
+                      {c.cidade ? `${c.cidade}/${c.estado ?? ""}` : "—"}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-muted-foreground">Equipamentos</span>
+                    <Badge variant="secondary">{c.equipamentos?.length ?? 0} equip.</Badge>
+                  </div>
+                </div>
+              </Link>
+              <div className="flex justify-end gap-1 border-t border-border px-4 pb-2 pt-2">
+                <MenuAcoes
+                  cliente={c}
+                  onEditar={() => abrirEdicao(c)}
+                  onExcluir={() => {
+                    setErroExcluir("");
+                    setClienteExcluir(c);
+                  }}
+                />
+              </div>
+            </Card>
+          ))}
+        {!carregando && clientesFiltrados.length === 0 && (
+          <Card className="p-4 text-sm text-muted-foreground">
+            {clientes.length === 0
+              ? "Nenhum cliente cadastrado ainda."
+              : "Nenhum cliente encontrado com essa busca."}
+          </Card>
+        )}
+      </div>
 
       {/* Modal de cadastro/edição */}
       <Dialog open={modalAberto} onOpenChange={(aberto) => { if (!aberto) fecharModal(); }}>

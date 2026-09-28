@@ -170,7 +170,7 @@ export function OrdensServicoList() {
       </div>
 
       {periodo === "personalizado" && (
-        <div className="flex items-center gap-3 rounded-xl border border-border bg-muted px-4 py-3">
+        <div className="flex flex-wrap items-center gap-3 rounded-xl border border-border bg-muted px-4 py-3">
           <label className="flex items-center gap-2 text-xs text-muted-foreground">
             De
             <Input
@@ -207,8 +207,8 @@ export function OrdensServicoList() {
         </div>
       )}
 
-      <div className="flex items-center gap-3">
-        <div className="relative flex-1">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+        <div className="relative sm:flex-1">
           <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             type="text"
@@ -218,37 +218,39 @@ export function OrdensServicoList() {
             className="pl-9"
           />
         </div>
-        <Select
-          value={funcionarioFiltro || "TODOS"}
-          onValueChange={(v) => setFuncionarioFiltro(v === "TODOS" ? "" : v)}
-        >
-          <SelectTrigger className="w-auto min-w-[180px]">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="TODOS">Todos os técnicos</SelectItem>
-            {tecnicos.map((t) => (
-              <SelectItem key={t.id} value={t.id}>
-                {t.nome}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        <Select value={periodo} onValueChange={(v) => setPeriodo(v as Periodo)}>
-          <SelectTrigger className="w-auto min-w-[180px]">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {OPCOES_PERIODO.map((op) => (
-              <SelectItem key={op.chave} value={op.chave}>
-                {op.rotulo}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+          <Select
+            value={funcionarioFiltro || "TODOS"}
+            onValueChange={(v) => setFuncionarioFiltro(v === "TODOS" ? "" : v)}
+          >
+            <SelectTrigger className="w-full sm:w-auto sm:min-w-[180px]">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="TODOS">Todos os técnicos</SelectItem>
+              {tecnicos.map((t) => (
+                <SelectItem key={t.id} value={t.id}>
+                  {t.nome}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Select value={periodo} onValueChange={(v) => setPeriodo(v as Periodo)}>
+            <SelectTrigger className="w-full sm:w-auto sm:min-w-[180px]">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {OPCOES_PERIODO.map((op) => (
+                <SelectItem key={op.chave} value={op.chave}>
+                  {op.rotulo}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
-      <Card className="py-0">
+      <Card className="hidden py-0 md:block">
         <Table>
           <TableHeader>
             <TableRow className="border-border hover:bg-transparent">
@@ -346,6 +348,65 @@ export function OrdensServicoList() {
           </TableBody>
         </Table>
       </Card>
+
+      {/* Lista em cards para mobile */}
+      <div className="space-y-3 md:hidden">
+        {carregando && (
+          <Card className="p-4 text-sm text-muted-foreground">Carregando...</Card>
+        )}
+        {!carregando &&
+          ordensFiltradas.map((os) => (
+            <Card key={os.id} className="p-0">
+              <Link to={`/ordens-servico/${os.id}`} className="block space-y-3 p-4">
+                <div className="flex items-start justify-between gap-2">
+                  <div className="flex min-w-0 flex-col gap-1">
+                    <div className="flex min-w-0 items-center gap-2">
+                      <Badge variant="secondary" className="codigo shrink-0">
+                        #{formatarNumeroOS(os.numero)}
+                      </Badge>
+                      <span className="min-w-0 truncate text-sm font-semibold text-foreground">
+                        {os.cliente.nome}
+                      </span>
+                    </div>
+                    <span className="truncate text-xs text-muted-foreground">
+                      {os.equipamento.tipo}
+                    </span>
+                  </div>
+                  <ChevronRight size={16} className="mt-1 shrink-0 text-muted-foreground" />
+                </div>
+                <p className="line-clamp-2 text-sm text-muted-foreground">
+                  {os.descricaoProblema}
+                </p>
+                <div className="flex items-center gap-1 text-sm">
+                  <UserRound size={12} className="shrink-0 text-muted-foreground" />
+                  {os.funcionario?.usuario?.nome ? (
+                    <span className="font-medium text-foreground">
+                      {os.funcionario.usuario.nome}
+                    </span>
+                  ) : (
+                    <span className="text-muted-foreground">Sem técnico atribuído</span>
+                  )}
+                </div>
+                <div className="flex items-center justify-between gap-2">
+                  <StatusBadge status={os.statusAtual} />
+                  <span
+                    className="text-[11px] text-muted-foreground"
+                    title={new Date(os.dataAbertura).toLocaleString("pt-BR")}
+                  >
+                    {tempoRelativo(os.dataAbertura)}
+                  </span>
+                </div>
+              </Link>
+            </Card>
+          ))}
+        {!carregando && ordensFiltradas.length === 0 && (
+          <Card className="p-4 text-sm text-muted-foreground">
+            {ordens.length === 0
+              ? "Nenhuma ordem de serviço cadastrada."
+              : "Nenhuma OS encontrada com esses filtros."}
+          </Card>
+        )}
+      </div>
     </div>
   );
 }

@@ -146,7 +146,7 @@ export function FolhaDePonto() {
       {erro && <p className="text-sm text-danger">{erro}</p>}
 
       {/* Meus registros */}
-      <Card className="py-0">
+      <Card className="hidden py-0 md:block">
         <CardHeader className="border-b border-border py-4">
           <CardTitle className="text-sm">Meus registros</CardTitle>
         </CardHeader>
@@ -194,9 +194,42 @@ export function FolhaDePonto() {
         </Table>
       </Card>
 
+      {/* Meus registros — lista em cards no mobile */}
+      <div className="space-y-3 md:hidden">
+        <p className="text-sm font-medium text-foreground">Meus registros</p>
+        {meus.length === 0 && (
+          <Card className="p-4 text-sm text-muted-foreground">
+            Nenhum registro de ponto ainda.
+          </Card>
+        )}
+        {meus.map((r) => (
+          <Card key={r.id} className="space-y-3 p-4">
+            <p className="text-sm font-semibold text-foreground">
+              {formatarDataHora(r.entrada)}
+            </p>
+            <div className="space-y-1.5 text-sm">
+              <div className="flex items-center justify-between gap-2">
+                <span className="text-muted-foreground">Saída</span>
+                <span className="min-w-0 truncate text-foreground">
+                  {r.saida ? (
+                    formatarDataHora(r.saida)
+                  ) : (
+                    <span className="font-medium text-foreground">em andamento</span>
+                  )}
+                </span>
+              </div>
+              <div className="flex items-center justify-between gap-2">
+                <span className="text-muted-foreground">Duração</span>
+                <span className="font-mono text-foreground">{duracao(r.entrada, r.saida)}</span>
+              </div>
+            </div>
+          </Card>
+        ))}
+      </div>
+
       {/* Visão consolidada — gerente/dono */}
       {podeConsolidar && (
-        <Card className="py-0">
+        <Card className="hidden py-0 md:block">
           <CardHeader className="flex flex-wrap items-center justify-between gap-3 border-b border-border py-4">
             <CardTitle className="text-sm">Folha da equipe</CardTitle>
             <CardAction className="self-center">
@@ -267,6 +300,65 @@ export function FolhaDePonto() {
             </TableBody>
           </Table>
         </Card>
+      )}
+
+      {/* Folha da equipe — lista em cards no mobile */}
+      {podeConsolidar && (
+        <div className="space-y-3 md:hidden">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <p className="text-sm font-medium text-foreground">Folha da equipe</p>
+            <Select
+              value={filtroFuncionario || TODOS}
+              onValueChange={(v) => setFiltroFuncionario(v === TODOS ? "" : v)}
+            >
+              <SelectTrigger size="sm" className="w-52">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value={TODOS}>Todos os funcionários</SelectItem>
+                {funcionarios.map((f) => (
+                  <SelectItem key={f.id} value={f.id}>
+                    {f.usuario.nome}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          {consolidado.length === 0 && (
+            <Card className="p-4 text-sm text-muted-foreground">
+              Nenhum registro no período.
+            </Card>
+          )}
+          {consolidado.map((r) => (
+            <Card key={r.id} className="space-y-3 p-4">
+              <p className="text-sm font-semibold text-foreground">
+                {r.funcionario?.usuario.nome ?? "—"}
+              </p>
+              <div className="space-y-1.5 text-sm">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-muted-foreground">Entrada</span>
+                  <span className="min-w-0 truncate text-foreground">
+                    {formatarDataHora(r.entrada)}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-muted-foreground">Saída</span>
+                  <span className="min-w-0 truncate text-foreground">
+                    {r.saida ? (
+                      formatarDataHora(r.saida)
+                    ) : (
+                      <span className="font-medium text-foreground">em andamento</span>
+                    )}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-muted-foreground">Duração</span>
+                  <span className="font-mono text-foreground">{duracao(r.entrada, r.saida)}</span>
+                </div>
+              </div>
+            </Card>
+          ))}
+        </div>
       )}
     </div>
   );

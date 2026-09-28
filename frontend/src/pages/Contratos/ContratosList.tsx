@@ -176,7 +176,7 @@ export function ContratosList() {
         }
       />
 
-      <Card className="py-0">
+      <Card className="hidden py-0 md:block">
         <Table>
           <TableHeader>
             <TableRow className="border-border hover:bg-transparent">
@@ -258,6 +258,73 @@ export function ContratosList() {
           </TableBody>
         </Table>
       </Card>
+
+      {/* Lista em cards para mobile */}
+      <div className="space-y-3 md:hidden">
+        {carregando && (
+          <Card className="p-4 text-sm text-muted-foreground">Carregando...</Card>
+        )}
+        {!carregando &&
+          contratos.map((c) => (
+            <Card key={c.id} className="space-y-3 p-4">
+              <div className="flex items-start justify-between gap-2">
+                <div className="flex min-w-0 flex-col">
+                  <span className="truncate text-sm font-semibold text-foreground">
+                    {c.cliente?.nome ?? "—"}
+                  </span>
+                  {c.numero && (
+                    <span className="codigo text-xs text-muted-foreground">nº {c.numero}</span>
+                  )}
+                </div>
+                <Badge variant={c.ativo ? "default" : "secondary"} className="shrink-0">
+                  {c.ativo ? "Ativo" : "Inativo"}
+                </Badge>
+              </div>
+              <div className="grid gap-2 text-sm">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-muted-foreground">Equipamento</span>
+                  <span className="min-w-0 truncate text-right text-foreground">
+                    {c.equipamento ? c.equipamento.tipo : "Todos os equipamentos"}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-muted-foreground">SLA</span>
+                  <span className="inline-flex items-center gap-1 font-medium text-foreground">
+                    <ShieldCheck size={14} className="text-muted-foreground" />
+                    {c.slaHorasResposta}h
+                  </span>
+                </div>
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-muted-foreground">Vigência</span>
+                  <span className="text-right text-foreground">
+                    {formatarData(c.vigenciaInicio)}
+                    {" – "}
+                    {c.vigenciaFim ? formatarData(c.vigenciaFim) : "sem término"}
+                  </span>
+                </div>
+              </div>
+              <div className="flex justify-end gap-1 border-t border-border pt-2">
+                <Button variant="ghost" size="icon-sm" onClick={() => abrirEdicao(c)} title="Editar">
+                  <Pencil />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon-sm"
+                  onClick={() => setContratoExcluir(c)}
+                  className="text-danger hover:text-danger"
+                  title="Excluir"
+                >
+                  <Trash2 />
+                </Button>
+              </div>
+            </Card>
+          ))}
+        {!carregando && contratos.length === 0 && (
+          <Card className="p-4 text-sm text-muted-foreground">
+            Nenhum contrato cadastrado. Crie um para acompanhar o SLA das ordens de serviço.
+          </Card>
+        )}
+      </div>
 
       {/* Modal de cadastro/edição */}
       <Dialog open={modalAberto} onOpenChange={(aberto) => { if (!aberto) fecharModal(); }}>

@@ -189,7 +189,7 @@ export function FuncionariosList() {
         }
       />
 
-      <Card className="py-0">
+      <Card className="hidden py-0 md:block">
         <Table>
           <TableHeader>
             <TableRow className="border-border hover:bg-transparent">
@@ -256,6 +256,53 @@ export function FuncionariosList() {
           </TableBody>
         </Table>
       </Card>
+
+      {/* Lista em cards para mobile */}
+      <div className="space-y-3 md:hidden">
+        {carregando && (
+          <Card className="p-4 text-sm text-muted-foreground">Carregando...</Card>
+        )}
+        {!carregando &&
+          funcionarios.map((f) => (
+            <Card key={f.id} className="p-4">
+              <Link to={`/funcionarios/${f.id}`} className="flex min-w-0 items-center gap-3">
+                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-secondary text-sm font-semibold text-secondary-foreground">
+                  {f.usuario.nome.charAt(0).toUpperCase()}
+                </div>
+                <div className="min-w-0">
+                  <p className="truncate text-sm font-semibold text-foreground">
+                    {f.usuario.nome}
+                  </p>
+                  <p className="truncate text-xs text-muted-foreground">{f.cargo}</p>
+                </div>
+              </Link>
+              <div className="mt-3 space-y-1.5 text-sm">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-muted-foreground">Acesso</span>
+                  <Badge variant="secondary">
+                    {ROTULO_PAPEL[f.usuario.papel ?? "TECNICO"] ?? f.usuario.papel ?? "—"}
+                  </Badge>
+                </div>
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-muted-foreground">Salário</span>
+                  <span className="codigo min-w-0 truncate text-foreground">
+                    R$ {Number(f.salarioAtual).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                  </span>
+                </div>
+              </div>
+              <div className="mt-3 flex justify-end gap-1 border-t border-border pt-2">
+                <Button variant="ghost" size="sm" onClick={() => abrirModalEditar(f)}>
+                  Editar
+                </Button>
+              </div>
+            </Card>
+          ))}
+        {!carregando && funcionarios.length === 0 && (
+          <Card className="p-4 text-sm text-muted-foreground">
+            Nenhum funcionário cadastrado.
+          </Card>
+        )}
+      </div>
 
       <Dialog open={modalAberto} onOpenChange={(aberto) => { if (!aberto) { setModalAberto(false); setErroSubmit(null); } }}>
         <DialogContent>
