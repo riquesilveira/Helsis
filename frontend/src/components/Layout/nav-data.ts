@@ -37,7 +37,9 @@ export const NAV_GROUPS: NavGroupConfig[] = [
   {
     titulo: "Geral",
     itens: [
-      { to: "/", rotulo: "Painel", exato: true, icone: LayoutDashboard },
+      // Painel = visão gerencial (financeiro da empresa). O técnico não vê;
+      // ele cai direto na "Minha rota" ao entrar.
+      { to: "/", rotulo: "Painel", exato: true, restritoA: ["DONO", "GESTOR", "SUPORTE"], icone: LayoutDashboard },
     ],
   },
   {
@@ -45,8 +47,10 @@ export const NAV_GROUPS: NavGroupConfig[] = [
     itens: [
       { to: "/minha-rota", rotulo: "Minha rota", restritoA: ["TECNICO"], icone: MapPin },
       { to: "/ordens-servico", rotulo: "Ordens de serviço", icone: ClipboardList },
-      { to: "/manutencoes-preventivas", rotulo: "Manutenções preventivas", icone: CalendarClock },
-      { to: "/clientes", rotulo: "Clientes", icone: Users },
+      // Agenda de preventivas e base de clientes são visões de planejamento/
+      // gestão — não aparecem para o técnico (N1).
+      { to: "/manutencoes-preventivas", rotulo: "Manutenções preventivas", restritoA: ["DONO", "GESTOR", "SUPORTE"], icone: CalendarClock },
+      { to: "/clientes", rotulo: "Clientes", restritoA: ["DONO", "GESTOR", "SUPORTE"], icone: Users },
     ],
   },
   {

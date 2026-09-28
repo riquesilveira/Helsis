@@ -8,15 +8,17 @@ const router = Router();
 router.use(autenticar);
 
 // Contratos envolvem SLA e valores contratuais — gestão restrita a DONO/GESTOR.
-// Leitura liberada também para SUPORTE/TECNICO (precisam ver o prazo do SLA).
+// Leitura liberada também para SUPORTE (precisa ver o prazo do SLA ao atender).
+// TECNICO fica de fora: o status de SLA da OS dele já vem no detalhe da ordem,
+// sem expor os valores contratuais.
 router.get(
   "/",
-  autorizar("DONO", "GESTOR", "SUPORTE", "TECNICO"),
+  autorizar("DONO", "GESTOR", "SUPORTE"),
   asyncHandler(contratoController.listar)
 );
 router.get(
   "/:id",
-  autorizar("DONO", "GESTOR", "SUPORTE", "TECNICO"),
+  autorizar("DONO", "GESTOR", "SUPORTE"),
   asyncHandler(contratoController.buscarPorId)
 );
 router.post("/", autorizar("DONO", "GESTOR"), asyncHandler(contratoController.criar));

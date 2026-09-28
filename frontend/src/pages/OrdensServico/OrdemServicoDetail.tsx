@@ -1368,14 +1368,19 @@ export function OrdemServicoDetail() {
                     ))}
                   </SelectContent>
                 </Select>
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => setModalNovaPeca(true)}
-                  className="shrink-0"
-                >
-                  + nova
-                </Button>
+                {/* Cadastrar uma nova peça no catálogo é ação de gestão
+                    (POST /pecas é DONO/GESTOR). O técnico só seleciona uma
+                    peça já existente. */}
+                {podeVerFinanceiro && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setModalNovaPeca(true)}
+                    className="shrink-0"
+                  >
+                    + nova
+                  </Button>
+                )}
               </div>
             </div>
             <div className="grid gap-1.5">

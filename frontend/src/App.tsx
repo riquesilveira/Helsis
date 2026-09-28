@@ -96,6 +96,17 @@ function RotaProtegidaPorPapel({
   return <>{children}</>;
 }
 
+// Página inicial por papel: o técnico (colaborador) não vê o Painel gerencial
+// — cai direto na "Minha rota" (as tarefas do dia dele). Os demais papéis
+// internos veem o Dashboard normalmente.
+function InicioPorPapel() {
+  const usuario = usuarioLogado();
+  if (usuario?.papel === "TECNICO") {
+    return <Navigate to="/minha-rota" replace />;
+  }
+  return <Dashboard />;
+}
+
 // Fallback discreto enquanto o chunk da rota é baixado. Curto o suficiente pra
 // não piscar em conexões rápidas, visível o bastante pra não parecer travado.
 function CarregandoRota() {
@@ -122,7 +133,7 @@ export default function App() {
             </RotaProtegida>
           }
         >
-          <Route path="/" element={<Dashboard />} />
+          <Route path="/" element={<InicioPorPapel />} />
           <Route
             path="/minha-rota"
             element={
@@ -141,9 +152,30 @@ export default function App() {
             }
           />
           <Route path="/ordens-servico/:id" element={<OrdemServicoDetail />} />
-          <Route path="/manutencoes-preventivas" element={<ManutencoesPreventivas />} />
-          <Route path="/clientes" element={<ClientesList />} />
-          <Route path="/clientes/:id" element={<ClienteDetail />} />
+          <Route
+            path="/manutencoes-preventivas"
+            element={
+              <RotaProtegidaPorPapel papeis={["DONO", "GESTOR", "SUPORTE"]}>
+                <ManutencoesPreventivas />
+              </RotaProtegidaPorPapel>
+            }
+          />
+          <Route
+            path="/clientes"
+            element={
+              <RotaProtegidaPorPapel papeis={["DONO", "GESTOR", "SUPORTE"]}>
+                <ClientesList />
+              </RotaProtegidaPorPapel>
+            }
+          />
+          <Route
+            path="/clientes/:id"
+            element={
+              <RotaProtegidaPorPapel papeis={["DONO", "GESTOR", "SUPORTE"]}>
+                <ClienteDetail />
+              </RotaProtegidaPorPapel>
+            }
+          />
           <Route
             path="/funcionarios"
             element={

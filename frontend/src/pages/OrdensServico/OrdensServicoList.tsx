@@ -219,22 +219,26 @@ export function OrdensServicoList() {
           />
         </div>
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-          <Select
-            value={funcionarioFiltro || "TODOS"}
-            onValueChange={(v) => setFuncionarioFiltro(v === "TODOS" ? "" : v)}
-          >
-            <SelectTrigger className="w-full sm:w-auto sm:min-w-[180px]">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="TODOS">Todos os técnicos</SelectItem>
-              {tecnicos.map((t) => (
-                <SelectItem key={t.id} value={t.id}>
-                  {t.nome}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          {/* O técnico só vê as OS dele, então o filtro por técnico não faz
+              sentido na visão do colaborador. */}
+          {podeAbrirChamado && (
+            <Select
+              value={funcionarioFiltro || "TODOS"}
+              onValueChange={(v) => setFuncionarioFiltro(v === "TODOS" ? "" : v)}
+            >
+              <SelectTrigger className="w-full sm:w-auto sm:min-w-[180px]">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="TODOS">Todos os técnicos</SelectItem>
+                {tecnicos.map((t) => (
+                  <SelectItem key={t.id} value={t.id}>
+                    {t.nome}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
           <Select value={periodo} onValueChange={(v) => setPeriodo(v as Periodo)}>
             <SelectTrigger className="w-full sm:w-auto sm:min-w-[180px]">
               <SelectValue />
