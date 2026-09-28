@@ -1,8 +1,13 @@
 import { FormEvent, useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import { ArrowLeft, X } from "lucide-react";
+import { ArrowLeft, TrendingDown, TrendingUp, Minus, X } from "lucide-react";
 import { api } from "../../services/api";
-import { DesempenhoFuncionario, Funcionario, TipoComissao } from "../../types";
+import {
+  DesempenhoFuncionario,
+  Funcionario,
+  HistoricoTarefaFuncionario,
+  TipoComissao,
+} from "../../types";
 import { formatarReais } from "../../utils/formatters";
 import { Button } from "../../components/shadcn/button";
 import { Badge } from "../../components/shadcn/badge";
@@ -44,6 +49,63 @@ function moedaParaNumero(valor: string): number {
   return Number(valor.replace(/\./g, "").replace(",", "."));
 }
 
+function formatarDuracao(s: number): string {
+  if (s < 60) return `${s}s`;
+  const min = Math.round(s / 60);
+  if (min < 60) return `${min}min`;
+  const h = Math.floor(min / 60);
+  const m = min % 60;
+  return m > 0 ? `${h}h${m.toString().padStart(2, "0")}` : `${h}h`;
+}
+
+function TarefaCronometrada({ tarefa }: { tarefa: HistoricoTarefaFuncionario }) {
+  const ref = tarefa.tempoMedioEquipeSegundos;
+  const meu = tarefa.tempoMedioSegundos;
+  const percent = ref > 0 ? Math.round(Math.abs((meu - ref) / ref) * 100) : 0;
+  const naMedia = ref <= 0 || percent <= 2;
+  const maisRapido = meu < ref;
+
+  let delta: { icone: typeof TrendingUp; texto: string; cor: string };
+  if (naMedia) {
+    delta = { icone: Minus, texto: "na média da equipe", cor: "text-muted-foreground" };
+  } else if (maisRapido) {
+    delta = { icone: TrendingDown, texto: `${percent}% mais rápido que a média`, cor: "text-emerald-600" };
+  } else {
+    delta = { icone: TrendingUp, texto: `${percent}% mais lento que a média`, cor: "text-red-600" };
+  }
+  const IconeDelta = delta.icone;
+
+  return (
+    <Card size="sm">
+      <CardContent>
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="min-w-0">
+            <div className="flex items-center gap-2">
+              <span className="codigo text-xs text-muted-foreground">{tarefa.codigo}</span>
+              <span className="text-xs text-muted-foreground">·</span>
+              <span className="text-xs text-muted-foreground">{tarefa.totalConcluidas} concluídas</span>
+            </div>
+            <p className="mt-1 truncate text-sm font-medium text-foreground">{tarefa.descricao}</p>
+            <div className={`mt-1 flex items-center gap-1 text-xs ${delta.cor}`}>
+              <IconeDelta size={13} />
+              {delta.texto}
+            </div>
+          </div>
+          <div className="flex shrink-0 items-baseline gap-4 sm:flex-col sm:items-end sm:gap-0">
+            <div className="sm:text-right">
+              <p className="codigo text-xl font-semibold text-foreground">{formatarDuracao(meu)}</p>
+              <p className="text-[11px] text-muted-foreground">tempo médio deste colaborador</p>
+            </div>
+            <p className="text-xs text-muted-foreground sm:mt-1">
+              equipe: <span className="codigo">{formatarDuracao(ref)}</span>
+            </p>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
 function CartaoMetrica({ rotulo, valor }: { rotulo: string; valor: string }) {
   return (
     <Card size="sm">
@@ -59,6 +121,7 @@ export function FuncionarioDesempenho() {
   const { id } = useParams();
   const [desempenho, setDesempenho] = useState<DesempenhoFuncionario | null>(null);
   const [funcionario, setFuncionario] = useState<Funcionario | null>(null);
+  const [tarefas, setTarefas] = useState<HistoricoTarefaFuncionario[]>([]);
 
   // modal de edição
   const [modalEditar, setModalEditar] = useState(false);
@@ -122,6 +185,7 @@ export function FuncionarioDesempenho() {
 
   useEffect(() => {
     api.get(`/desempenho/${id}`).then((r) => setDesempenho(r.data)).catch(() => {});
+    api.get(`/desempenho/${id}/tarefas`).then((r) => setTarefas(r.data)).catch(() => {});
     carregarFuncionario();
   }, [id]);
 
@@ -176,7 +240,7 @@ export function FuncionarioDesempenho() {
         é a base objetiva usada para avaliar pedidos de aumento.
       </p>
 
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
         <CartaoMetrica
           rotulo="Taxa de acerto na 1ª visita"
           valor={`${Math.round(desempenho.taxaResolucaoPrimeiraTentativa * 100)}%`}
@@ -202,6 +266,24 @@ export function FuncionarioDesempenho() {
           rotulo="Peças trocadas sem resolver"
           valor={String(desempenho.pecasTrocadasQueNaoResolveram)}
         />
+      </div>
+
+      <div>
+        <h2 className="text-sm font-medium text-foreground">Tarefas cronometradas</h2>
+        <p className="mb-3 mt-0.5 text-xs text-muted-foreground">
+          Tempo médio deste colaborador por tarefa, comparado à média da equipe.
+        </p>
+        {tarefas.length === 0 ? (
+          <p className="text-sm text-muted-foreground">
+            Nenhuma tarefa cronometrada concluída ainda.
+          </p>
+        ) : (
+          <div className="space-y-3">
+            {tarefas.map((t) => (
+              <TarefaCronometrada key={t.tarefaCatalogoId} tarefa={t} />
+            ))}
+          </div>
+        )}
       </div>
 
       <div>

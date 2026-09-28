@@ -10,6 +10,7 @@ import {
   Paperclip,
   Pencil,
   Plane,
+  Play,
   Plus,
   Timer,
   Trash2,
@@ -29,6 +30,8 @@ import {
   Sla,
   Solucao,
   StatusOS,
+  StatusTarefa,
+  TarefaCatalogo,
   TipoAnexo,
 } from "../../types";
 import { useEtapasStatus } from "../../hooks/useEtapasStatus";
@@ -87,6 +90,17 @@ const ROTULO_TIPO_ANEXO: Record<TipoAnexo, string> = {
   LAUDO: "Laudo",
   OUTRO: "Outro",
 };
+
+// Formata a duração medida da tarefa (só visível ao dono/gestor). O técnico
+// nunca vê tempo — o cronômetro roda nos bastidores.
+function formatarDuracao(s: number): string {
+  if (s < 60) return `${s}s`;
+  const min = Math.round(s / 60);
+  if (min < 60) return `${min}min`;
+  const h = Math.floor(min / 60);
+  const m = min % 60;
+  return m > 0 ? `${h}h${m.toString().padStart(2, "0")}` : `${h}h`;
+}
 
 // Badge de SLA a partir do status calculado no backend. SEM_CONTRATO não
 // renderiza nada (não há prazo contratual pra esse cliente/equipamento).
@@ -207,6 +221,14 @@ export function OrdemServicoDetail() {
   const [valorComissao, setValorComissao] = useState("");
   const [salvandoFinanceiro, setSalvandoFinanceiro] = useState(false);
 
+  // tarefas cronometradas (o tempo é medido nos bastidores; o técnico só
+  // avança o status). Catálogo de tarefas alimenta o seletor de "adicionar".
+  const [tarefasCatalogo, setTarefasCatalogo] = useState<TarefaCatalogo[]>([]);
+  const [tarefaCatalogoId, setTarefaCatalogoId] = useState("");
+  const [adicionandoTarefa, setAdicionandoTarefa] = useState(false);
+  const [tarefaMutando, setTarefaMutando] = useState<string | null>(null);
+  const [erroTarefa, setErroTarefa] = useState<string | null>(null);
+
   // anexos (fotos/laudos)
   const [enviandoAnexo, setEnviandoAnexo] = useState(false);
   const [tipoAnexo, setTipoAnexo] = useState<TipoAnexo>("FOTO");
@@ -237,6 +259,11 @@ export function OrdemServicoDetail() {
   }, [id]);
   useEffect(() => {
     api.get("/pecas").then((r) => setPecas(r.data)).catch(() => {});
+  }, []);
+
+  // catálogo de tarefas para o seletor de "adicionar tarefa"
+  useEffect(() => {
+    api.get("/tarefas-catalogo").then((r) => setTarefasCatalogo(r.data)).catch(() => {});
   }, []);
 
   // catálogo de diagnóstico codificado (alimenta os dropdowns do fechamento)
@@ -509,6 +536,48 @@ export function OrdemServicoDetail() {
     }
   }
 
+  async function handleAdicionarTarefa(e: FormEvent) {
+    e.preventDefault();
+    if (!tarefaCatalogoId) return;
+    setErroTarefa(null);
+    setAdicionandoTarefa(true);
+    try {
+      await api.post(`/ordens-servico/${id}/tarefas`, { tarefaCatalogoId });
+      setTarefaCatalogoId("");
+      carregar();
+    } catch (err: any) {
+      setErroTarefa(err?.response?.data?.erro ?? "Não foi possível adicionar a tarefa.");
+    } finally {
+      setAdicionandoTarefa(false);
+    }
+  }
+
+  async function handleStatusTarefa(tarefaId: string, status: StatusTarefa) {
+    setErroTarefa(null);
+    setTarefaMutando(tarefaId);
+    try {
+      await api.patch(`/ordens-servico/${id}/tarefas/${tarefaId}`, { status });
+      carregar();
+    } catch (err: any) {
+      setErroTarefa(err?.response?.data?.erro ?? "Não foi possível atualizar a tarefa.");
+    } finally {
+      setTarefaMutando(null);
+    }
+  }
+
+  async function handleRemoverTarefa(tarefaId: string) {
+    setErroTarefa(null);
+    setTarefaMutando(tarefaId);
+    try {
+      await api.delete(`/ordens-servico/${id}/tarefas/${tarefaId}`);
+      carregar();
+    } catch (err: any) {
+      setErroTarefa(err?.response?.data?.erro ?? "Não foi possível remover a tarefa.");
+    } finally {
+      setTarefaMutando(null);
+    }
+  }
+
   if (!os) return <p className="text-sm text-muted-foreground">Carregando...</p>;
 
   const semTecnico = !os.funcionario;
@@ -517,6 +586,16 @@ export function OrdemServicoDetail() {
     0
   );
   const valorTotal = valorPecas + (Number(valorMaoDeObra) || 0);
+
+  const tarefas = os.tarefas ?? [];
+  // Só o dono/gestor vê o tempo medido e o executor de cada tarefa concluída.
+  const podeVerDuracao = podeVerFinanceiro;
+  // Remover tarefa é ação de suporte (N2) para cima — o técnico não remove.
+  const podeRemoverTarefa = podeDesignar;
+  // Esconde do seletor as tarefas já adicionadas à OS.
+  const tarefasCatalogoDisponivel = tarefasCatalogo.filter(
+    (t) => t.ativo !== false && !tarefas.some((x) => x.tarefaCatalogoId === t.id)
+  );
 
   return (
     <div className="space-y-6 max-w-3xl">
@@ -792,6 +871,117 @@ export function OrdemServicoDetail() {
           </CardContent>
         </Card>
       )}
+
+      {/* Tarefas (cronometradas nos bastidores) */}
+      <Card>
+        <CardHeader className="border-b">
+          <CardTitle>Tarefas</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="divide-y divide-border">
+            {tarefas.map((t) => {
+              const mutando = tarefaMutando === t.id;
+              return (
+                <div key={t.id} className="py-3 flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="text-sm text-foreground">
+                      {t.tarefaCatalogo.descricao}{" "}
+                      <span className="codigo text-xs text-muted-foreground">
+                        ({t.tarefaCatalogo.codigo})
+                      </span>
+                    </p>
+                    {t.status === "CONCLUIDA" && podeVerDuracao && (
+                      <p className="text-xs text-muted-foreground mt-0.5">
+                        {t.duracaoSegundos != null && (
+                          <span className="codigo">{formatarDuracao(t.duracaoSegundos)}</span>
+                        )}
+                        {t.funcionario?.usuario?.nome && (
+                          <>
+                            {t.duracaoSegundos != null ? " · " : ""}
+                            {t.funcionario.usuario.nome}
+                          </>
+                        )}
+                      </p>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-2 shrink-0">
+                    {t.status === "PENDENTE" && (
+                      <Button
+                        size="sm"
+                        onClick={() => handleStatusTarefa(t.id, "EM_ANDAMENTO")}
+                        disabled={mutando}
+                      >
+                        <Play />
+                        Iniciar
+                      </Button>
+                    )}
+                    {t.status === "EM_ANDAMENTO" && (
+                      <>
+                        <span className="inline-flex items-center rounded-md bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground">
+                          Em andamento
+                        </span>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleStatusTarefa(t.id, "CONCLUIDA")}
+                          disabled={mutando}
+                        >
+                          Concluir
+                        </Button>
+                      </>
+                    )}
+                    {t.status === "CONCLUIDA" && (
+                      <span className="inline-flex items-center gap-1 text-xs font-medium text-status-concluido">
+                        <CheckCircle2 size={14} className="shrink-0" />
+                        Concluída
+                      </span>
+                    )}
+                    {podeRemoverTarefa && (
+                      <Button
+                        variant="ghost"
+                        size="icon-sm"
+                        onClick={() => handleRemoverTarefa(t.id)}
+                        disabled={mutando}
+                        className="text-danger hover:text-danger"
+                        title="Remover tarefa"
+                      >
+                        <Trash2 />
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+            {tarefas.length === 0 && (
+              <p className="text-sm text-muted-foreground py-3">Nenhuma tarefa adicionada.</p>
+            )}
+          </div>
+          <form onSubmit={handleAdicionarTarefa} className="mt-4 flex items-center gap-2">
+            <Select value={tarefaCatalogoId} onValueChange={setTarefaCatalogoId}>
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Adicionar tarefa..." />
+              </SelectTrigger>
+              <SelectContent>
+                {tarefasCatalogoDisponivel.map((t) => (
+                  <SelectItem key={t.id} value={t.id}>
+                    {t.codigo} — {t.descricao}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Button
+              type="submit"
+              size="sm"
+              className="shrink-0"
+              disabled={adicionandoTarefa || !tarefaCatalogoId}
+            >
+              <Plus />
+              {adicionandoTarefa ? "Adicionando..." : "Adicionar"}
+            </Button>
+          </form>
+          {erroTarefa && <p className="text-xs text-danger mt-2">{erroTarefa}</p>}
+        </CardContent>
+      </Card>
 
       {/* Peças trocadas */}
       <Card>

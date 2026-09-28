@@ -10,6 +10,7 @@ import diagnosticoRoutes from "../modules/diagnostico/diagnostico.routes";
 import pontoRoutes from "../modules/ponto/ponto.routes";
 import contratoRoutes from "../modules/contratos/contrato.routes";
 import configuracaoRoutes from "../modules/configuracoes/configuracao.routes";
+import tarefaCatalogoRoutes from "../modules/tarefas/tarefaCatalogo.routes";
 
 const router = Router();
 
@@ -24,5 +25,6 @@ router.use("/diagnostico", diagnosticoRoutes);
 router.use("/ponto", pontoRoutes);
 router.use("/contratos", contratoRoutes);
 router.use("/configuracoes", configuracaoRoutes);
+router.use("/tarefas-catalogo", tarefaCatalogoRoutes);
 
 export default router;

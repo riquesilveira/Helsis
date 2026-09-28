@@ -1,7 +1,8 @@
 import { Request, Response } from "express";
 import { z } from "zod";
-import { ModalidadeAtendimento, StatusOS, TipoOS } from "@prisma/client";
+import { ModalidadeAtendimento, StatusOS, StatusTarefa, TipoOS } from "@prisma/client";
 import * as osService from "./ordemServico.service";
+import * as tarefaOSService from "../tarefas/tarefaOS.service";
 import { buscarFuncionarioPorUsuarioId } from "../funcionarios/funcionario.service";
 import { listarNotificacoes } from "../notificacoes/notificacao.service";
 import { AppError } from "../../utils/AppError";
@@ -212,6 +213,57 @@ export async function excluirDeslocamento(req: Request, res: Response) {
 
 export async function notificacoes(req: Request, res: Response) {
   res.json(await listarNotificacoes(req.params.id));
+}
+
+// ----------------------------------------------------------------------------
+// Tarefas cronometradas da OS. O técnico só muda o status da tarefa (Iniciar /
+// Concluir) — o tempo é medido nos bastidores. A atribuição de "quem executou"
+// é sempre o técnico designado da OS (ou o próprio técnico logado).
+// ----------------------------------------------------------------------------
+
+const adicionarTarefaSchema = z.object({
+  tarefaCatalogoId: z.string().uuid(),
+});
+
+const atualizarStatusTarefaSchema = z.object({
+  status: z.nativeEnum(StatusTarefa),
+});
+
+// Garante que um TECNICO só mexe nas tarefas de uma OS atribuída a ele; devolve
+// o funcionarioId que deve ser creditado como executor da tarefa.
+async function resolverExecutor(req: Request, osId: string): Promise<string | undefined> {
+  const os = await osService.buscarOrdemServicoPorId(osId);
+  if (req.usuario!.papel === "TECNICO") {
+    const funcionario = await buscarFuncionarioPorUsuarioId(req.usuario!.id);
+    if (os.funcionarioId !== funcionario.id) {
+      throw new AppError("Você não tem permissão para alterar esta ordem de serviço.", 403);
+    }
+    return funcionario.id;
+  }
+  // DONO/GESTOR/SUPORTE marcando por ele: credita ao técnico designado da OS.
+  return os.funcionarioId ?? undefined;
+}
+
+export async function adicionarTarefa(req: Request, res: Response) {
+  const { tarefaCatalogoId } = adicionarTarefaSchema.parse(req.body);
+  await resolverExecutor(req, req.params.id); // valida permissão do técnico
+  const tarefa = await tarefaOSService.adicionarTarefa(req.params.id, tarefaCatalogoId);
+  res.status(201).json(tarefa);
+}
+
+export async function atualizarStatusTarefa(req: Request, res: Response) {
+  const { status } = atualizarStatusTarefaSchema.parse(req.body);
+  const funcionarioId = await resolverExecutor(req, req.params.id);
+  const tarefa = await tarefaOSService.atualizarStatusTarefa(req.params.id, req.params.tarefaId, {
+    status,
+    funcionarioId,
+  });
+  res.json(tarefa);
+}
+
+export async function removerTarefa(req: Request, res: Response) {
+  await tarefaOSService.removerTarefa(req.params.id, req.params.tarefaId);
+  res.status(204).end();
 }
 
 // ----------------------------------------------------------------------------

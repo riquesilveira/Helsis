@@ -27,3 +27,22 @@ export async function resumoMensal(req: Request, res: Response) {
   const ano = req.query.ano ? Number(req.query.ano) : agora.getFullYear();
   res.json(await desempenhoService.calcularResumoMensal(req.params.id, mes, ano));
 }
+
+// Comparativo de produtividade: tempo por tarefa cronometrada, colaborador a
+// colaborador. Aceita filtros opcionais por tarefa e período (finalizadoEm).
+export async function comparativoTarefas(req: Request, res: Response) {
+  const { tarefaCatalogoId, de, ate } = req.query;
+  res.json(
+    await desempenhoService.comparativoTarefas({
+      tarefaCatalogoId: tarefaCatalogoId ? String(tarefaCatalogoId) : undefined,
+      de: de ? new Date(String(de)) : undefined,
+      ate: ate ? new Date(String(ate)) : undefined,
+    })
+  );
+}
+
+// Histórico de tarefas cronometradas de um colaborador (com a média da equipe
+// como referência) — usado na página de desempenho do funcionário.
+export async function historicoTarefas(req: Request, res: Response) {
+  res.json(await desempenhoService.historicoTarefasFuncionario(req.params.id));
+}

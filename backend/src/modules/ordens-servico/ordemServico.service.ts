@@ -123,6 +123,13 @@ export async function buscarOrdemServicoPorId(id: string) {
       causa: true,
       defeito: true,
       solucao: true,
+      tarefas: {
+        include: {
+          tarefaCatalogo: true,
+          funcionario: { include: { usuario: { select: { nome: true } } } },
+        },
+        orderBy: { criadoEm: "asc" },
+      },
     },
   });
 

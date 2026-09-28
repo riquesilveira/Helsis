@@ -1,4 +1,4 @@
-import { StatusOS } from "@prisma/client";
+import { StatusOS, StatusTarefa } from "@prisma/client";
 import { prisma } from "../../lib/prisma";
 import { AppError } from "../../utils/AppError";
 
@@ -188,4 +188,207 @@ export async function calcularResumoMensal(
     totalComissoes,
     totalAPagar: salarioBase + totalComissoes,
   };
+}
+
+// ----------------------------------------------------------------------------
+// TAREFAS CRONOMETRADAS — comparativo de produtividade
+// ----------------------------------------------------------------------------
+// Responde à pergunta do dono: "quanto cada colaborador leva na MESMA tarefa?".
+// O tempo por execução já vem medido (TarefaOS.duracaoSegundos), gravado na
+// conclusão. Aqui só agregamos por (tarefa × funcionário).
+
+export interface FuncionarioNaTarefa {
+  funcionarioId: string;
+  nome: string;
+  totalConcluidas: number;
+  tempoMedioSegundos: number;
+  tempoMinSegundos: number;
+  tempoMaxSegundos: number;
+}
+
+export interface ComparativoTarefa {
+  tarefaCatalogoId: string;
+  codigo: string;
+  descricao: string;
+  tempoEstimadoMin: number | null;
+  totalConcluidas: number;
+  tempoMedioSegundos: number; // média da equipe nesta tarefa
+  funcionarios: FuncionarioNaTarefa[]; // ordenado do mais rápido pro mais lento
+}
+
+interface FiltroComparativo {
+  tarefaCatalogoId?: string;
+  de?: Date;
+  ate?: Date;
+}
+
+// Só considera execuções concluídas e com duração medida, atribuídas a alguém.
+function whereExecucoesConcluidas(filtro: FiltroComparativo = {}) {
+  const where: Record<string, unknown> = {
+    status: StatusTarefa.CONCLUIDA,
+    duracaoSegundos: { not: null },
+    funcionarioId: { not: null },
+  };
+  if (filtro.tarefaCatalogoId) where.tarefaCatalogoId = filtro.tarefaCatalogoId;
+  if (filtro.de || filtro.ate) {
+    where.finalizadoEm = {
+      ...(filtro.de ? { gte: filtro.de } : {}),
+      ...(filtro.ate ? { lte: filtro.ate } : {}),
+    };
+  }
+  return where;
+}
+
+function media(valores: number[]): number {
+  return valores.length > 0 ? Math.round(valores.reduce((a, b) => a + b, 0) / valores.length) : 0;
+}
+
+/**
+ * Comparativo de tempo por tarefa: para cada tarefa do catálogo com execuções
+ * concluídas, lista cada colaborador com seu tempo médio/min/máx, ordenados do
+ * mais rápido pro mais lento. É a base da tela "Comparativo de produtividade".
+ */
+export async function comparativoTarefas(filtro: FiltroComparativo = {}): Promise<ComparativoTarefa[]> {
+  const execucoes = await prisma.tarefaOS.findMany({
+    where: whereExecucoesConcluidas(filtro),
+    select: {
+      duracaoSegundos: true,
+      tarefaCatalogoId: true,
+      tarefaCatalogo: { select: { codigo: true, descricao: true, tempoEstimadoMin: true } },
+      funcionarioId: true,
+      funcionario: { select: { usuario: { select: { nome: true } } } },
+    },
+  });
+
+  // Agrupa por tarefa → por funcionário.
+  const porTarefa = new Map<
+    string,
+    {
+      codigo: string;
+      descricao: string;
+      tempoEstimadoMin: number | null;
+      todasDuracoes: number[];
+      porFuncionario: Map<string, { nome: string; duracoes: number[] }>;
+    }
+  >();
+
+  for (const ex of execucoes) {
+    const dur = ex.duracaoSegundos as number;
+    let tarefa = porTarefa.get(ex.tarefaCatalogoId);
+    if (!tarefa) {
+      tarefa = {
+        codigo: ex.tarefaCatalogo.codigo,
+        descricao: ex.tarefaCatalogo.descricao,
+        tempoEstimadoMin: ex.tarefaCatalogo.tempoEstimadoMin ?? null,
+        todasDuracoes: [],
+        porFuncionario: new Map(),
+      };
+      porTarefa.set(ex.tarefaCatalogoId, tarefa);
+    }
+    tarefa.todasDuracoes.push(dur);
+
+    const fid = ex.funcionarioId as string;
+    let func = tarefa.porFuncionario.get(fid);
+    if (!func) {
+      func = { nome: ex.funcionario?.usuario.nome ?? "—", duracoes: [] };
+      tarefa.porFuncionario.set(fid, func);
+    }
+    func.duracoes.push(dur);
+  }
+
+  const resultado: ComparativoTarefa[] = [];
+  for (const [tarefaCatalogoId, tarefa] of porTarefa) {
+    const funcionarios: FuncionarioNaTarefa[] = [...tarefa.porFuncionario.entries()]
+      .map(([funcionarioId, f]) => ({
+        funcionarioId,
+        nome: f.nome,
+        totalConcluidas: f.duracoes.length,
+        tempoMedioSegundos: media(f.duracoes),
+        tempoMinSegundos: Math.min(...f.duracoes),
+        tempoMaxSegundos: Math.max(...f.duracoes),
+      }))
+      .sort((a, b) => a.tempoMedioSegundos - b.tempoMedioSegundos);
+
+    resultado.push({
+      tarefaCatalogoId,
+      codigo: tarefa.codigo,
+      descricao: tarefa.descricao,
+      tempoEstimadoMin: tarefa.tempoEstimadoMin,
+      totalConcluidas: tarefa.todasDuracoes.length,
+      tempoMedioSegundos: media(tarefa.todasDuracoes),
+      funcionarios,
+    });
+  }
+
+  return resultado.sort((a, b) => a.codigo.localeCompare(b.codigo));
+}
+
+export interface HistoricoTarefaFuncionario {
+  tarefaCatalogoId: string;
+  codigo: string;
+  descricao: string;
+  tempoEstimadoMin: number | null;
+  totalConcluidas: number;
+  tempoMedioSegundos: number; // do funcionário
+  tempoMedioEquipeSegundos: number; // média da equipe na mesma tarefa (referência)
+}
+
+/**
+ * Histórico de tarefas cronometradas de um colaborador, com a média da equipe
+ * na mesma tarefa como referência — mostra em quais tarefas ele está acima ou
+ * abaixo da média. Alimenta a seção da página de desempenho do funcionário.
+ */
+export async function historicoTarefasFuncionario(
+  funcionarioId: string
+): Promise<HistoricoTarefaFuncionario[]> {
+  const funcionario = await prisma.funcionario.findUnique({ where: { id: funcionarioId } });
+  if (!funcionario) throw new AppError("Funcionário não encontrado.", 404);
+
+  // Média da equipe por tarefa (reaproveita o comparativo geral).
+  const comparativo = await comparativoTarefas();
+  const mediaEquipePorTarefa = new Map(
+    comparativo.map((c) => [c.tarefaCatalogoId, c.tempoMedioSegundos])
+  );
+
+  const execucoes = await prisma.tarefaOS.findMany({
+    where: whereExecucoesConcluidas({ tarefaCatalogoId: undefined }),
+    select: {
+      duracaoSegundos: true,
+      tarefaCatalogoId: true,
+      funcionarioId: true,
+      tarefaCatalogo: { select: { codigo: true, descricao: true, tempoEstimadoMin: true } },
+    },
+  });
+
+  const doFuncionario = execucoes.filter((e) => e.funcionarioId === funcionarioId);
+
+  const porTarefa = new Map<
+    string,
+    { codigo: string; descricao: string; tempoEstimadoMin: number | null; duracoes: number[] }
+  >();
+  for (const ex of doFuncionario) {
+    let t = porTarefa.get(ex.tarefaCatalogoId);
+    if (!t) {
+      t = {
+        codigo: ex.tarefaCatalogo.codigo,
+        descricao: ex.tarefaCatalogo.descricao,
+        tempoEstimadoMin: ex.tarefaCatalogo.tempoEstimadoMin ?? null,
+        duracoes: [],
+      };
+      porTarefa.set(ex.tarefaCatalogoId, t);
+    }
+    t.duracoes.push(ex.duracaoSegundos as number);
+  }
+
+  return [...porTarefa.entries()]
+    .map(([tarefaCatalogoId, t]) => ({
+      tarefaCatalogoId,
+      codigo: t.codigo,
+      descricao: t.descricao,
+      tempoEstimadoMin: t.tempoEstimadoMin,
+      totalConcluidas: t.duracoes.length,
+      tempoMedioSegundos: media(t.duracoes),
+      tempoMedioEquipeSegundos: mediaEquipePorTarefa.get(tarefaCatalogoId) ?? media(t.duracoes),
+    }))
+    .sort((a, b) => a.codigo.localeCompare(b.codigo));
 }

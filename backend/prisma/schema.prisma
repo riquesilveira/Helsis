@@ -75,6 +75,7 @@ model Funcionario {
   deslocamentos    Deslocamento[]
   registrosPonto   RegistroPonto[]
   anexos           Anexo[]
+  tarefasExecutadas TarefaOS[]
 
   @@map("funcionarios")
 }
@@ -275,6 +276,7 @@ model OrdemServico {
   deslocamentos    Deslocamento[]
   notificacoes     Notificacao[]
   anexos           Anexo[]
+  tarefas          TarefaOS[]
 
   @@map("ordens_servico")
 }
@@ -355,6 +357,61 @@ model Solucao {
   ordensServico    OrdemServico[]
 
   @@map("solucoes")
+}
+
+// ----------------------------------------------------------------------------
+// TAREFAS CRONOMETRADAS (produtividade)
+// ----------------------------------------------------------------------------
+// Catálogo de tarefas nomeadas e padronizadas (ex: "Trocar bobina",
+// "Calibrar") que compõem o trabalho dentro de uma OS. Cada tarefa executada
+// (TarefaOS) mede automaticamente quanto o técnico levou — o cronômetro é
+// implícito: começa quando ele marca a tarefa EM_ANDAMENTO e para quando ele
+// a marca CONCLUIDA. O técnico NÃO vê cronômetro; só o dono/gestor enxerga os
+// tempos e compara colaboradores na MESMA tarefa. tempoEstimadoMin é um alvo
+// opcional pra comparar realizado vs. esperado.
+
+enum StatusTarefa {
+  PENDENTE     // adicionada à OS, ainda não iniciada
+  EM_ANDAMENTO // técnico começou — cronômetro rodando (iniciadoEm setado)
+  CONCLUIDA    // finalizada — duracaoSegundos fixado
+}
+
+model TarefaCatalogo {
+  id               String     @id @default(uuid())
+  codigo           String     @unique
+  descricao        String
+  tempoEstimadoMin Int? // tempo-alvo estimado, em minutos (opcional)
+  ativo            Boolean    @default(true)
+  criadoEm         DateTime   @default(now())
+  execucoes        TarefaOS[]
+
+  @@map("tarefas_catalogo")
+}
+
+// Uma tarefa do catálogo executada dentro de uma OS específica. É aqui que o
+// tempo real por (funcionário × tarefa) é medido. duracaoSegundos é gravado no
+// momento da conclusão (finalizadoEm − iniciadoEm) pra agregação rápida no
+// comparativo, sem recomputar a diferença toda vez.
+model TarefaOS {
+  id               String         @id @default(uuid())
+  ordemServicoId   String
+  ordemServico     OrdemServico   @relation(fields: [ordemServicoId], references: [id], onDelete: Cascade)
+  tarefaCatalogoId String
+  tarefaCatalogo   TarefaCatalogo @relation(fields: [tarefaCatalogoId], references: [id])
+  // Quem executou — setado quando a tarefa é iniciada. Nulo enquanto PENDENTE.
+  funcionarioId    String?
+  funcionario      Funcionario?   @relation(fields: [funcionarioId], references: [id])
+  status           StatusTarefa   @default(PENDENTE)
+  iniciadoEm       DateTime? // marcado ao entrar em EM_ANDAMENTO
+  finalizadoEm     DateTime? // marcado ao entrar em CONCLUIDA
+  duracaoSegundos  Int? // finalizadoEm − iniciadoEm, fixado na conclusão
+  criadoEm         DateTime       @default(now())
+  atualizadoEm     DateTime       @updatedAt
+
+  @@index([ordemServicoId])
+  @@index([tarefaCatalogoId])
+  @@index([funcionarioId])
+  @@map("tarefas_os")
 }
 
 // ----------------------------------------------------------------------------

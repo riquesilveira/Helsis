@@ -175,6 +175,35 @@ export interface Solucao {
   tempoEstimadoMin?: number | null;
 }
 
+// Catálogo de tarefas cronometráveis (ex: "Trocar bobina", "Calibrar").
+export interface TarefaCatalogo {
+  id: string;
+  codigo: string;
+  descricao: string;
+  tempoEstimadoMin?: number | null;
+  ativo?: boolean;
+}
+
+export type StatusTarefa = "PENDENTE" | "EM_ANDAMENTO" | "CONCLUIDA";
+
+// Execução de uma tarefa dentro de uma OS. O tempo (duracaoSegundos) é medido
+// nos bastidores — o técnico só muda o status; iniciadoEm/finalizadoEm e a
+// duração só interessam ao dono/gestor.
+export interface TarefaOSItem {
+  id: string;
+  ordemServicoId: string;
+  tarefaCatalogoId: string;
+  tarefaCatalogo: TarefaCatalogo;
+  funcionarioId?: string | null;
+  funcionario?: Funcionario | null;
+  status: StatusTarefa;
+  iniciadoEm?: string | null;
+  finalizadoEm?: string | null;
+  duracaoSegundos?: number | null;
+  criadoEm: string;
+  atualizadoEm: string;
+}
+
 export interface OrdemServico {
   id: string;
   numero: number;
@@ -203,6 +232,7 @@ export interface OrdemServico {
   pecasTrocadas?: PecaTrocadaItem[];
   deslocamentos?: DeslocamentoItem[];
   anexos?: AnexoItem[];
+  tarefas?: TarefaOSItem[];
   sla?: Sla;
 }
 
@@ -223,6 +253,39 @@ export interface DesempenhoFuncionario {
   custoTotalDeslocamento: number;
   pecasTrocadasQueNaoResolveram: number;
   comissaoAcumulada: number;
+}
+
+// Comparativo de produtividade — tempo por tarefa cronometrada, colaborador a
+// colaborador (só DONO/GESTOR). Tempos em segundos.
+export interface FuncionarioNaTarefa {
+  funcionarioId: string;
+  nome: string;
+  totalConcluidas: number;
+  tempoMedioSegundos: number;
+  tempoMinSegundos: number;
+  tempoMaxSegundos: number;
+}
+
+export interface ComparativoTarefa {
+  tarefaCatalogoId: string;
+  codigo: string;
+  descricao: string;
+  tempoEstimadoMin: number | null;
+  totalConcluidas: number;
+  tempoMedioSegundos: number;
+  funcionarios: FuncionarioNaTarefa[];
+}
+
+// Histórico de tarefas cronometradas de um colaborador (com a média da equipe
+// como referência), usado na página de desempenho do funcionário.
+export interface HistoricoTarefaFuncionario {
+  tarefaCatalogoId: string;
+  codigo: string;
+  descricao: string;
+  tempoEstimadoMin: number | null;
+  totalConcluidas: number;
+  tempoMedioSegundos: number;
+  tempoMedioEquipeSegundos: number;
 }
 
 export interface ItemComissaoResumo {

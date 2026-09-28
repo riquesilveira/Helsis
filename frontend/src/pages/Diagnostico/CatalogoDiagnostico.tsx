@@ -176,6 +176,8 @@ function SecaoCatalogo({ config }: { config: ConfigCatalogo }) {
           Nenhum{f ? "a" : ""} {config.singular} cadastrad{f ? "a" : "o"} ainda.
         </p>
       ) : (
+        <>
+        <div className="hidden md:block">
         <Table>
           <TableHeader>
             <TableRow className="border-border hover:bg-transparent">
@@ -235,6 +237,53 @@ function SecaoCatalogo({ config }: { config: ConfigCatalogo }) {
             ))}
           </TableBody>
         </Table>
+        </div>
+
+        {/* Lista em cards para mobile */}
+        <div className="space-y-3 p-4 md:hidden">
+          {itens.map((item) => (
+            <Card key={item.id} className="space-y-3 p-4">
+              <div className="codigo text-sm font-semibold text-foreground">{item.codigo}</div>
+              <div className="space-y-2 text-sm">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-muted-foreground">Descrição</span>
+                  <span className="min-w-0 truncate text-right text-foreground">
+                    {item.descricao}
+                  </span>
+                </div>
+                {config.temTempo && (
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-muted-foreground">Tempo est.</span>
+                    <span className="inline-flex items-center gap-1.5 text-foreground">
+                      <Clock size={13} className="text-muted-foreground" />
+                      {formatarTempo(item.tempoEstimadoMin)}
+                    </span>
+                  </div>
+                )}
+              </div>
+              <div className="flex justify-end gap-1 border-t border-border pt-2">
+                <Button
+                  variant="ghost"
+                  size="icon-sm"
+                  onClick={() => abrirEdicao(item)}
+                  aria-label="Editar"
+                >
+                  <Pencil />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon-sm"
+                  onClick={() => excluir(item)}
+                  aria-label="Remover"
+                  className="text-muted-foreground hover:bg-danger/10 hover:text-danger"
+                >
+                  <Trash2 />
+                </Button>
+              </div>
+            </Card>
+          ))}
+        </div>
+        </>
       )}
 
       <Dialog open={modalAberto} onOpenChange={(aberto) => { if (!aberto) setModalAberto(false); }}>
@@ -243,8 +292,8 @@ function SecaoCatalogo({ config }: { config: ConfigCatalogo }) {
             <DialogTitle>{`${editando ? "Editar" : novo} ${config.singular}`}</DialogTitle>
           </DialogHeader>
           <form onSubmit={salvar} className="space-y-4">
-            <div className="grid grid-cols-3 gap-3">
-              <div className="col-span-1 grid gap-1.5">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+              <div className="grid gap-1.5 sm:col-span-1">
                 <Label htmlFor="catalogo-codigo">Código</Label>
                 <Input
                   id="catalogo-codigo"
@@ -254,7 +303,7 @@ function SecaoCatalogo({ config }: { config: ConfigCatalogo }) {
                   placeholder="C01"
                 />
               </div>
-              <div className="col-span-2 grid gap-1.5">
+              <div className="grid gap-1.5 sm:col-span-2">
                 <Label htmlFor="catalogo-descricao">Descrição</Label>
                 <Input
                   id="catalogo-descricao"
@@ -298,28 +347,322 @@ function SecaoCatalogo({ config }: { config: ConfigCatalogo }) {
   );
 }
 
+// Catálogo de tarefas cronometráveis (ex: "Trocar bobina", "Calibrar"). São
+// tarefas padronizadas e nomeadas que o técnico executa e que ficam
+// cronometradas por trás. Espelha o SecaoCatalogo, mas usa /tarefas-catalogo.
+type ItemTarefa = {
+  id: string;
+  codigo: string;
+  descricao: string;
+  tempoEstimadoMin?: number | null;
+};
+
+function SecaoTarefasCatalogo() {
+  const [itens, setItens] = useState<ItemTarefa[]>([]);
+  const [carregando, setCarregando] = useState(true);
+  const [erroLista, setErroLista] = useState<string | null>(null);
+
+  // modal de criar/editar
+  const [modalAberto, setModalAberto] = useState(false);
+  const [editando, setEditando] = useState<ItemTarefa | null>(null);
+  const [codigo, setCodigo] = useState("");
+  const [descricao, setDescricao] = useState("");
+  const [tempo, setTempo] = useState("");
+  const [salvando, setSalvando] = useState(false);
+  const [erroForm, setErroForm] = useState<string | null>(null);
+
+  function carregar() {
+    setCarregando(true);
+    api
+      .get(`/tarefas-catalogo`)
+      .then((r) => setItens(r.data))
+      .catch(() => setErroLista("Não foi possível carregar as tarefas. Tente novamente."))
+      .finally(() => setCarregando(false));
+  }
+
+  useEffect(carregar, []);
+
+  function abrirNovo() {
+    setEditando(null);
+    setCodigo("");
+    setDescricao("");
+    setTempo("");
+    setErroForm(null);
+    setModalAberto(true);
+  }
+
+  function abrirEdicao(item: ItemTarefa) {
+    setEditando(item);
+    setCodigo(item.codigo);
+    setDescricao(item.descricao);
+    setTempo(item.tempoEstimadoMin ? String(item.tempoEstimadoMin) : "");
+    setErroForm(null);
+    setModalAberto(true);
+  }
+
+  async function salvar(e: FormEvent) {
+    e.preventDefault();
+    setSalvando(true);
+    setErroForm(null);
+
+    const corpo: Record<string, unknown> = {
+      codigo: codigo.trim(),
+      descricao: descricao.trim(),
+      tempoEstimadoMin: tempo ? Number(tempo) : undefined,
+    };
+
+    try {
+      if (editando) {
+        await api.patch(`/tarefas-catalogo/${editando.id}`, corpo);
+      } else {
+        await api.post(`/tarefas-catalogo`, corpo);
+      }
+      setModalAberto(false);
+      carregar();
+    } catch (err: any) {
+      setErroForm(
+        err?.response?.data?.erro ?? "Não foi possível salvar a tarefa. Tente novamente."
+      );
+    } finally {
+      setSalvando(false);
+    }
+  }
+
+  async function excluir(item: ItemTarefa) {
+    const ok = window.confirm(
+      `Remover a tarefa "${item.codigo} — ${item.descricao}" do catálogo? ` +
+        `Ordens de serviço antigas que já usam esta tarefa não são afetadas.`
+    );
+    if (!ok) return;
+    try {
+      await api.delete(`/tarefas-catalogo/${item.id}`);
+      setItens((prev) => prev.filter((i) => i.id !== item.id));
+    } catch (err: any) {
+      alert(err?.response?.data?.erro ?? "Não foi possível remover a tarefa. Tente novamente.");
+    }
+  }
+
+  return (
+    <Card className="py-0">
+      <div className="flex items-center justify-between gap-3 border-b border-border px-5 py-3">
+        <h2 className="flex items-center gap-2 text-sm font-medium text-foreground">
+          Tarefas
+          {!carregando && (
+            <span className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1.5 text-xs font-medium text-primary-foreground">
+              {itens.length}
+            </span>
+          )}
+        </h2>
+        <Button size="sm" onClick={abrirNovo}>
+          <Plus />
+          Adicionar tarefa
+        </Button>
+      </div>
+
+      <p className="px-5 pt-3 text-xs text-muted-foreground">
+        Tarefas padronizadas que o técnico executa e que ficam cronometradas (ex.: "Trocar
+        bobina", "Calibrar").
+      </p>
+
+      {carregando ? (
+        <p className="px-5 py-6 text-sm text-muted-foreground">Carregando...</p>
+      ) : erroLista ? (
+        <p className="px-5 py-6 text-sm text-danger">{erroLista}</p>
+      ) : itens.length === 0 ? (
+        <p className="px-5 py-6 text-sm text-muted-foreground">
+          Nenhuma tarefa cadastrada ainda.
+        </p>
+      ) : (
+        <>
+        <div className="hidden md:block">
+        <Table>
+          <TableHeader>
+            <TableRow className="border-border hover:bg-transparent">
+              <TableHead className="w-32 px-5 text-xs font-medium text-muted-foreground">
+                Código
+              </TableHead>
+              <TableHead className="px-5 text-xs font-medium text-muted-foreground">
+                Descrição
+              </TableHead>
+              <TableHead className="w-32 px-5 text-xs font-medium text-muted-foreground">
+                Tempo est.
+              </TableHead>
+              <TableHead className="w-24 px-5 text-right text-xs font-medium text-muted-foreground">
+                <span className="sr-only">Ações</span>
+              </TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {itens.map((item) => (
+              <TableRow key={item.id} className="border-border hover:bg-muted/50">
+                <TableCell className="px-5 py-2.5">
+                  <span className="codigo font-medium text-foreground">{item.codigo}</span>
+                </TableCell>
+                <TableCell className="px-5 py-2.5 text-foreground">{item.descricao}</TableCell>
+                <TableCell className="px-5 py-2.5 text-muted-foreground">
+                  <span className="inline-flex items-center gap-1.5">
+                    <Clock size={13} className="text-muted-foreground" />
+                    {formatarTempo(item.tempoEstimadoMin)}
+                  </span>
+                </TableCell>
+                <TableCell className="px-5 py-2.5">
+                  <div className="flex items-center justify-end gap-1">
+                    <Button
+                      variant="ghost"
+                      size="icon-sm"
+                      onClick={() => abrirEdicao(item)}
+                      aria-label="Editar"
+                    >
+                      <Pencil />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon-sm"
+                      onClick={() => excluir(item)}
+                      aria-label="Remover"
+                      className="text-muted-foreground hover:bg-danger/10 hover:text-danger"
+                    >
+                      <Trash2 />
+                    </Button>
+                  </div>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+        </div>
+
+        {/* Lista em cards para mobile */}
+        <div className="space-y-3 p-4 md:hidden">
+          {itens.map((item) => (
+            <Card key={item.id} className="space-y-3 p-4">
+              <div className="codigo text-sm font-semibold text-foreground">{item.codigo}</div>
+              <div className="space-y-2 text-sm">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-muted-foreground">Descrição</span>
+                  <span className="min-w-0 truncate text-right text-foreground">
+                    {item.descricao}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-muted-foreground">Tempo est.</span>
+                  <span className="inline-flex items-center gap-1.5 text-foreground">
+                    <Clock size={13} className="text-muted-foreground" />
+                    {formatarTempo(item.tempoEstimadoMin)}
+                  </span>
+                </div>
+              </div>
+              <div className="flex justify-end gap-1 border-t border-border pt-2">
+                <Button
+                  variant="ghost"
+                  size="icon-sm"
+                  onClick={() => abrirEdicao(item)}
+                  aria-label="Editar"
+                >
+                  <Pencil />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon-sm"
+                  onClick={() => excluir(item)}
+                  aria-label="Remover"
+                  className="text-muted-foreground hover:bg-danger/10 hover:text-danger"
+                >
+                  <Trash2 />
+                </Button>
+              </div>
+            </Card>
+          ))}
+        </div>
+        </>
+      )}
+
+      <Dialog open={modalAberto} onOpenChange={(aberto) => { if (!aberto) setModalAberto(false); }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{`${editando ? "Editar" : "Nova"} tarefa`}</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={salvar} className="space-y-4">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+              <div className="grid gap-1.5 sm:col-span-1">
+                <Label htmlFor="tarefa-codigo">Código</Label>
+                <Input
+                  id="tarefa-codigo"
+                  required
+                  value={codigo}
+                  onChange={(e) => setCodigo(e.target.value)}
+                  placeholder="T01"
+                />
+              </div>
+              <div className="grid gap-1.5 sm:col-span-2">
+                <Label htmlFor="tarefa-descricao">Descrição</Label>
+                <Input
+                  id="tarefa-descricao"
+                  required
+                  minLength={2}
+                  value={descricao}
+                  onChange={(e) => setDescricao(e.target.value)}
+                  placeholder="Ex.: Trocar bobina"
+                />
+              </div>
+            </div>
+
+            <div className="grid gap-1.5">
+              <Label htmlFor="tarefa-tempo">Tempo estimado (minutos) — opcional</Label>
+              <Input
+                id="tarefa-tempo"
+                type="number"
+                min={1}
+                value={tempo}
+                onChange={(e) => setTempo(e.target.value)}
+                placeholder="Ex.: 90"
+              />
+            </div>
+
+            {erroForm && <p className="text-sm text-danger">{erroForm}</p>}
+
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setModalAberto(false)}>
+                Cancelar
+              </Button>
+              <Button type="submit" disabled={salvando}>
+                {salvando ? "Salvando..." : editando ? "Salvar" : "Adicionar"}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+    </Card>
+  );
+}
+
 export function CatalogoDiagnostico() {
-  const [tab, setTab] = useState<TipoCatalogo>("causas");
-  const ativo = CATALOGOS.find((c) => c.chave === tab)!;
+  const [tab, setTab] = useState<TipoCatalogo | "tarefas">("causas");
+  const ativo = CATALOGOS.find((c) => c.chave === tab);
 
   return (
     <div className="space-y-6">
       <PageHeader
         titulo="Catálogo de diagnóstico"
-        subtitulo="Padronize as causas, defeitos e soluções escolhidos no fechamento dos chamados."
+        subtitulo="Padronize as causas, defeitos, soluções e tarefas usados no atendimento dos chamados."
       />
 
-      <Tabs value={tab} onValueChange={(valor) => setTab(valor as TipoCatalogo)}>
+      <Tabs value={tab} onValueChange={(valor) => setTab(valor as TipoCatalogo | "tarefas")}>
         <TabsList>
           {CATALOGOS.map((c) => (
             <TabsTrigger key={c.chave} value={c.chave}>
               {c.rotulo}
             </TabsTrigger>
           ))}
+          <TabsTrigger value="tarefas">Tarefas</TabsTrigger>
         </TabsList>
       </Tabs>
 
-      <SecaoCatalogo key={ativo.chave} config={ativo} />
+      {tab === "tarefas" || !ativo ? (
+        <SecaoTarefasCatalogo />
+      ) : (
+        <SecaoCatalogo key={ativo.chave} config={ativo} />
+      )}
     </div>
   );
 }

@@ -65,6 +65,11 @@ const CatalogoDiagnostico = lazy(() =>
 const ContratosList = lazy(() =>
   import("./pages/Contratos/ContratosList").then((m) => ({ default: m.ContratosList }))
 );
+const ComparativoProdutividade = lazy(() =>
+  import("./pages/Produtividade/ComparativoProdutividade").then((m) => ({
+    default: m.ComparativoProdutividade,
+  }))
+);
 const SemPermissao = lazy(() =>
   import("./pages/SemPermissao").then((m) => ({ default: m.SemPermissao }))
 );
@@ -192,6 +197,14 @@ export default function App() {
             element={
               <RotaProtegidaPorPapel papeis={["DONO", "GESTOR"]}>
                 <ContratosList />
+              </RotaProtegidaPorPapel>
+            }
+          />
+          <Route
+            path="/produtividade"
+            element={
+              <RotaProtegidaPorPapel papeis={["DONO", "GESTOR"]}>
+                <ComparativoProdutividade />
               </RotaProtegidaPorPapel>
             }
           />
