@@ -598,7 +598,7 @@ export function OrdemServicoDetail() {
   );
 
   return (
-    <div className="space-y-6 max-w-3xl">
+    <div className="space-y-6">
       <Link
         to="/ordens-servico"
         className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
