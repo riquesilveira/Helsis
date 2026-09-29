@@ -1,4 +1,4 @@
-import { lazy, Suspense } from "react";
+import { lazy, Suspense, useEffect } from "react";
 import { Navigate, Route, Routes } from "react-router-dom";
 import { AppLayout } from "./components/Layout/AppLayout";
 import { Login } from "./pages/Login";
@@ -74,6 +74,31 @@ const SemPermissao = lazy(() =>
   import("./pages/SemPermissao").then((m) => ({ default: m.SemPermissao }))
 );
 
+// Pré-carrega em segundo plano (quando o navegador está ocioso) os chunks das
+// telas mais usadas, pra a navegação não esperar o download do JS. Vite dedup­lica
+// os módulos (mesmo import do lazy acima), então isso só antecipa o fetch.
+function prefetchRotas() {
+  import("./pages/Dashboard");
+  import("./pages/OrdensServico/OrdensServicoList");
+  import("./pages/OrdensServico/OrdemServicoDetail");
+  import("./pages/Clientes/ClientesList");
+  import("./pages/Funcionarios/MinhaRota");
+  import("./pages/Funcionarios/FuncionariosList");
+  import("./pages/ManutencoesPreventivas/ManutencoesPreventivas");
+  import("./pages/FolhaDePonto/FolhaDePonto");
+}
+
+function usarPrefetchRotas() {
+  useEffect(() => {
+    if (!localStorage.getItem("token")) return; // só quando logado
+    const idle =
+      "requestIdleCallback" in window
+        ? (cb: () => void) => (window as unknown as { requestIdleCallback: (c: () => void) => number }).requestIdleCallback(cb)
+        : (cb: () => void) => setTimeout(cb, 1500);
+    idle(prefetchRotas);
+  }, []);
+}
+
 function RotaProtegida({ children }: { children: React.ReactNode }) {
   const autenticado = Boolean(localStorage.getItem("token"));
   return autenticado ? <>{children}</> : <Navigate to="/login" replace />;
@@ -118,6 +143,7 @@ function CarregandoRota() {
 }
 
 export default function App() {
+  usarPrefetchRotas();
   return (
     <Suspense fallback={<CarregandoRota />}>
       <Routes>
