@@ -65,6 +65,17 @@ function normalizar(texto: string) {
   return texto.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
 }
 
+// Ponto colorido de cada status nas abas de filtro \u2014 mesma paleta das pills.
+const COR_STATUS_DOT: Record<StatusOS, string> = {
+  RECEBIDO: "bg-status-recebido",
+  DIAGNOSTICO: "bg-status-diagnostico",
+  AGUARDANDO_PECA: "bg-status-aguardando",
+  EM_REPARO: "bg-status-reparo",
+  AGUARDANDO_VALIDACAO: "bg-status-validacao",
+  CONCLUIDO: "bg-status-concluido",
+  CANCELADO: "bg-status-cancelado",
+};
+
 export function OrdensServicoList() {
   const { opcoes } = useEtapasStatus();
   const abasStatus = useMemo<{ chave: StatusOS | "todos"; rotulo: string }[]>(
@@ -150,23 +161,32 @@ export function OrdensServicoList() {
         }
       />
 
-      <div className="flex items-center gap-1 overflow-x-auto border-b border-border">
-        {abasStatus.map((aba) => (
-          <button
-            key={aba.chave}
-            onClick={() => setStatusFiltro(aba.chave)}
-            className={`-mb-px flex items-center gap-1.5 whitespace-nowrap border-b-2 px-3 py-2.5 text-sm font-medium transition-colors ${
-              statusFiltro === aba.chave
-                ? "border-foreground text-foreground"
-                : "border-transparent text-muted-foreground hover:text-foreground"
-            }`}
-          >
-            {aba.rotulo}
-            <Badge variant="secondary" className="h-4 px-1.5 text-[11px]">
-              {contagemPorStatus[aba.chave]}
-            </Badge>
-          </button>
-        ))}
+      <div className="flex flex-wrap items-center gap-2">
+        {abasStatus.map((aba) => {
+          const ativo = statusFiltro === aba.chave;
+          const dot = aba.chave !== "todos" ? COR_STATUS_DOT[aba.chave] : null;
+          return (
+            <button
+              key={aba.chave}
+              onClick={() => setStatusFiltro(aba.chave)}
+              className={`inline-flex items-center gap-2 whitespace-nowrap rounded-full px-3 py-1.5 text-sm transition-colors ${
+                ativo
+                  ? "bg-foreground text-background"
+                  : "text-muted-foreground hover:bg-muted hover:text-foreground"
+              }`}
+            >
+              {dot && <span className={`h-2 w-2 shrink-0 rounded-full ${dot}`} />}
+              <span className={ativo ? "font-medium" : ""}>{aba.rotulo}</span>
+              <span
+                className={`codigo text-xs tabular-nums ${
+                  ativo ? "text-background/70" : "text-muted-foreground/60"
+                }`}
+              >
+                {contagemPorStatus[aba.chave]}
+              </span>
+            </button>
+          );
+        })}
       </div>
 
       {periodo === "personalizado" && (
