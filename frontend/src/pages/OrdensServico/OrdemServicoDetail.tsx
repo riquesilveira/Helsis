@@ -598,7 +598,7 @@ export function OrdemServicoDetail() {
   );
 
   return (
-    <div className="space-y-6 max-w-3xl">
+    <div className="space-y-6 max-w-5xl">
       <Link
         to="/ordens-servico"
         className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
@@ -629,6 +629,10 @@ export function OrdemServicoDetail() {
         )}
       </div>
 
+      {/* Corpo em duas colunas (masonry): os cards se distribuem em 2 colunas
+          balanceadas no desktop e empilham no mobile. break-inside-avoid
+          impede que um card seja cortado entre colunas. */}
+      <div className="gap-6 space-y-6 lg:columns-2 lg:space-y-0 [&>*]:break-inside-avoid lg:[&>*]:mb-6">
       <Card>
         <CardContent>
           <p className="text-xs text-muted-foreground mb-1">Problema relatado</p>
@@ -1336,6 +1340,8 @@ export function OrdemServicoDetail() {
           </Card>
         )
       )}
+      </div>
+      {/* fim do corpo em duas colunas */}
 
       {/* Modal registrar peça trocada */}
       <Dialog
