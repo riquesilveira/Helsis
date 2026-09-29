@@ -29,12 +29,12 @@
      segue uma progressão FRIA e desaturada (ardósia → azul → índigo → violeta)
      que combina com o grafite do sistema sem virar arco-íris; os desfechos e a
      espera usam as cores semânticas (âmbar/verde/vermelho). */
-  --color-status-recebido: #64748b;      /* ardósia — recém-chegado */
-  --color-status-diagnostico: #3f6fa3;   /* azul aço — em avaliação */
-  --color-status-reparo: #5b5fc7;        /* índigo — conserto em andamento */
-  --color-status-validacao: #9a5fbf;     /* violeta — aguardando validação */
-  --color-status-aguardando: var(--color-warning);   /* âmbar — esperando peça */
-  --color-status-concluido: var(--color-success);    /* verde — concluído */
+  --color-status-recebido: #6b7280;      /* cinza — recém-chegado */
+  --color-status-diagnostico: #3f6fa3;   /* azul aço — em avaliação (etapa off) */
+  --color-status-reparo: #2563eb;        /* azul — conserto em andamento */
+  --color-status-validacao: #9a5fbf;     /* violeta — validação (etapa off) */
+  --color-status-aguardando: #ea7317;    /* laranja — esperando peça */
+  --color-status-concluido: #22a45d;     /* verde (mais claro) — concluído */
   --color-status-cancelado: var(--color-danger);      /* vermelho — cancelado */
 
   --font-sans: Inter, system-ui, sans-serif;

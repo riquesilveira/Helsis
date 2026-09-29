@@ -2,17 +2,16 @@ import { Link } from "react-router-dom";
 import { OrdemServico } from "../types";
 import { useEtapasStatus } from "../hooks/useEtapasStatus";
 
-// Fundo suave (10%) + texto forte, via tokens de status. Estados de fluxo
-// (recebido/diagnóstico/reparo) resolvem para cinza neutro; só exceção/desfecho
-// (aguardando peça, concluído, cancelado) carregam cor — mesma filosofia do StatusBadge.
+// Pill sólida (cor cheia + texto branco), via tokens de status — mesma
+// linguagem do StatusBadge.
 const COR_STATUS: Record<string, string> = {
-  RECEBIDO: "bg-status-recebido/10 text-status-recebido",
-  DIAGNOSTICO: "bg-status-diagnostico/10 text-status-diagnostico",
-  AGUARDANDO_PECA: "bg-status-aguardando/10 text-status-aguardando",
-  EM_REPARO: "bg-status-reparo/10 text-status-reparo",
-  AGUARDANDO_VALIDACAO: "bg-status-validacao/10 text-status-validacao",
-  CONCLUIDO: "bg-status-concluido/10 text-status-concluido",
-  CANCELADO: "bg-status-cancelado/10 text-status-cancelado",
+  RECEBIDO: "bg-status-recebido text-white",
+  DIAGNOSTICO: "bg-status-diagnostico text-white",
+  AGUARDANDO_PECA: "bg-status-aguardando text-white",
+  EM_REPARO: "bg-status-reparo text-white",
+  AGUARDANDO_VALIDACAO: "bg-status-validacao text-white",
+  CONCLUIDO: "bg-status-concluido text-white",
+  CANCELADO: "bg-status-cancelado text-white",
 };
 
 /**
