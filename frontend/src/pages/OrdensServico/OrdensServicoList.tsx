@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { ChevronRight, Plus, Search } from "lucide-react";
 import { api } from "../../services/api";
 import { usuarioLogado } from "../../services/auth";
@@ -77,6 +77,7 @@ const COR_STATUS_DOT: Record<StatusOS, string> = {
 };
 
 export function OrdensServicoList() {
+  const navigate = useNavigate();
   const { opcoes } = useEtapasStatus();
   const abasStatus = useMemo<{ chave: StatusOS | "todos"; rotulo: string }[]>(
     () => [
@@ -305,23 +306,24 @@ export function OrdensServicoList() {
             )}
             {!carregando &&
               ordensFiltradas.map((os) => (
-                <TableRow key={os.id} className="group border-border hover:bg-muted/50">
+                <TableRow
+                  key={os.id}
+                  onClick={() => navigate(`/ordens-servico/${os.id}`)}
+                  className="group cursor-pointer border-border hover:bg-muted/50"
+                >
                   <TableCell className="px-5 py-4">
-                    <Link
-                      to={`/ordens-servico/${os.id}`}
-                      className="flex min-w-0 flex-col gap-1"
-                    >
+                    <div className="flex min-w-0 flex-col gap-1">
                       <Badge variant="secondary" className="codigo w-fit shrink-0">
                         #{formatarNumeroOS(os.numero)}
                       </Badge>
                       <span className="truncate text-sm font-semibold text-foreground">
                         {os.cliente.nome}
                       </span>
-                    </Link>
+                    </div>
                   </TableCell>
                   <TableCell className="px-5 py-4">
                     <div className="flex min-w-0 flex-col gap-0.5">
-                      <span className="truncate text-xs font-medium text-foreground">
+                      <span className="truncate text-xs font-bold text-foreground">
                         {os.equipamento.tipo}
                       </span>
                       <span className="line-clamp-1 text-sm text-muted-foreground">
@@ -348,13 +350,10 @@ export function OrdensServicoList() {
                     </p>
                   </TableCell>
                   <TableCell className="px-5 py-4 text-right">
-                    <Link
-                      to={`/ordens-servico/${os.id}`}
-                      aria-label="Ver ordem de serviço"
-                      className="inline-flex text-muted-foreground transition-colors hover:text-foreground"
-                    >
-                      <ChevronRight size={16} />
-                    </Link>
+                    <ChevronRight
+                      size={16}
+                      className="inline-flex text-muted-foreground transition-colors group-hover:text-foreground"
+                    />
                   </TableCell>
                 </TableRow>
               ))}
@@ -392,7 +391,7 @@ export function OrdensServicoList() {
                   <ChevronRight size={16} className="mt-1 shrink-0 text-muted-foreground" />
                 </div>
                 <div className="flex flex-col gap-0.5">
-                  <span className="truncate text-xs font-medium text-foreground">
+                  <span className="truncate text-xs font-bold text-foreground">
                     {os.equipamento.tipo}
                   </span>
                   <p className="line-clamp-2 text-sm text-muted-foreground">
