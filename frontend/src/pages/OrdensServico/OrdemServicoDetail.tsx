@@ -598,7 +598,7 @@ export function OrdemServicoDetail() {
   );
 
   return (
-    <div className="space-y-6 max-w-6xl">
+    <div className="space-y-6 max-w-3xl">
       <Link
         to="/ordens-servico"
         className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
@@ -688,10 +688,6 @@ export function OrdemServicoDetail() {
         <StatusTimeline historico={os.statusHistoricos} statusAtual={os.statusAtual} />
       </div>
 
-      {/* Cards secundários em duas colunas (masonry): a timeline acima fica
-          full-width; aqui o resto ocupa a largura disponível. break-inside-avoid
-          impede que um card seja cortado entre colunas. */}
-      <div className="gap-6 space-y-6 lg:columns-2 lg:space-y-0 [&>*]:break-inside-avoid lg:[&>*]:mb-6">
       <Card>
         <CardHeader className="border-b">
           <CardTitle>Notificações enviadas ao cliente</CardTitle>
@@ -1340,8 +1336,6 @@ export function OrdemServicoDetail() {
           </Card>
         )
       )}
-      </div>
-      {/* fim das duas colunas */}
 
       {/* Modal registrar peça trocada */}
       <Dialog
