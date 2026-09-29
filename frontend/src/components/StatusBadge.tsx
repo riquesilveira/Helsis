@@ -2,16 +2,16 @@ import { StatusOS, TipoOS } from "../types";
 import { useEtapasStatus } from "../hooks/useEtapasStatus";
 import { Badge } from "./shadcn/badge";
 
-// Fundo suave (10% da cor) + texto forte, usando os tokens de status.
-// A maioria dos estados é neutra (cinza); só as exceções/desfechos têm cor.
+// Fundo suave (12% da cor) + anel sutil + texto forte, usando os tokens de
+// status. Cada etapa tem cor própria pra ser reconhecida num relance.
 const CLASSE_STATUS: Record<StatusOS, string> = {
-  RECEBIDO: "bg-status-recebido/10 text-status-recebido",
-  DIAGNOSTICO: "bg-status-diagnostico/10 text-status-diagnostico",
-  AGUARDANDO_PECA: "bg-status-aguardando/10 text-status-aguardando",
-  EM_REPARO: "bg-status-reparo/10 text-status-reparo",
-  AGUARDANDO_VALIDACAO: "bg-status-validacao/10 text-status-validacao",
-  CONCLUIDO: "bg-status-concluido/10 text-status-concluido",
-  CANCELADO: "bg-status-cancelado/10 text-status-cancelado",
+  RECEBIDO: "bg-status-recebido/12 text-status-recebido ring-1 ring-inset ring-status-recebido/20",
+  DIAGNOSTICO: "bg-status-diagnostico/12 text-status-diagnostico ring-1 ring-inset ring-status-diagnostico/20",
+  AGUARDANDO_PECA: "bg-status-aguardando/12 text-status-aguardando ring-1 ring-inset ring-status-aguardando/20",
+  EM_REPARO: "bg-status-reparo/12 text-status-reparo ring-1 ring-inset ring-status-reparo/20",
+  AGUARDANDO_VALIDACAO: "bg-status-validacao/12 text-status-validacao ring-1 ring-inset ring-status-validacao/20",
+  CONCLUIDO: "bg-status-concluido/12 text-status-concluido ring-1 ring-inset ring-status-concluido/20",
+  CANCELADO: "bg-status-cancelado/12 text-status-cancelado ring-1 ring-inset ring-status-cancelado/20",
 };
 
 const PONTO_STATUS: Record<StatusOS, string> = {

@@ -154,12 +154,12 @@ function GraficoFaturamento({ dados }: { dados: { dia: string; valor: number; va
       <CardContent>
         <div className="mb-3 flex items-center gap-4 text-xs text-muted-foreground">
           <span className="flex items-center gap-1.5">
-            <span className="inline-block h-2.5 w-3.5 rounded-sm bg-muted-foreground/25 ring-1 ring-muted-foreground/40" />
+            <span className="inline-block h-2.5 w-2.5 rounded-full bg-foreground" />
             Este período
           </span>
           <span className="flex items-center gap-1.5">
             <svg width="18" height="6" aria-hidden>
-              <line x1="0" y1="3" x2="18" y2="3" stroke="var(--foreground)" strokeWidth="2" strokeDasharray="4 3" />
+              <line x1="0" y1="3" x2="18" y2="3" stroke="var(--muted-foreground)" strokeWidth="2" strokeDasharray="4 3" />
             </svg>
             Período anterior
           </span>
@@ -167,23 +167,21 @@ function GraficoFaturamento({ dados }: { dados: { dia: string; valor: number; va
         <ResponsiveContainer width="100%" height={220}>
           <ComposedChart data={dados} margin={{ top: 5, right: 8, left: 0, bottom: 0 }}>
             <defs>
-              <pattern
-                id="hachuraFaturamento"
-                patternUnits="userSpaceOnUse"
-                width="7"
-                height="7"
-                patternTransform="rotate(45)"
-              >
-                <line x1="0" y1="0" x2="0" y2="7" stroke="var(--muted-foreground)" strokeOpacity="0.22" strokeWidth="1" />
-              </pattern>
+              {/* Preenchimento em gradiente vertical (grafite → transparente),
+                  visual limpo tipo Linear/Vercel. */}
+              <linearGradient id="fillFaturamento" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="var(--foreground)" stopOpacity={0.16} />
+                <stop offset="100%" stopColor="var(--foreground)" stopOpacity={0} />
+              </linearGradient>
             </defs>
-            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--border)" />
+            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--border)" strokeOpacity={0.6} />
             <XAxis
               dataKey="dia"
               tick={{ fontSize: 11, fill: "var(--muted-foreground)" }}
               axisLine={false}
               tickLine={false}
               interval={4}
+              dy={4}
             />
             <YAxis
               tick={{ fontSize: 11, fill: "var(--muted-foreground)" }}
@@ -198,27 +196,29 @@ function GraficoFaturamento({ dados }: { dados: { dia: string; valor: number; va
                 name === "valor" ? "Este período" : "Período anterior",
               ]}
               contentStyle={ESTILO_TOOLTIP}
+              cursor={{ stroke: "var(--border)", strokeWidth: 1 }}
             />
-            {/* Área hachurada (este período) ao fundo */}
-            <Area
-              type="stepAfter"
-              dataKey="valor"
-              name="valor"
-              stroke="var(--muted-foreground)"
-              strokeWidth={2}
-              fill="url(#hachuraFaturamento)"
-              dot={false}
-              activeDot={{ r: 3 }}
-            />
-            {/* Período anterior (tracejado) por cima, como na referência */}
+            {/* Período anterior — linha tracejada leve, ao fundo */}
             <Line
-              type="stepAfter"
+              type="monotone"
               dataKey="valorAnterior"
               name="valorAnterior"
-              stroke="var(--foreground)"
-              strokeWidth={2}
-              strokeDasharray="6 4"
+              stroke="var(--muted-foreground)"
+              strokeWidth={1.5}
+              strokeDasharray="5 4"
+              strokeOpacity={0.7}
               dot={false}
+            />
+            {/* Este período — área suave com gradiente por cima */}
+            <Area
+              type="monotone"
+              dataKey="valor"
+              name="valor"
+              stroke="var(--foreground)"
+              strokeWidth={2.5}
+              fill="url(#fillFaturamento)"
+              dot={false}
+              activeDot={{ r: 4, strokeWidth: 2, stroke: "var(--card)" }}
             />
           </ComposedChart>
         </ResponsiveContainer>

@@ -24,19 +24,18 @@
   --color-danger: #c0453e;
   --color-info: #4a6b8f;
 
-  /* Tokens de status por domínio — mantidos resolvíveis para os componentes
-     ainda não migrados (StatusBadge etc.). A cor sinaliza EXCEÇÃO, não
-     progresso: os estados do fluxo normal (recebido, diagnóstico, reparo,
-     validação) ficam em cinza neutro e são diferenciados pelo rótulo — o
-     avanço do fluxo é comunicado pelo StatusTimeline. Só três estados
-     carregam cor semântica. */
-  --color-status-recebido: var(--color-grafite-600);
-  --color-status-diagnostico: var(--color-grafite-600);
-  --color-status-reparo: var(--color-grafite-600);
-  --color-status-validacao: var(--color-grafite-600);
-  --color-status-aguardando: var(--color-warning);
-  --color-status-concluido: var(--color-success);
-  --color-status-cancelado: var(--color-danger);
+  /* Tokens de status por domínio (StatusBadge, StatusTimeline, etc.). Cada
+     etapa tem uma cor própria pra ser reconhecida num relance. O fluxo normal
+     segue uma progressão FRIA e desaturada (ardósia → azul → índigo → violeta)
+     que combina com o grafite do sistema sem virar arco-íris; os desfechos e a
+     espera usam as cores semânticas (âmbar/verde/vermelho). */
+  --color-status-recebido: #64748b;      /* ardósia — recém-chegado */
+  --color-status-diagnostico: #3f6fa3;   /* azul aço — em avaliação */
+  --color-status-reparo: #5b5fc7;        /* índigo — conserto em andamento */
+  --color-status-validacao: #9a5fbf;     /* violeta — aguardando validação */
+  --color-status-aguardando: var(--color-warning);   /* âmbar — esperando peça */
+  --color-status-concluido: var(--color-success);    /* verde — concluído */
+  --color-status-cancelado: var(--color-danger);      /* vermelho — cancelado */
 
   --font-sans: Inter, system-ui, sans-serif;
   --font-mono: Inter, system-ui, sans-serif;
