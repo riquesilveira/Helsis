@@ -607,26 +607,28 @@ export function OrdemServicoDetail() {
         Ordens de serviço
       </Link>
 
-      <div>
-        <div className="flex items-center gap-2">
+      <div className="flex flex-wrap items-start justify-between gap-x-4 gap-y-2">
+        <div className="min-w-0">
+          <h1 className="text-xl font-semibold text-foreground">{os.cliente.nome}</h1>
+          <p className="text-sm text-muted-foreground mt-1">
+            {os.equipamento.tipo}
+            {os.equipamento.marca ? ` — ${os.equipamento.marca} ${os.equipamento.modelo ?? ""}` : ""}
+            {" · "}
+            {ROTULO_MODALIDADE[os.modalidade]}
+          </p>
+          {os.sla && os.sla.status !== "SEM_CONTRATO" && (
+            <div className="mt-2">
+              <SlaBadge sla={os.sla} />
+            </div>
+          )}
+        </div>
+        <div className="flex shrink-0 items-center gap-2">
           <p className="codigo text-sm text-muted-foreground">OS #{formatarNumeroOS(os.numero)}</p>
           <TipoBadge tipo={os.tipo} />
           <span className="text-xs text-muted-foreground" title={new Date(os.dataAbertura).toLocaleString("pt-BR")}>
             aberta {tempoRelativo(os.dataAbertura)}
           </span>
         </div>
-        <h1 className="text-xl font-semibold text-foreground mt-1">{os.cliente.nome}</h1>
-        <p className="text-sm text-muted-foreground mt-1">
-          {os.equipamento.tipo}
-          {os.equipamento.marca ? ` — ${os.equipamento.marca} ${os.equipamento.modelo ?? ""}` : ""}
-          {" · "}
-          {ROTULO_MODALIDADE[os.modalidade]}
-        </p>
-        {os.sla && os.sla.status !== "SEM_CONTRATO" && (
-          <div className="mt-2">
-            <SlaBadge sla={os.sla} />
-          </div>
-        )}
       </div>
 
       <Card>
