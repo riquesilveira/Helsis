@@ -1,11 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { ChevronRight, Plus, Search, UserRound } from "lucide-react";
+import { ChevronRight, Plus, Search } from "lucide-react";
 import { api } from "../../services/api";
 import { usuarioLogado } from "../../services/auth";
 import { OrdemServico, StatusOS } from "../../types";
 import { useEtapasStatus } from "../../hooks/useEtapasStatus";
-import { tempoRelativo, formatarNumeroOS } from "../../utils/formatters";
+import { tempoRelativo, formatarNumeroOS, abreviarNome } from "../../utils/formatters";
 import { PageHeader } from "../../components/PageHeader";
 import { StatusBadge } from "../../components/StatusBadge";
 import { Card } from "../../components/shadcn/card";
@@ -311,33 +311,31 @@ export function OrdensServicoList() {
                       to={`/ordens-servico/${os.id}`}
                       className="flex min-w-0 flex-col gap-1"
                     >
-                      <div className="flex min-w-0 items-center gap-2">
-                        <Badge variant="secondary" className="codigo shrink-0">
-                          #{formatarNumeroOS(os.numero)}
-                        </Badge>
-                        <span className="min-w-0 truncate text-xs text-muted-foreground">
-                          {os.equipamento.tipo}
-                        </span>
-                      </div>
+                      <Badge variant="secondary" className="codigo w-fit shrink-0">
+                        #{formatarNumeroOS(os.numero)}
+                      </Badge>
                       <span className="truncate text-sm font-semibold text-foreground">
                         {os.cliente.nome}
                       </span>
                     </Link>
                   </TableCell>
-                  <TableCell className="px-5 py-4 text-sm text-muted-foreground">
-                    <span className="line-clamp-1">{os.descricaoProblema}</span>
+                  <TableCell className="px-5 py-4">
+                    <div className="flex min-w-0 flex-col gap-0.5">
+                      <span className="truncate text-xs font-medium text-foreground">
+                        {os.equipamento.tipo}
+                      </span>
+                      <span className="line-clamp-1 text-sm text-muted-foreground">
+                        {os.descricaoProblema}
+                      </span>
+                    </div>
                   </TableCell>
                   <TableCell className="px-5 py-4 text-sm">
                     {os.funcionario?.usuario?.nome ? (
-                      <span className="flex items-center gap-1 font-medium text-foreground">
-                        <UserRound size={12} className="shrink-0 text-muted-foreground" />
-                        {os.funcionario.usuario.nome}
+                      <span className="font-medium text-foreground">
+                        {abreviarNome(os.funcionario.usuario.nome)}
                       </span>
                     ) : (
-                      <span className="flex items-center gap-1 text-muted-foreground">
-                        <UserRound size={12} className="shrink-0" />
-                        Sem técnico atribuído
-                      </span>
+                      <span className="text-muted-foreground">Sem técnico atribuído</span>
                     )}
                   </TableCell>
                   <TableCell className="px-5 py-4">
@@ -384,28 +382,27 @@ export function OrdensServicoList() {
               <Link to={`/ordens-servico/${os.id}`} className="block space-y-3 p-4">
                 <div className="flex items-start justify-between gap-2">
                   <div className="flex min-w-0 flex-col gap-1">
-                    <div className="flex min-w-0 items-center gap-2">
-                      <Badge variant="secondary" className="codigo shrink-0">
-                        #{formatarNumeroOS(os.numero)}
-                      </Badge>
-                      <span className="min-w-0 truncate text-xs text-muted-foreground">
-                        {os.equipamento.tipo}
-                      </span>
-                    </div>
+                    <Badge variant="secondary" className="codigo w-fit shrink-0">
+                      #{formatarNumeroOS(os.numero)}
+                    </Badge>
                     <span className="truncate text-sm font-semibold text-foreground">
                       {os.cliente.nome}
                     </span>
                   </div>
                   <ChevronRight size={16} className="mt-1 shrink-0 text-muted-foreground" />
                 </div>
-                <p className="line-clamp-2 text-sm text-muted-foreground">
-                  {os.descricaoProblema}
-                </p>
+                <div className="flex flex-col gap-0.5">
+                  <span className="truncate text-xs font-medium text-foreground">
+                    {os.equipamento.tipo}
+                  </span>
+                  <p className="line-clamp-2 text-sm text-muted-foreground">
+                    {os.descricaoProblema}
+                  </p>
+                </div>
                 <div className="flex items-center gap-1 text-sm">
-                  <UserRound size={12} className="shrink-0 text-muted-foreground" />
                   {os.funcionario?.usuario?.nome ? (
                     <span className="font-medium text-foreground">
-                      {os.funcionario.usuario.nome}
+                      {abreviarNome(os.funcionario.usuario.nome)}
                     </span>
                   ) : (
                     <span className="text-muted-foreground">Sem técnico atribuído</span>

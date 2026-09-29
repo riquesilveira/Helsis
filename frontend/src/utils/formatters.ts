@@ -9,6 +9,17 @@ export function formatarNumeroOS(numero: number): string {
   return String(numero).padStart(6, "0").replace(/(\d{2})(?=\d)/g, "$1-");
 }
 
+// Nome curto do técnico: primeiro nome + inicial do sobrenome
+// (ex.: "Henrique Leandro da Silveira" → "Henrique S.").
+export function abreviarNome(nome: string): string {
+  const partes = nome.trim().split(/\s+/).filter(Boolean);
+  if (partes.length === 0) return "";
+  if (partes.length === 1) return partes[0];
+  const primeiro = partes[0];
+  const sobrenome = partes[partes.length - 1];
+  return `${primeiro} ${sobrenome.charAt(0).toUpperCase()}.`;
+}
+
 export function tempoRelativo(iso: string): string {
   const diffMs = Date.now() - new Date(iso).getTime();
   const minutos = Math.floor(diffMs / 60_000);
