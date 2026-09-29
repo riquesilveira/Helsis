@@ -989,8 +989,9 @@ export function OrdemServicoDetail() {
           <CardTitle>Peças trocadas</CardTitle>
           <CardAction>
             <Button
-              variant="ghost"
+              variant="outline"
               size="sm"
+              className="border-foreground text-foreground transition-colors hover:bg-foreground hover:text-background"
               onClick={() => setModalPecaAberto(true)}
               disabled={semTecnico}
               title={semTecnico ? "Atribua um técnico à OS primeiro" : ""}
@@ -1049,8 +1050,9 @@ export function OrdemServicoDetail() {
           {podeVerFinanceiro && (
             <CardAction>
               <Button
-                variant="ghost"
+                variant="outline"
                 size="sm"
+                className="border-foreground text-foreground transition-colors hover:bg-foreground hover:text-background"
                 onClick={abrirNovoDeslocamento}
                 disabled={semTecnico}
                 title={semTecnico ? "Atribua um técnico à OS primeiro" : ""}
