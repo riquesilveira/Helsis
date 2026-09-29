@@ -10,6 +10,7 @@ const COR_STATUS: Record<string, string> = {
   DIAGNOSTICO: "bg-status-diagnostico/10 text-status-diagnostico",
   AGUARDANDO_PECA: "bg-status-aguardando/10 text-status-aguardando",
   EM_REPARO: "bg-status-reparo/10 text-status-reparo",
+  AGUARDANDO_VALIDACAO: "bg-status-validacao/10 text-status-validacao",
   CONCLUIDO: "bg-status-concluido/10 text-status-concluido",
   CANCELADO: "bg-status-cancelado/10 text-status-cancelado",
 };

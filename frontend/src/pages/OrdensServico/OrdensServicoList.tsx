@@ -315,12 +315,12 @@ export function OrdensServicoList() {
                         <Badge variant="secondary" className="codigo shrink-0">
                           #{formatarNumeroOS(os.numero)}
                         </Badge>
-                        <span className="min-w-0 truncate text-sm font-semibold text-foreground">
-                          {os.cliente.nome}
+                        <span className="min-w-0 truncate text-xs text-muted-foreground">
+                          {os.equipamento.tipo}
                         </span>
                       </div>
-                      <span className="truncate text-xs text-muted-foreground">
-                        {os.equipamento.tipo}
+                      <span className="truncate text-sm font-semibold text-foreground">
+                        {os.cliente.nome}
                       </span>
                     </Link>
                   </TableCell>
@@ -388,12 +388,12 @@ export function OrdensServicoList() {
                       <Badge variant="secondary" className="codigo shrink-0">
                         #{formatarNumeroOS(os.numero)}
                       </Badge>
-                      <span className="min-w-0 truncate text-sm font-semibold text-foreground">
-                        {os.cliente.nome}
+                      <span className="min-w-0 truncate text-xs text-muted-foreground">
+                        {os.equipamento.tipo}
                       </span>
                     </div>
-                    <span className="truncate text-xs text-muted-foreground">
-                      {os.equipamento.tipo}
+                    <span className="truncate text-sm font-semibold text-foreground">
+                      {os.cliente.nome}
                     </span>
                   </div>
                   <ChevronRight size={16} className="mt-1 shrink-0 text-muted-foreground" />
