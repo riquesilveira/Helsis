@@ -691,8 +691,10 @@ export function OrdemServicoDetail() {
       {/* Diagnóstico codificado — só aparece depois de preenchido no fechamento */}
       {(os.causa || os.defeito || os.solucao) && (
         <Card>
+          <CardHeader className="border-b">
+            <CardTitle>Diagnóstico</CardTitle>
+          </CardHeader>
           <CardContent>
-            <p className="text-xs text-muted-foreground mb-3">Diagnóstico</p>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div>
                 <p className="text-[11px] uppercase tracking-wide text-muted-foreground">Causa</p>
