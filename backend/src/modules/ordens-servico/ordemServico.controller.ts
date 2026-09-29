@@ -133,15 +133,8 @@ export async function atualizarStatus(req: Request, res: Response) {
     if (os.funcionarioId !== funcionario.id) {
       throw new AppError("Você não tem permissão para alterar esta ordem de serviço.", 403);
     }
-    // Fechamento parcial × total: o técnico (N1) só faz o fechamento parcial
-    // (AGUARDANDO_VALIDACAO). O fechamento total (CONCLUIDO) é validado pelo
-    // Suporte (N2) para cima.
-    if (dados.status === "CONCLUIDO") {
-      throw new AppError(
-        "Técnico faz o fechamento parcial (aguardando validação). A conclusão é feita pelo Suporte.",
-        403
-      );
-    }
+    // Sem a etapa de validação em dois níveis, o técnico conclui a própria OS
+    // diretamente (não há mais fechamento parcial → validação do Suporte).
   }
 
   const os = await osService.atualizarStatus(req.params.id, dados);

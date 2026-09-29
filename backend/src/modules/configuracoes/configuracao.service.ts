@@ -15,6 +15,7 @@ interface EtapaPadrao {
   rotulo: string;
   rotuloCliente: string;
   ordem: number;
+  ativo?: boolean; // default true; false = etapa desligada do fluxo padrão
 }
 
 export const ETAPAS_PADRAO: EtapaPadrao[] = [
@@ -24,6 +25,7 @@ export const ETAPAS_PADRAO: EtapaPadrao[] = [
     ordem: 1,
     rotulo: "Em diagnóstico",
     rotuloCliente: "Seu equipamento está em diagnóstico",
+    ativo: false,
   },
   {
     status: "AGUARDANDO_PECA",
@@ -42,6 +44,7 @@ export const ETAPAS_PADRAO: EtapaPadrao[] = [
     ordem: 4,
     rotulo: "Aguardando validação",
     rotuloCliente: "O reparo foi finalizado e está passando pela validação final",
+    ativo: false,
   },
   {
     status: "CONCLUIDO",
@@ -70,7 +73,7 @@ export async function garantirEtapasPadrao() {
           rotulo: etapa.rotulo,
           rotuloCliente: etapa.rotuloCliente,
           ordem: etapa.ordem,
-          ativo: true,
+          ativo: etapa.ativo ?? true,
         },
       })
     )

@@ -15,10 +15,10 @@ export interface EtapaConfig {
 // não responda. A ordem aqui é a ordem canônica do fluxo.
 export const ETAPAS_PADRAO: EtapaConfig[] = [
   { status: "RECEBIDO", ordem: 0, rotulo: "Recebido", rotuloCliente: "Recebemos seu chamado", ativo: true },
-  { status: "DIAGNOSTICO", ordem: 1, rotulo: "Em diagnóstico", rotuloCliente: "Seu equipamento está em diagnóstico", ativo: true },
+  { status: "DIAGNOSTICO", ordem: 1, rotulo: "Em diagnóstico", rotuloCliente: "Seu equipamento está em diagnóstico", ativo: false },
   { status: "AGUARDANDO_PECA", ordem: 2, rotulo: "Aguardando peça", rotuloCliente: "Aguardando chegada de peça", ativo: true },
   { status: "EM_REPARO", ordem: 3, rotulo: "Em reparo", rotuloCliente: "Seu equipamento está em reparo", ativo: true },
-  { status: "AGUARDANDO_VALIDACAO", ordem: 4, rotulo: "Aguardando validação", rotuloCliente: "O reparo foi finalizado e está passando pela validação final", ativo: true },
+  { status: "AGUARDANDO_VALIDACAO", ordem: 4, rotulo: "Aguardando validação", rotuloCliente: "O reparo foi finalizado e está passando pela validação final", ativo: false },
   { status: "CONCLUIDO", ordem: 5, rotulo: "Concluído", rotuloCliente: "O reparo foi concluído e o equipamento já está liberado para uso", ativo: true },
   { status: "CANCELADO", ordem: 6, rotulo: "Cancelado", rotuloCliente: "O atendimento foi cancelado", ativo: true },
 ];

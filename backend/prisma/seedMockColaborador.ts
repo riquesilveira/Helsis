@@ -48,10 +48,10 @@ const DEFS: DefOS[] = [
     ],
   },
   {
-    status: StatusOS.DIAGNOSTICO,
+    status: StatusOS.RECEBIDO,
     problema: "Tomógrafo travando durante a inicialização do console.",
     agendaHora: 10,
-    historico: [StatusOS.RECEBIDO, StatusOS.DIAGNOSTICO],
+    historico: [StatusOS.RECEBIDO],
     tarefas: [{ cat: 9, status: StatusTarefa.CONCLUIDA, durSeg: 2650 }],
   },
   {
@@ -68,15 +68,10 @@ const DEFS: DefOS[] = [
     tarefas: [{ cat: 9, status: StatusTarefa.CONCLUIDA, durSeg: 2100 }],
   },
   {
-    status: StatusOS.AGUARDANDO_VALIDACAO,
+    status: StatusOS.EM_REPARO,
     problema: "Mamógrafo com alerta de calibração do detector digital.",
     agendaHora: 16,
-    historico: [
-      StatusOS.RECEBIDO,
-      StatusOS.DIAGNOSTICO,
-      StatusOS.EM_REPARO,
-      StatusOS.AGUARDANDO_VALIDACAO,
-    ],
+    historico: [StatusOS.RECEBIDO, StatusOS.EM_REPARO],
     tarefas: [
       { cat: 4, status: StatusTarefa.CONCLUIDA, durSeg: 2300 },
       { cat: 8, status: StatusTarefa.EM_ANDAMENTO },

@@ -35,24 +35,8 @@ beforeEach(() => {
   (buscarFuncionarioPorUsuarioId as ReturnType<typeof vi.fn>).mockResolvedValue(FUNC_TECNICO);
 });
 
-describe("atualizarStatus — fechamento parcial (N1) × total (N2)", () => {
-  it("TÉCNICO não pode concluir (CONCLUIDO) a OS → 403", async () => {
-    (osService.buscarOrdemServicoPorId as ReturnType<typeof vi.fn>).mockResolvedValue({
-      funcionarioId: FUNC_TECNICO.id, // é a OS dele, mas ainda assim não pode concluir
-    });
-    const req = reqMock({
-      params: { id: "os-1" },
-      body: { status: "CONCLUIDO" },
-      usuario: { id: "u-tec", papel: "TECNICO" },
-    });
-
-    await expect(atualizarStatus(req, resMock())).rejects.toMatchObject({
-      statusCode: 403,
-    });
-    expect(osService.atualizarStatus).not.toHaveBeenCalled();
-  });
-
-  it("TÉCNICO pode fazer o fechamento parcial (AGUARDANDO_VALIDACAO) na própria OS", async () => {
+describe("atualizarStatus — permissões de status do técnico", () => {
+  it("TÉCNICO pode concluir (CONCLUIDO) a própria OS", async () => {
     (osService.buscarOrdemServicoPorId as ReturnType<typeof vi.fn>).mockResolvedValue({
       funcionarioId: FUNC_TECNICO.id,
     });
@@ -60,14 +44,29 @@ describe("atualizarStatus — fechamento parcial (N1) × total (N2)", () => {
     const res = resMock();
     const req = reqMock({
       params: { id: "os-1" },
-      body: { status: "AGUARDANDO_VALIDACAO" },
+      body: { status: "CONCLUIDO" },
       usuario: { id: "u-tec", papel: "TECNICO" },
     });
 
     await atualizarStatus(req, res);
-    expect(osService.atualizarStatus).toHaveBeenCalledWith("os-1", {
-      status: "AGUARDANDO_VALIDACAO",
+    expect(osService.atualizarStatus).toHaveBeenCalledWith("os-1", { status: "CONCLUIDO" });
+    expect(res.json).toHaveBeenCalledWith({ id: "os-1" });
+  });
+
+  it("TÉCNICO pode atualizar o status da própria OS (ex: EM_REPARO)", async () => {
+    (osService.buscarOrdemServicoPorId as ReturnType<typeof vi.fn>).mockResolvedValue({
+      funcionarioId: FUNC_TECNICO.id,
     });
+    (osService.atualizarStatus as ReturnType<typeof vi.fn>).mockResolvedValue({ id: "os-1" });
+    const res = resMock();
+    const req = reqMock({
+      params: { id: "os-1" },
+      body: { status: "EM_REPARO" },
+      usuario: { id: "u-tec", papel: "TECNICO" },
+    });
+
+    await atualizarStatus(req, res);
+    expect(osService.atualizarStatus).toHaveBeenCalledWith("os-1", { status: "EM_REPARO" });
     expect(res.json).toHaveBeenCalledWith({ id: "os-1" });
   });
 
@@ -77,7 +76,7 @@ describe("atualizarStatus — fechamento parcial (N1) × total (N2)", () => {
     });
     const req = reqMock({
       params: { id: "os-9" },
-      body: { status: "AGUARDANDO_VALIDACAO" },
+      body: { status: "EM_REPARO" },
       usuario: { id: "u-tec", papel: "TECNICO" },
     });
 
@@ -85,7 +84,7 @@ describe("atualizarStatus — fechamento parcial (N1) × total (N2)", () => {
     expect(osService.atualizarStatus).not.toHaveBeenCalled();
   });
 
-  it("SUPORTE pode concluir (fechamento total) a OS", async () => {
+  it("SUPORTE pode concluir a OS", async () => {
     (osService.atualizarStatus as ReturnType<typeof vi.fn>).mockResolvedValue({ id: "os-1" });
     const res = resMock();
     const req = reqMock({
