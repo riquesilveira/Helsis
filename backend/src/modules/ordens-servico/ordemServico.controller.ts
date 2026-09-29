@@ -164,6 +164,16 @@ export async function registrarPeca(req: Request, res: Response) {
   res.status(201).json(peca);
 }
 
+const atualizarDescricaoSchema = z.object({
+  descricaoProblema: z.string().min(5),
+});
+
+export async function atualizarDescricao(req: Request, res: Response) {
+  const { descricaoProblema } = atualizarDescricaoSchema.parse(req.body);
+  const os = await osService.atualizarDescricao(req.params.id, descricaoProblema);
+  res.json(os);
+}
+
 export async function atribuirTecnico(req: Request, res: Response) {
   const { funcionarioId } = atribuirTecnicoSchema.parse(req.body);
   const os = await osService.atribuirTecnico(req.params.id, funcionarioId);

@@ -44,6 +44,13 @@ router.patch(
   asyncHandler(osController.atualizarFinanceiro)
 );
 
+// Editar a descrição do problema relatado — gestão/suporte.
+router.patch(
+  "/:id/descricao",
+  autorizar("DONO", "GESTOR", "SUPORTE"),
+  asyncHandler(osController.atualizarDescricao)
+);
+
 // Tarefas cronometradas — o técnico executa e marca o status; DONO/GESTOR/
 // SUPORTE também podem gerenciar. A remoção fica restrita à gestão.
 router.post(

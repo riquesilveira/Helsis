@@ -294,6 +294,18 @@ export async function atualizarStatus(osId: string, dados: AtualizarStatusInput)
  * usada e se resolveu o problema — é isso que permite ao dono ver, por
  * exemplo, que o técnico errou a peça 2 vezes antes de acertar.
  */
+/**
+ * Atualiza a descrição do problema relatado da OS (edição pontual pela
+ * gestão/suporte, ex: corrigir/complementar o que foi registrado na abertura).
+ */
+export async function atualizarDescricao(osId: string, descricaoProblema: string) {
+  await buscarOrdemServicoPorId(osId);
+  return prisma.ordemServico.update({
+    where: { id: osId },
+    data: { descricaoProblema },
+  });
+}
+
 export async function registrarPecaTrocada(osId: string, dados: RegistrarPecaInput) {
   const os = await buscarOrdemServicoPorId(osId);
 

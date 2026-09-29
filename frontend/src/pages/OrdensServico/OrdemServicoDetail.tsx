@@ -181,6 +181,9 @@ export function OrdemServicoDetail() {
   const [solucaoId, setSolucaoId] = useState("");
 
   // formulário de peça trocada
+  const [editandoProblema, setEditandoProblema] = useState(false);
+  const [descricaoEdit, setDescricaoEdit] = useState("");
+  const [salvandoProblema, setSalvandoProblema] = useState(false);
   const [modalPecaAberto, setModalPecaAberto] = useState(false);
   const [pecaCatalogoId, setPecaCatalogoId] = useState("");
   const [tipoServico, setTipoServico] = useState("Substituição");
@@ -280,6 +283,18 @@ export function OrdemServicoDetail() {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  async function handleSalvarProblema() {
+    if (!os) return;
+    setSalvandoProblema(true);
+    try {
+      await api.patch(`/ordens-servico/${os.id}/descricao`, { descricaoProblema: descricaoEdit });
+      setEditandoProblema(false);
+      carregar();
+    } finally {
+      setSalvandoProblema(false);
+    }
+  }
 
   async function handleAtribuir(e: FormEvent) {
     e.preventDefault();
@@ -632,9 +647,44 @@ export function OrdemServicoDetail() {
       </div>
 
       <Card>
+        <CardHeader className="border-b">
+          <CardTitle>Problema relatado</CardTitle>
+          {podeDesignar && !editandoProblema && (
+            <CardAction>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  setDescricaoEdit(os.descricaoProblema);
+                  setEditandoProblema(true);
+                }}
+              >
+                <Pencil />
+                Editar
+              </Button>
+            </CardAction>
+          )}
+        </CardHeader>
         <CardContent>
-          <p className="text-xs text-muted-foreground mb-1">Problema relatado</p>
-          <p className="text-sm text-foreground">{os.descricaoProblema}</p>
+          {editandoProblema ? (
+            <div className="space-y-3">
+              <Textarea
+                rows={3}
+                value={descricaoEdit}
+                onChange={(e) => setDescricaoEdit(e.target.value)}
+              />
+              <div className="flex gap-2">
+                <Button size="sm" onClick={handleSalvarProblema} disabled={salvandoProblema || descricaoEdit.trim().length < 5}>
+                  {salvandoProblema ? "Salvando..." : "Salvar"}
+                </Button>
+                <Button size="sm" variant="ghost" onClick={() => setEditandoProblema(false)}>
+                  Cancelar
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <p className="text-sm text-foreground">{os.descricaoProblema}</p>
+          )}
         </CardContent>
       </Card>
 
@@ -685,10 +735,14 @@ export function OrdemServicoDetail() {
         </Card>
       )}
 
-      <div>
-        <h2 className="text-sm font-medium text-foreground mb-3">Acompanhamento</h2>
-        <StatusTimeline historico={os.statusHistoricos} statusAtual={os.statusAtual} />
-      </div>
+      <Card>
+        <CardHeader className="border-b">
+          <CardTitle>Acompanhamento</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <StatusTimeline historico={os.statusHistoricos} statusAtual={os.statusAtual} />
+        </CardContent>
+      </Card>
 
       <Card>
         <CardHeader className="border-b">
