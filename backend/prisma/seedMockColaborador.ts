@@ -41,7 +41,7 @@ const DEFS: DefOS[] = [
     status: StatusOS.EM_REPARO,
     problema: "Ressonância com artefato de imagem intermitente após a última manutenção.",
     agendaHora: 8,
-    historico: [StatusOS.RECEBIDO, StatusOS.DIAGNOSTICO, StatusOS.EM_REPARO],
+    historico: [StatusOS.RECEBIDO, StatusOS.EM_REPARO],
     tarefas: [
       { cat: 1, status: StatusTarefa.CONCLUIDA, durSeg: 2480 },
       { cat: 0, status: StatusTarefa.EM_ANDAMENTO },
@@ -64,7 +64,7 @@ const DEFS: DefOS[] = [
   {
     status: StatusOS.AGUARDANDO_PECA,
     problema: "Fonte de alta tensão do raio-X apresentando instabilidade.",
-    historico: [StatusOS.RECEBIDO, StatusOS.DIAGNOSTICO, StatusOS.AGUARDANDO_PECA],
+    historico: [StatusOS.RECEBIDO, StatusOS.AGUARDANDO_PECA],
     tarefas: [{ cat: 9, status: StatusTarefa.CONCLUIDA, durSeg: 2100 }],
   },
   {
@@ -83,7 +83,6 @@ const DEFS: DefOS[] = [
     diasAtras: 3,
     historico: [
       StatusOS.RECEBIDO,
-      StatusOS.DIAGNOSTICO,
       StatusOS.EM_REPARO,
       StatusOS.CONCLUIDO,
     ],
@@ -99,7 +98,6 @@ const DEFS: DefOS[] = [
     diasAtras: 9,
     historico: [
       StatusOS.RECEBIDO,
-      StatusOS.DIAGNOSTICO,
       StatusOS.EM_REPARO,
       StatusOS.CONCLUIDO,
     ],
