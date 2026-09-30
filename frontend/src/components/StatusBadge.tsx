@@ -8,7 +8,7 @@ const CLASSE_STATUS: Record<StatusOS, string> = {
   RECEBIDO: "bg-status-recebido text-white",
   DIAGNOSTICO: "bg-status-diagnostico text-white",
   AGUARDANDO_PECA: "bg-status-aguardando text-white",
-  EM_REPARO: "bg-status-reparo text-white",
+  EM_REPARO: "bg-status-reparo text-white animate-pulse",
   AGUARDANDO_VALIDACAO: "bg-status-validacao text-white",
   CONCLUIDO: "bg-status-concluido text-white",
   CANCELADO: "bg-status-cancelado text-white",
