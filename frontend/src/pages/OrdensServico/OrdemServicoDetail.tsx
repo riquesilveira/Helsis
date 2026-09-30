@@ -762,15 +762,6 @@ export function OrdemServicoDetail() {
 
       <Card>
         <CardHeader className="border-b">
-          <CardTitle>Acompanhamento</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <StatusTimeline historico={os.statusHistoricos} statusAtual={os.statusAtual} />
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader className="border-b">
           <CardTitle>Notificações enviadas ao cliente</CardTitle>
           {podeDesignar && (
             <CardAction>
@@ -860,14 +851,15 @@ export function OrdemServicoDetail() {
         </Card>
       </div>
 
-      {/* Atualizar status */}
-      {os.statusAtual !== "CONCLUIDO" && os.statusAtual !== "CANCELADO" && (
-        <Card>
-          <CardHeader className="border-b">
-            <CardTitle>Atualizar status</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleAtualizarStatus}>
+      {/* Acompanhamento + atualizar status (num card só) */}
+      <Card>
+        <CardHeader className="border-b">
+          <CardTitle>Acompanhamento</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <StatusTimeline historico={os.statusHistoricos} statusAtual={os.statusAtual} />
+          {os.statusAtual !== "CONCLUIDO" && os.statusAtual !== "CANCELADO" && (
+            <form onSubmit={handleAtualizarStatus} className="mt-4 border-t border-border pt-4">
               <div className="grid gap-1.5 mb-4">
                 <Label htmlFor="novo-status">Novo status</Label>
                 <Select value={novoStatus} onValueChange={(v) => setNovoStatus(v as StatusOS)}>
@@ -964,9 +956,9 @@ export function OrdemServicoDetail() {
                 {enviandoStatus ? "Salvando..." : "Salvar status"}
               </Button>
             </form>
-          </CardContent>
-        </Card>
-      )}
+          )}
+        </CardContent>
+      </Card>
 
       {/* Tarefas (cronometradas nos bastidores) */}
       <Card>
