@@ -84,18 +84,28 @@ describe("atualizarStatus — permissões de status do técnico", () => {
     expect(osService.atualizarStatus).not.toHaveBeenCalled();
   });
 
-  it("SUPORTE pode concluir a OS", async () => {
-    (osService.atualizarStatus as ReturnType<typeof vi.fn>).mockResolvedValue({ id: "os-1" });
-    const res = resMock();
+  it("SUPORTE não pode concluir (conclusão é do técnico) → 403", async () => {
     const req = reqMock({
       params: { id: "os-1" },
       body: { status: "CONCLUIDO" },
       usuario: { id: "u-sup", papel: "SUPORTE" },
     });
 
+    await expect(atualizarStatus(req, resMock())).rejects.toMatchObject({ statusCode: 403 });
+    expect(osService.atualizarStatus).not.toHaveBeenCalled();
+  });
+
+  it("SUPORTE pode mudar para status intermediário (ex: EM_REPARO)", async () => {
+    (osService.atualizarStatus as ReturnType<typeof vi.fn>).mockResolvedValue({ id: "os-1" });
+    const res = resMock();
+    const req = reqMock({
+      params: { id: "os-1" },
+      body: { status: "EM_REPARO" },
+      usuario: { id: "u-sup", papel: "SUPORTE" },
+    });
+
     await atualizarStatus(req, res);
-    expect(osService.atualizarStatus).toHaveBeenCalledWith("os-1", { status: "CONCLUIDO" });
-    // Suporte não passa pela busca de funcionário do técnico
+    expect(osService.atualizarStatus).toHaveBeenCalledWith("os-1", { status: "EM_REPARO" });
     expect(buscarFuncionarioPorUsuarioId).not.toHaveBeenCalled();
   });
 });

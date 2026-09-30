@@ -900,17 +900,21 @@ export function OrdemServicoDetail() {
                   Avisar no WhatsApp
                 </Button>
               )}
-              {os.statusAtual === "CONCLUIDO" || os.statusAtual === "CANCELADO" ? (
-                <Button size="sm" variant="outline" onClick={abrirModalStatus}>
-                  <RotateCcw />
-                  Reabrir chamado
-                </Button>
-              ) : (
-                <Button size="sm" onClick={abrirModalStatus}>
-                  <Plus />
-                  Novo status
-                </Button>
-              )}
+              {(os.statusAtual === "CONCLUIDO" || os.statusAtual === "CANCELADO") &&
+                (podeDesignar || ehTecnico) && (
+                  <Button size="sm" variant="outline" onClick={abrirModalStatus}>
+                    <RotateCcw />
+                    Reabrir chamado
+                  </Button>
+                )}
+              {os.statusAtual !== "CONCLUIDO" &&
+                os.statusAtual !== "CANCELADO" &&
+                ehTecnico && (
+                  <Button size="sm" onClick={abrirModalStatus}>
+                    <Plus />
+                    Novo status
+                  </Button>
+                )}
             </div>
           </CardAction>
         </CardHeader>
@@ -943,7 +947,11 @@ export function OrdemServicoDetail() {
                 </SelectTrigger>
                 <SelectContent>
                   {opcoes
-                    .filter((op) => op.status !== os.statusAtual)
+                    .filter(
+                      (op) =>
+                        op.status !== os.statusAtual &&
+                        (ehTecnico || op.status !== "CONCLUIDO")
+                    )
                     .map((op) => (
                       <SelectItem key={op.status} value={op.status}>
                         {op.rotulo}

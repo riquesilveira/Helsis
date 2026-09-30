@@ -126,6 +126,12 @@ export async function criar(req: Request, res: Response) {
 export async function atualizarStatus(req: Request, res: Response) {
   const dados = atualizarStatusSchema.parse(req.body);
 
+  // A CONCLUSÃO é do técnico que executa o serviço — quem faz, fecha. Gestão/
+  // suporte não concluem (apenas designam técnico e reabrem chamados).
+  if (dados.status === "CONCLUIDO" && req.usuario!.papel !== "TECNICO") {
+    throw new AppError("A conclusão da OS é feita pelo técnico responsável.", 403);
+  }
+
   // TECNICO só pode alterar status de OS atribuída a ele
   if (req.usuario!.papel === "TECNICO") {
     const os = await osService.buscarOrdemServicoPorId(req.params.id);
@@ -133,8 +139,6 @@ export async function atualizarStatus(req: Request, res: Response) {
     if (os.funcionarioId !== funcionario.id) {
       throw new AppError("Você não tem permissão para alterar esta ordem de serviço.", 403);
     }
-    // Sem a etapa de validação em dois níveis, o técnico conclui a própria OS
-    // diretamente (não há mais fechamento parcial → validação do Suporte).
   }
 
   const os = await osService.atualizarStatus(req.params.id, dados);
