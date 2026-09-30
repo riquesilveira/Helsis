@@ -51,7 +51,6 @@ import { Button } from "../../components/shadcn/button";
 import { Input } from "../../components/shadcn/input";
 import { Label } from "../../components/shadcn/label";
 import { Textarea } from "../../components/shadcn/textarea";
-import { Checkbox } from "../../components/shadcn/checkbox";
 import {
   Select,
   SelectContent,
@@ -999,16 +998,6 @@ export function OrdemServicoDetail() {
                 </div>
               </div>
             )}
-            <div className="flex items-center gap-2">
-              <Checkbox
-                id="nova-tentativa"
-                checked={novaTentativa}
-                onCheckedChange={(v) => setNovaTentativa(v === true)}
-              />
-              <Label htmlFor="nova-tentativa" className="text-sm font-normal text-foreground">
-                Essa mudança representa uma nova tentativa de resolver o problema
-              </Label>
-            </div>
             {erroStatus && <p className="text-xs text-danger">{erroStatus}</p>}
             <div className="flex gap-2">
               <Button type="submit" disabled={enviandoStatus}>
