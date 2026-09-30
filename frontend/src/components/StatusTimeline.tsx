@@ -45,7 +45,7 @@ export function StatusTimeline({
             {/* Trilho: bolinha (stroke) + linha vertical até a próxima */}
             <div className="flex flex-col items-center self-stretch">
               <span
-                className={`mt-1 h-3.5 w-3.5 shrink-0 rounded-full border-2 bg-card ${BORDA_STATUS[evento.status]}`}
+                className={`mt-1 h-3 w-3 shrink-0 rounded-full border-2 bg-card ${BORDA_STATUS[evento.status]}`}
               />
               {!ultimo && <span className="w-0.5 flex-1 bg-border" />}
             </div>
