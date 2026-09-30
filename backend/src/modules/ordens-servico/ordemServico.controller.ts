@@ -265,6 +265,7 @@ export async function atualizarStatusTarefa(req: Request, res: Response) {
 }
 
 export async function removerTarefa(req: Request, res: Response) {
+  await resolverExecutor(req, req.params.id); // valida que a OS é do técnico
   await tarefaOSService.removerTarefa(req.params.id, req.params.tarefaId);
   res.status(204).end();
 }

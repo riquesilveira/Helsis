@@ -51,21 +51,22 @@ router.patch(
   asyncHandler(osController.atualizarDescricao)
 );
 
-// Tarefas cronometradas — o técnico executa e marca o status; DONO/GESTOR/
-// SUPORTE também podem gerenciar. A remoção fica restrita à gestão.
+// Tarefas cronometradas — EXECUÇÃO é do colaborador (técnico) que faz o serviço:
+// adicionar, iniciar/concluir e remover. Gestão/suporte só visualizam (leitura
+// vem embutida no detalhe da OS) e acompanham os tempos no Comparativo.
 router.post(
   "/:id/tarefas",
-  autorizar("DONO", "GESTOR", "SUPORTE", "TECNICO"),
+  autorizar("TECNICO"),
   asyncHandler(osController.adicionarTarefa)
 );
 router.patch(
   "/:id/tarefas/:tarefaId",
-  autorizar("DONO", "GESTOR", "SUPORTE", "TECNICO"),
+  autorizar("TECNICO"),
   asyncHandler(osController.atualizarStatusTarefa)
 );
 router.delete(
   "/:id/tarefas/:tarefaId",
-  autorizar("DONO", "GESTOR", "SUPORTE"),
+  autorizar("TECNICO"),
   asyncHandler(osController.removerTarefa)
 );
 

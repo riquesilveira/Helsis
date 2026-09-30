@@ -148,13 +148,12 @@ export function OrdemServicoDetail() {
   // Designar/reatribuir chamado é função do Suporte (N2) para cima.
   const podeDesignar =
     usuario?.papel === "DONO" || usuario?.papel === "GESTOR" || usuario?.papel === "SUPORTE";
-  // Fechamento parcial × total: o técnico (N1) só faz o fechamento parcial
-  // (AGUARDANDO_VALIDACAO). A conclusão (fechamento total) é validada pelo
-  // Suporte (N2) para cima, então CONCLUIDO fica fora da lista para o técnico.
-  const opcoesStatus =
-    usuario?.papel === "TECNICO"
-      ? opcoes.filter((op) => op.status !== "CONCLUIDO")
-      : opcoes;
+  // Executar tarefas (iniciar/concluir/adicionar) é ação do colaborador que faz
+  // o serviço — só o técnico. Gestão/suporte veem a seção em modo leitura.
+  const ehTecnico = usuario?.papel === "TECNICO";
+  // Sem a etapa de validação em dois níveis, o técnico conclui a própria OS —
+  // CONCLUIDO fica disponível para todos os papéis que atualizam status.
+  const opcoesStatus = opcoes;
   const [os, setOs] = useState<OrdemServico | null>(null);
   const [pecas, setPecas] = useState<PecaCatalogo[]>([]);
   const [notificacoes, setNotificacoes] = useState<NotificacaoItem[]>([]);
@@ -606,7 +605,7 @@ export function OrdemServicoDetail() {
   // Só o dono/gestor vê o tempo medido e o executor de cada tarefa concluída.
   const podeVerDuracao = podeVerFinanceiro;
   // Remover tarefa é ação de suporte (N2) para cima — o técnico não remove.
-  const podeRemoverTarefa = podeDesignar;
+  const podeRemoverTarefa = ehTecnico;
   // Esconde do seletor as tarefas já adicionadas à OS.
   const tarefasCatalogoDisponivel = tarefasCatalogo.filter(
     (t) => t.ativo !== false && !tarefas.some((x) => x.tarefaCatalogoId === t.id)
@@ -963,29 +962,36 @@ export function OrdemServicoDetail() {
                     )}
                   </div>
                   <div className="flex items-center gap-2 shrink-0">
-                    {t.status === "PENDENTE" && (
-                      <Button
-                        size="sm"
-                        onClick={() => handleStatusTarefa(t.id, "EM_ANDAMENTO")}
-                        disabled={mutando}
-                      >
-                        <Play />
-                        Iniciar
-                      </Button>
-                    )}
+                    {t.status === "PENDENTE" &&
+                      (ehTecnico ? (
+                        <Button
+                          size="sm"
+                          onClick={() => handleStatusTarefa(t.id, "EM_ANDAMENTO")}
+                          disabled={mutando}
+                        >
+                          <Play />
+                          Iniciar
+                        </Button>
+                      ) : (
+                        <span className="inline-flex items-center rounded-md bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground">
+                          Pendente
+                        </span>
+                      ))}
                     {t.status === "EM_ANDAMENTO" && (
                       <>
                         <span className="inline-flex items-center rounded-md bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground">
                           Em andamento
                         </span>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleStatusTarefa(t.id, "CONCLUIDA")}
-                          disabled={mutando}
-                        >
-                          Concluir
-                        </Button>
+                        {ehTecnico && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleStatusTarefa(t.id, "CONCLUIDA")}
+                            disabled={mutando}
+                          >
+                            Concluir
+                          </Button>
+                        )}
                       </>
                     )}
                     {t.status === "CONCLUIDA" && (
@@ -1014,30 +1020,34 @@ export function OrdemServicoDetail() {
               <p className="text-sm text-muted-foreground py-3">Nenhuma tarefa adicionada.</p>
             )}
           </div>
-          <form onSubmit={handleAdicionarTarefa} className="mt-4 flex items-center gap-2">
-            <Select value={tarefaCatalogoId} onValueChange={setTarefaCatalogoId}>
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="Adicionar tarefa..." />
-              </SelectTrigger>
-              <SelectContent>
-                {tarefasCatalogoDisponivel.map((t) => (
-                  <SelectItem key={t.id} value={t.id}>
-                    {t.codigo} — {t.descricao}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Button
-              type="submit"
-              size="sm"
-              className="shrink-0"
-              disabled={adicionandoTarefa || !tarefaCatalogoId}
-            >
-              <Plus />
-              {adicionandoTarefa ? "Adicionando..." : "Adicionar"}
-            </Button>
-          </form>
-          {erroTarefa && <p className="text-xs text-danger mt-2">{erroTarefa}</p>}
+          {ehTecnico && (
+            <>
+              <form onSubmit={handleAdicionarTarefa} className="mt-4 flex items-center gap-2">
+                <Select value={tarefaCatalogoId} onValueChange={setTarefaCatalogoId}>
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Adicionar tarefa..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {tarefasCatalogoDisponivel.map((t) => (
+                      <SelectItem key={t.id} value={t.id}>
+                        {t.codigo} — {t.descricao}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Button
+                  type="submit"
+                  size="sm"
+                  className="shrink-0"
+                  disabled={adicionandoTarefa || !tarefaCatalogoId}
+                >
+                  <Plus />
+                  {adicionandoTarefa ? "Adicionando..." : "Adicionar"}
+                </Button>
+              </form>
+              {erroTarefa && <p className="text-xs text-danger mt-2">{erroTarefa}</p>}
+            </>
+          )}
         </CardContent>
       </Card>
 
