@@ -13,6 +13,7 @@ import {
   Plane,
   Play,
   Plus,
+  RotateCcw,
   Timer,
   Trash2,
   Upload,
@@ -373,7 +374,11 @@ export function OrdemServicoDetail() {
   // (o primeiro diferente do atual — não dá pra "mudar" pro mesmo status).
   function abrirModalStatus() {
     if (!os) return;
-    const primeiro = opcoes.find((op) => op.status !== os.statusAtual);
+    const reabrindo = os.statusAtual === "CONCLUIDO" || os.statusAtual === "CANCELADO";
+    // Reabrindo, o padrão é voltar pra "Em reparo"; senão, o primeiro status
+    // diferente do atual.
+    const preferido = reabrindo ? opcoes.find((op) => op.status === "EM_REPARO") : undefined;
+    const primeiro = preferido ?? opcoes.find((op) => op.status !== os.statusAtual);
     if (primeiro) setNovoStatus(primeiro.status);
     setObservacao("");
     setNovaTentativa(false);
@@ -389,7 +394,8 @@ export function OrdemServicoDetail() {
       await api.patch(`/ordens-servico/${id}/status`, {
         status: novoStatus,
         observacao: observacao || undefined,
-        novaTentativa,
+        // Reabrir a partir de CONCLUIDO conta como nova tentativa (o problema voltou).
+        novaTentativa: novaTentativa || os?.statusAtual === "CONCLUIDO",
         funcionarioId: os?.funcionario?.id,
         causaId: causaId || undefined,
         defeitoId: defeitoId || undefined,
@@ -894,7 +900,12 @@ export function OrdemServicoDetail() {
                   Avisar no WhatsApp
                 </Button>
               )}
-              {os.statusAtual !== "CONCLUIDO" && os.statusAtual !== "CANCELADO" && (
+              {os.statusAtual === "CONCLUIDO" || os.statusAtual === "CANCELADO" ? (
+                <Button size="sm" variant="outline" onClick={abrirModalStatus}>
+                  <RotateCcw />
+                  Reabrir chamado
+                </Button>
+              ) : (
                 <Button size="sm" onClick={abrirModalStatus}>
                   <Plus />
                   Novo status
@@ -917,7 +928,11 @@ export function OrdemServicoDetail() {
       >
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Novo status</DialogTitle>
+            <DialogTitle>
+              {os.statusAtual === "CONCLUIDO" || os.statusAtual === "CANCELADO"
+                ? "Reabrir chamado"
+                : "Novo status"}
+            </DialogTitle>
           </DialogHeader>
           <form onSubmit={handleAtualizarStatus} className="space-y-4">
             <div className="grid gap-1.5">

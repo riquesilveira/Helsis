@@ -264,6 +264,12 @@ export async function atualizarStatus(osId: string, dados: AtualizarStatusInput)
   if (dados.status === StatusOS.CONCLUIDO) {
     dadosAtualizacao.dataConclusao = new Date();
     dadosAtualizacao.resolvidoNaPrimeira = os.numeroTentativas === 0;
+  } else if (os.statusAtual === StatusOS.CONCLUIDO) {
+    // Reabertura: saiu de CONCLUIDO pra um status ativo (ex: o cliente/médico
+    // apontou que o problema voltou). Limpa a conclusão — não está mais fechada
+    // — e marca que não foi resolvido de primeira.
+    dadosAtualizacao.dataConclusao = null;
+    dadosAtualizacao.resolvidoNaPrimeira = false;
   }
 
   const osAtualizada = await prisma.ordemServico.update({
