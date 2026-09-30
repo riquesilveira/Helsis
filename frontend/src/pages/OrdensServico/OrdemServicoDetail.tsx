@@ -7,6 +7,7 @@ import {
   CheckCircle2,
   FileText,
   Image as ImageIcon,
+  MessageCircle,
   Paperclip,
   Pencil,
   Plane,
@@ -143,7 +144,7 @@ function SlaBadge({ sla }: { sla?: Sla }) {
 export function OrdemServicoDetail() {
   const { id } = useParams();
   const usuario = usuarioLogado();
-  const { opcoes } = useEtapasStatus();
+  const { opcoes, etapas, rotulo } = useEtapasStatus();
   const podeVerFinanceiro = usuario?.papel === "DONO" || usuario?.papel === "GESTOR";
   // Designar/reatribuir chamado é função do Suporte (N2) para cima.
   const podeDesignar =
@@ -282,6 +283,24 @@ export function OrdemServicoDetail() {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Abre o WhatsApp (web/app) com a mensagem de acompanhamento já pronta —
+  // envio manual, sem API/custo. Quem clica envia do próprio WhatsApp.
+  function enviarAcompanhamentoWhatsApp() {
+    if (!os) return;
+    const tel = (os.cliente.telefone || "").replace(/\D/g, "");
+    if (!tel) return;
+    const telE164 = tel.startsWith("55") ? tel : `55${tel}`;
+    const etapa = etapas.find((e) => e.status === os.statusAtual);
+    const textoStatus = etapa?.rotuloCliente ?? rotulo(os.statusAtual);
+    const link = `${window.location.origin}/acompanhar/${os.id}`;
+    const msg =
+      `Olá! Atualização do seu atendimento (OS #${formatarNumeroOS(os.numero)}):\n\n` +
+      `${textoStatus}\n` +
+      `Equipamento: ${os.equipamento.tipo}\n\n` +
+      `Acompanhe em tempo real: ${link}`;
+    window.open(`https://wa.me/${telE164}?text=${encodeURIComponent(msg)}`, "_blank", "noopener");
+  }
 
   async function handleSalvarProblema() {
     if (!os) return;
@@ -748,6 +767,21 @@ export function OrdemServicoDetail() {
       <Card>
         <CardHeader className="border-b">
           <CardTitle>Notificações enviadas ao cliente</CardTitle>
+          {podeDesignar && (
+            <CardAction>
+              <Button
+                variant="outline"
+                size="sm"
+                className="border-foreground text-foreground transition-colors hover:bg-foreground hover:text-background"
+                onClick={enviarAcompanhamentoWhatsApp}
+                disabled={!os.cliente.telefone}
+                title={!os.cliente.telefone ? "Cliente sem telefone cadastrado" : ""}
+              >
+                <MessageCircle />
+                Avisar no WhatsApp
+              </Button>
+            </CardAction>
+          )}
         </CardHeader>
         <CardContent>
           <div className="divide-y divide-border">
