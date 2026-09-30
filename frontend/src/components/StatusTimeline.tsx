@@ -45,9 +45,11 @@ export function StatusTimeline({
             {/* Trilho: bolinha (stroke) + linha vertical até a próxima */}
             <div className="flex flex-col items-center self-stretch">
               <span
-                className={`mt-1 h-3 w-3 shrink-0 rounded-full border-2 bg-card ${BORDA_STATUS[evento.status]}`}
+                className={`mt-1 h-3 w-3 shrink-0 rounded-full border-2 border-solid bg-card ${BORDA_STATUS[evento.status]} ${
+                  recente ? "animate-pulse" : ""
+                }`}
               />
-              {!ultimo && <span className="w-0.5 flex-1 bg-border" />}
+              {!ultimo && <span className="w-px flex-1 bg-border" />}
             </div>
             <div className={`min-w-0 flex-1 ${ultimo ? "pb-0" : "pb-5"}`}>
               <div className="flex items-start justify-between gap-3">
