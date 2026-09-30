@@ -294,11 +294,16 @@ export function OrdemServicoDetail() {
     const etapa = etapas.find((e) => e.status === os.statusAtual);
     const textoStatus = etapa?.rotuloCliente ?? rotulo(os.statusAtual);
     const link = `${window.location.origin}/acompanhar/${os.id}`;
+    // Negrito no WhatsApp = *texto*. O link fica numa linha só, limpo, pra o
+    // WhatsApp transformar em link clicável ao enviar.
     const msg =
-      `Olá! Atualização do seu atendimento (OS #${formatarNumeroOS(os.numero)}):\n\n` +
-      `${textoStatus}\n` +
-      `Equipamento: ${os.equipamento.tipo}\n\n` +
-      `Acompanhe em tempo real: ${link}`;
+      `*Atualização do seu atendimento* 🔧\n\n` +
+      `Olá, *${os.cliente.nome}*! Segue o andamento da sua ordem de serviço:\n\n` +
+      `*OS:* #${formatarNumeroOS(os.numero)}\n` +
+      `*Equipamento:* ${os.equipamento.tipo}\n` +
+      `*Status:* ${textoStatus}\n\n` +
+      `📲 Acompanhe em tempo real pelo link abaixo:\n${link}\n\n` +
+      `Qualquer dúvida, é só responder por aqui. 🙂`;
     window.open(`https://wa.me/${telE164}?text=${encodeURIComponent(msg)}`, "_blank", "noopener");
   }
 
