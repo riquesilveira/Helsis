@@ -8,9 +8,10 @@ function inicial(nome: string) {
 }
 
 /**
- * Top bar enxuta: no mobile, o gatilho abre/fecha a sidebar (que é um drawer);
- * no desktop, o colapso fica dentro da própria sidebar. Sem breadcrumb — a
- * navegação de contexto (voltar + título) fica na própria página.
+ * Top bar. O miolo (#app-header-slot) é um "slot" onde cada página pode injetar
+ * o próprio contexto (ex: a tela da OS coloca voltar + cliente + OS + equipamento)
+ * via portal. No mobile, o gatilho abre a sidebar; no desktop o colapso fica na
+ * própria sidebar.
  */
 export function Header() {
   const usuario = usuarioLogado();
@@ -18,11 +19,14 @@ export function Header() {
   return (
     <header
       data-slot="app-header"
-      className="sticky top-0 z-40 flex h-16 shrink-0 items-center gap-2 border-b border-border bg-background/80 px-4 backdrop-blur-lg"
+      className="sticky top-0 z-40 flex min-h-16 shrink-0 items-center gap-3 border-b border-border bg-background/80 px-4 py-2 backdrop-blur-lg"
     >
       <SidebarTrigger className="-ml-1 md:hidden" />
 
-      <div className="ml-auto flex items-center gap-2">
+      {/* Slot de contexto por página (preenchido via portal) */}
+      <div id="app-header-slot" className="min-w-0 flex-1" />
+
+      <div className="flex shrink-0 items-center gap-2">
         {usuario && (
           <UserMenu
             side="bottom"
