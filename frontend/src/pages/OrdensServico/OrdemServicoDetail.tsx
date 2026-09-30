@@ -37,7 +37,7 @@ import {
 } from "../../types";
 import { useEtapasStatus } from "../../hooks/useEtapasStatus";
 import { StatusTimeline } from "../../components/StatusTimeline";
-import { TipoBadge } from "../../components/StatusBadge";
+import { StatusBadge, TipoBadge } from "../../components/StatusBadge";
 import { usuarioLogado } from "../../services/auth";
 import { formatarReais, tempoRelativo, formatarNumeroOS } from "../../utils/formatters";
 import {
@@ -153,8 +153,8 @@ export function OrdemServicoDetail() {
   // o serviço — só o técnico. Gestão/suporte veem a seção em modo leitura.
   const ehTecnico = usuario?.papel === "TECNICO";
   // Sem a etapa de validação em dois níveis, o técnico conclui a própria OS —
-  // CONCLUIDO fica disponível para todos os papéis que atualizam status.
-  const opcoesStatus = opcoes;
+  // CONCLUIDO fica disponível para todos os papéis (filtrado o status atual no
+  // seletor, pra não "mudar" pro mesmo status).
   const [os, setOs] = useState<OrdemServico | null>(null);
   const [pecas, setPecas] = useState<PecaCatalogo[]>([]);
   const [notificacoes, setNotificacoes] = useState<NotificacaoItem[]>([]);
@@ -184,6 +184,10 @@ export function OrdemServicoDetail() {
   const [editandoProblema, setEditandoProblema] = useState(false);
   const [descricaoEdit, setDescricaoEdit] = useState("");
   const [salvandoProblema, setSalvandoProblema] = useState(false);
+  // Último status já avisado ao cliente por WhatsApp (guardado por OS no
+  // navegador). Serve pra desabilitar o botão quando não há status novo.
+  const [statusAvisado, setStatusAvisado] = useState<string | null>(null);
+  const [modalStatusAberto, setModalStatusAberto] = useState(false);
   const [modalPecaAberto, setModalPecaAberto] = useState(false);
   const [pecaCatalogoId, setPecaCatalogoId] = useState("");
   const [tipoServico, setTipoServico] = useState("Substituição");
@@ -253,6 +257,16 @@ export function OrdemServicoDetail() {
   }
 
   useEffect(carregar, [id]);
+  // Carrega, por OS, qual status já foi avisado por WhatsApp (persistido local).
+  useEffect(() => {
+    if (!os) return;
+    try {
+      setStatusAvisado(localStorage.getItem(`notif-wpp-${os.id}`));
+    } catch {
+      setStatusAvisado(null);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [os?.id]);
   useEffect(() => {
     carregarNotificacoes();
     // segunda tentativa: cobre o caso de acabar de abrir a OS, cuja
@@ -305,6 +319,13 @@ export function OrdemServicoDetail() {
       `📲 Acompanhe em tempo real pelo link abaixo:\n${link}\n\n` +
       `Qualquer dúvida, é só responder por aqui. 🙂`;
     window.open(`https://wa.me/${telE164}?text=${encodeURIComponent(msg)}`, "_blank", "noopener");
+    // Marca o status atual como já avisado — desabilita o botão até o próximo status.
+    try {
+      localStorage.setItem(`notif-wpp-${os.id}`, os.statusAtual);
+    } catch {
+      /* ignore */
+    }
+    setStatusAvisado(os.statusAtual);
   }
 
   async function handleSalvarProblema() {
@@ -349,6 +370,18 @@ export function OrdemServicoDetail() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [os?.id]);
 
+  // Abre o modal de troca de status já com um status válido pré-selecionado
+  // (o primeiro diferente do atual — não dá pra "mudar" pro mesmo status).
+  function abrirModalStatus() {
+    if (!os) return;
+    const primeiro = opcoes.find((op) => op.status !== os.statusAtual);
+    if (primeiro) setNovoStatus(primeiro.status);
+    setObservacao("");
+    setNovaTentativa(false);
+    setErroStatus(null);
+    setModalStatusAberto(true);
+  }
+
   async function handleAtualizarStatus(e: FormEvent) {
     e.preventDefault();
     setErroStatus(null);
@@ -365,6 +398,7 @@ export function OrdemServicoDetail() {
       });
       setObservacao("");
       setNovaTentativa(false);
+      setModalStatusAberto(false);
       carregar();
       // pequeno atraso: a notificação é enviada em segundo plano no backend
       setTimeout(carregarNotificacoes, 1200);
@@ -763,21 +797,6 @@ export function OrdemServicoDetail() {
       <Card>
         <CardHeader className="border-b">
           <CardTitle>Notificações enviadas ao cliente</CardTitle>
-          {podeDesignar && (
-            <CardAction>
-              <Button
-                variant="outline"
-                size="sm"
-                className="border-foreground text-foreground transition-colors hover:bg-foreground hover:text-background"
-                onClick={enviarAcompanhamentoWhatsApp}
-                disabled={!os.cliente.telefone}
-                title={!os.cliente.telefone ? "Cliente sem telefone cadastrado" : ""}
-              >
-                <MessageCircle />
-                Avisar no WhatsApp
-              </Button>
-            </CardAction>
-          )}
         </CardHeader>
         <CardContent>
           <div className="divide-y divide-border">
@@ -851,114 +870,157 @@ export function OrdemServicoDetail() {
         </Card>
       </div>
 
-      {/* Acompanhamento + atualizar status (num card só) */}
+      {/* Acompanhamento — timeline + ações (status atual, novo status, WhatsApp) */}
       <Card>
         <CardHeader className="border-b">
           <CardTitle>Acompanhamento</CardTitle>
+          <CardAction>
+            <div className="flex flex-wrap items-center gap-2">
+              <StatusBadge status={os.statusAtual} pulsante />
+              {os.statusAtual !== "CONCLUIDO" && os.statusAtual !== "CANCELADO" && (
+                <Button size="sm" onClick={abrirModalStatus}>
+                  <Plus />
+                  Novo status
+                </Button>
+              )}
+              {podeDesignar && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="border-foreground text-foreground transition-colors hover:bg-foreground hover:text-background"
+                  onClick={enviarAcompanhamentoWhatsApp}
+                  disabled={!os.cliente.telefone || statusAvisado === os.statusAtual}
+                  title={
+                    !os.cliente.telefone
+                      ? "Cliente sem telefone cadastrado"
+                      : statusAvisado === os.statusAtual
+                        ? "Você já avisou o cliente sobre este status"
+                        : ""
+                  }
+                >
+                  <MessageCircle />
+                  Avisar no WhatsApp
+                </Button>
+              )}
+            </div>
+          </CardAction>
         </CardHeader>
         <CardContent>
           <StatusTimeline historico={os.statusHistoricos} statusAtual={os.statusAtual} />
-          {os.statusAtual !== "CONCLUIDO" && os.statusAtual !== "CANCELADO" && (
-            <form onSubmit={handleAtualizarStatus} className="mt-4 border-t border-border pt-4">
-              <div className="grid gap-1.5 mb-4">
-                <Label htmlFor="novo-status">Novo status</Label>
-                <Select value={novoStatus} onValueChange={(v) => setNovoStatus(v as StatusOS)}>
-                  <SelectTrigger id="novo-status" className="w-full">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {opcoesStatus.map((op) => (
+        </CardContent>
+      </Card>
+
+      {/* Modal: novo status */}
+      <Dialog
+        open={modalStatusAberto}
+        onOpenChange={(aberto) => {
+          if (!aberto) setModalStatusAberto(false);
+        }}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Novo status</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleAtualizarStatus} className="space-y-4">
+            <div className="grid gap-1.5">
+              <Label htmlFor="novo-status">Status</Label>
+              <Select value={novoStatus} onValueChange={(v) => setNovoStatus(v as StatusOS)}>
+                <SelectTrigger id="novo-status" className="w-full">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {opcoes
+                    .filter((op) => op.status !== os.statusAtual)
+                    .map((op) => (
                       <SelectItem key={op.status} value={op.status}>
                         {op.rotulo}
                       </SelectItem>
                     ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="grid gap-1.5 mb-4">
-                <Label htmlFor="observacao-status">Observação (opcional)</Label>
-                <Textarea
-                  id="observacao-status"
-                  rows={2}
-                  placeholder="Ex: peça trocada não resolveu, retornando ao reparo"
-                  value={observacao}
-                  onChange={(e) => setObservacao(e.target.value)}
-                />
-              </div>
-              {/* Diagnóstico codificado — aparece no fechamento (parcial ou total),
-                  onde o técnico padroniza causa/defeito/solução por dropdown. */}
-              {(novoStatus === "AGUARDANDO_VALIDACAO" || novoStatus === "CONCLUIDO") && (
-                <div className="mb-4 rounded-md border border-status-validacao/30 bg-status-validacao/5 p-3">
-                  <p className="text-xs font-medium text-foreground mb-2">
-                    Diagnóstico (padronizado)
-                  </p>
-                  <div className="grid gap-1.5 mb-4">
-                    <Label htmlFor="causa-diag">Causa</Label>
-                    <Select value={causaId} onValueChange={setCausaId}>
-                      <SelectTrigger id="causa-diag" className="w-full">
-                        <SelectValue placeholder="Selecione…" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {causas.map((c) => (
-                          <SelectItem key={c.id} value={c.id}>
-                            {c.codigo} — {c.descricao}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="grid gap-1.5 mb-4">
-                    <Label htmlFor="defeito-diag">Defeito</Label>
-                    <Select value={defeitoId} onValueChange={setDefeitoId}>
-                      <SelectTrigger id="defeito-diag" className="w-full">
-                        <SelectValue placeholder="Selecione…" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {defeitos.map((d) => (
-                          <SelectItem key={d.id} value={d.id}>
-                            {d.codigo} — {d.descricao}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="grid gap-1.5">
-                    <Label htmlFor="solucao-diag">Solução</Label>
-                    <Select value={solucaoId} onValueChange={setSolucaoId}>
-                      <SelectTrigger id="solucao-diag" className="w-full">
-                        <SelectValue placeholder="Selecione…" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {solucoes.map((s) => (
-                          <SelectItem key={s.id} value={s.id}>
-                            {s.codigo} — {s.descricao}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="grid gap-1.5">
+              <Label htmlFor="observacao-status">Observação (opcional)</Label>
+              <Textarea
+                id="observacao-status"
+                rows={2}
+                placeholder="Ex: peça trocada não resolveu, retornando ao reparo"
+                value={observacao}
+                onChange={(e) => setObservacao(e.target.value)}
+              />
+            </div>
+            {(novoStatus === "AGUARDANDO_VALIDACAO" || novoStatus === "CONCLUIDO") && (
+              <div className="rounded-md border border-status-validacao/30 bg-status-validacao/5 p-3">
+                <p className="text-xs font-medium text-foreground mb-2">Diagnóstico (padronizado)</p>
+                <div className="grid gap-1.5 mb-4">
+                  <Label htmlFor="causa-diag">Causa</Label>
+                  <Select value={causaId} onValueChange={setCausaId}>
+                    <SelectTrigger id="causa-diag" className="w-full">
+                      <SelectValue placeholder="Selecione…" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {causas.map((c) => (
+                        <SelectItem key={c.id} value={c.id}>
+                          {c.codigo} — {c.descricao}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
-              )}
-              <div className="mb-4 flex items-center gap-2">
-                <Checkbox
-                  id="nova-tentativa"
-                  checked={novaTentativa}
-                  onCheckedChange={(v) => setNovaTentativa(v === true)}
-                />
-                <Label htmlFor="nova-tentativa" className="text-sm font-normal text-foreground">
-                  Essa mudança representa uma nova tentativa de resolver o problema
-                </Label>
+                <div className="grid gap-1.5 mb-4">
+                  <Label htmlFor="defeito-diag">Defeito</Label>
+                  <Select value={defeitoId} onValueChange={setDefeitoId}>
+                    <SelectTrigger id="defeito-diag" className="w-full">
+                      <SelectValue placeholder="Selecione…" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {defeitos.map((d) => (
+                        <SelectItem key={d.id} value={d.id}>
+                          {d.codigo} — {d.descricao}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="grid gap-1.5">
+                  <Label htmlFor="solucao-diag">Solução</Label>
+                  <Select value={solucaoId} onValueChange={setSolucaoId}>
+                    <SelectTrigger id="solucao-diag" className="w-full">
+                      <SelectValue placeholder="Selecione…" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {solucoes.map((s) => (
+                        <SelectItem key={s.id} value={s.id}>
+                          {s.codigo} — {s.descricao}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
-              {erroStatus && (
-                <p className="text-xs text-danger mb-3">{erroStatus}</p>
-              )}
+            )}
+            <div className="flex items-center gap-2">
+              <Checkbox
+                id="nova-tentativa"
+                checked={novaTentativa}
+                onCheckedChange={(v) => setNovaTentativa(v === true)}
+              />
+              <Label htmlFor="nova-tentativa" className="text-sm font-normal text-foreground">
+                Essa mudança representa uma nova tentativa de resolver o problema
+              </Label>
+            </div>
+            {erroStatus && <p className="text-xs text-danger">{erroStatus}</p>}
+            <div className="flex gap-2">
               <Button type="submit" disabled={enviandoStatus}>
                 {enviandoStatus ? "Salvando..." : "Salvar status"}
               </Button>
-            </form>
-          )}
-        </CardContent>
-      </Card>
+              <Button type="button" variant="ghost" onClick={() => setModalStatusAberto(false)}>
+                Cancelar
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
 
       {/* Tarefas (cronometradas nos bastidores) */}
       <Card>
