@@ -37,7 +37,7 @@ import {
 } from "../../types";
 import { useEtapasStatus } from "../../hooks/useEtapasStatus";
 import { StatusTimeline } from "../../components/StatusTimeline";
-import { StatusBadge, TipoBadge } from "../../components/StatusBadge";
+import { TipoBadge } from "../../components/StatusBadge";
 import { usuarioLogado } from "../../services/auth";
 import { formatarReais, tempoRelativo, formatarNumeroOS } from "../../utils/formatters";
 import {
@@ -875,13 +875,6 @@ export function OrdemServicoDetail() {
           <CardTitle>Acompanhamento</CardTitle>
           <CardAction>
             <div className="flex flex-wrap items-center gap-2">
-              <StatusBadge status={os.statusAtual} pulsante />
-              {os.statusAtual !== "CONCLUIDO" && os.statusAtual !== "CANCELADO" && (
-                <Button size="sm" onClick={abrirModalStatus}>
-                  <Plus />
-                  Novo status
-                </Button>
-              )}
               {podeDesignar && (
                 <Button
                   variant="outline"
@@ -899,6 +892,12 @@ export function OrdemServicoDetail() {
                 >
                   <MessageCircle />
                   Avisar no WhatsApp
+                </Button>
+              )}
+              {os.statusAtual !== "CONCLUIDO" && os.statusAtual !== "CANCELADO" && (
+                <Button size="sm" onClick={abrirModalStatus}>
+                  <Plus />
+                  Novo status
                 </Button>
               )}
             </div>
