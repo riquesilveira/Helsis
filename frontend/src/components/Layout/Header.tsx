@@ -1,32 +1,85 @@
+import { Fragment } from "react";
+import { Link, useLocation } from "react-router-dom";
 import { usuarioLogado } from "../../services/auth";
 import { SidebarTrigger } from "../shadcn/sidebar";
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from "../shadcn/breadcrumb";
 import { Avatar, AvatarFallback } from "../shadcn/avatar";
 import { UserMenu } from "./UserMenu";
+
+// Rótulos legíveis por segmento de rota. Segmentos ausentes (ids dinâmicos como
+// /clientes/:id) caem no rótulo genérico "Detalhes".
+const CRUMB_LABELS: Record<string, string> = {
+  "ordens-servico": "Ordens de serviço",
+  nova: "Nova OS",
+  "manutencoes-preventivas": "Manutenções preventivas",
+  clientes: "Clientes",
+  funcionarios: "Equipe & desempenho",
+  "catalogo-diagnostico": "Catálogo de diagnóstico",
+  "folha-de-ponto": "Folha de ponto",
+  "minha-rota": "Minha rota",
+  configuracoes: "Configurações",
+  rota: "Rota",
+  resumo: "Resumo mensal",
+};
 
 function inicial(nome: string) {
   return nome.trim().charAt(0).toUpperCase();
 }
 
-/**
- * Top bar. O miolo (#app-header-slot) é um "slot" onde cada página pode injetar
- * o próprio contexto (ex: a tela da OS coloca voltar + cliente + OS + equipamento)
- * via portal. No mobile, o gatilho abre a sidebar; no desktop o colapso fica na
- * própria sidebar.
- */
 export function Header() {
+  const { pathname } = useLocation();
   const usuario = usuarioLogado();
+
+  const segmentos = pathname.split("/").filter(Boolean);
+  const crumbs = segmentos.map((seg, i) => ({
+    href: `/${segmentos.slice(0, i + 1).join("/")}`,
+    label: CRUMB_LABELS[seg] ?? "Detalhes",
+    ultimo: i === segmentos.length - 1,
+  }));
 
   return (
     <header
       data-slot="app-header"
-      className="sticky top-0 z-40 flex min-h-16 shrink-0 items-center gap-3 border-b border-border bg-background/80 px-4 py-2 backdrop-blur-lg"
+      className="sticky top-0 z-40 flex h-16 shrink-0 items-center gap-2 border-b border-border bg-background/80 px-4 backdrop-blur-lg"
     >
-      <SidebarTrigger className="-ml-1 md:hidden" />
+      <SidebarTrigger className="-ml-1" />
 
-      {/* Slot de contexto por página (preenchido via portal) */}
-      <div id="app-header-slot" className="min-w-0 flex-1" />
+      <Breadcrumb>
+        <BreadcrumbList>
+          <BreadcrumbItem>
+            {segmentos.length === 0 ? (
+              <BreadcrumbPage>Painel</BreadcrumbPage>
+            ) : (
+              <BreadcrumbLink asChild>
+                <Link to="/">Início</Link>
+              </BreadcrumbLink>
+            )}
+          </BreadcrumbItem>
+          {crumbs.map((crumb) => (
+            <Fragment key={crumb.href}>
+              <BreadcrumbSeparator />
+              <BreadcrumbItem>
+                {crumb.ultimo ? (
+                  <BreadcrumbPage>{crumb.label}</BreadcrumbPage>
+                ) : (
+                  <BreadcrumbLink asChild>
+                    <Link to={crumb.href}>{crumb.label}</Link>
+                  </BreadcrumbLink>
+                )}
+              </BreadcrumbItem>
+            </Fragment>
+          ))}
+        </BreadcrumbList>
+      </Breadcrumb>
 
-      <div className="flex shrink-0 items-center gap-2">
+      <div className="ml-auto flex items-center gap-2">
         {usuario && (
           <UserMenu
             side="bottom"

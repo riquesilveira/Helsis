@@ -12,7 +12,6 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarRail,
-  SidebarTrigger,
 } from "../shadcn/sidebar";
 import { Avatar, AvatarFallback } from "../shadcn/avatar";
 import { NAV_GROUPS, ROTULO_PAPEL, type NavItemConfig } from "./nav-data";
@@ -47,8 +46,6 @@ export function AppSidebar() {
             <p className="text-[15px] font-semibold tracking-tight text-foreground">Resso</p>
             <p className="text-[11px] text-muted-foreground">Gestão de serviços</p>
           </div>
-          {/* Colapsar/expandir a sidebar (desktop). No mobile o gatilho fica no header. */}
-          <SidebarTrigger className="ml-auto hidden md:flex group-data-[collapsible=icon]:hidden" />
         </div>
       </SidebarHeader>
 
