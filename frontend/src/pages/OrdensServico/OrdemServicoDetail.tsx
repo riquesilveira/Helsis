@@ -676,36 +676,41 @@ export function OrdemServicoDetail() {
 
   return (
     <div className="mx-auto max-w-5xl space-y-6">
-      <Link
-        to="/ordens-servico"
-        className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
-      >
-        <ArrowLeft size={16} />
-        Ordens de serviço
-      </Link>
-
-      <div>
-        <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5">
-          <h1 className="text-xl font-semibold text-foreground">{os.cliente.nome}</h1>
-          <div className="flex items-center gap-2">
-            <p className="codigo text-sm text-muted-foreground">OS #{formatarNumeroOS(os.numero)}</p>
-            <TipoBadge tipo={os.tipo} />
-            <span className="text-xs text-muted-foreground" title={new Date(os.dataAbertura).toLocaleString("pt-BR")}>
-              aberta {tempoRelativo(os.dataAbertura)}
-            </span>
+      {/* Cabeçalho da OS: voltar + cliente + OS/tipo/abertura + equipamento */}
+      <div className="flex items-start gap-3">
+        <Link
+          to="/ordens-servico"
+          aria-label="Voltar para ordens de serviço"
+          className="mt-0.5 inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+        >
+          <ArrowLeft size={18} />
+        </Link>
+        <div className="min-w-0">
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5">
+            <h1 className="text-xl font-semibold text-foreground">{os.cliente.nome}</h1>
+            <div className="flex items-center gap-2">
+              <p className="codigo text-sm text-muted-foreground">OS #{formatarNumeroOS(os.numero)}</p>
+              <TipoBadge tipo={os.tipo} />
+              <span
+                className="text-xs text-muted-foreground"
+                title={new Date(os.dataAbertura).toLocaleString("pt-BR")}
+              >
+                aberta {tempoRelativo(os.dataAbertura)}
+              </span>
+            </div>
           </div>
+          <p className="text-sm text-muted-foreground mt-1">
+            {os.equipamento.tipo}
+            {os.equipamento.marca ? ` — ${os.equipamento.marca} ${os.equipamento.modelo ?? ""}` : ""}
+            {" · "}
+            {ROTULO_MODALIDADE[os.modalidade]}
+          </p>
+          {os.sla && os.sla.status !== "SEM_CONTRATO" && (
+            <div className="mt-2">
+              <SlaBadge sla={os.sla} />
+            </div>
+          )}
         </div>
-        <p className="text-sm text-muted-foreground mt-1">
-          {os.equipamento.tipo}
-          {os.equipamento.marca ? ` — ${os.equipamento.marca} ${os.equipamento.modelo ?? ""}` : ""}
-          {" · "}
-          {ROTULO_MODALIDADE[os.modalidade]}
-        </p>
-        {os.sla && os.sla.status !== "SEM_CONTRATO" && (
-          <div className="mt-2">
-            <SlaBadge sla={os.sla} />
-          </div>
-        )}
       </div>
 
       <Card>
