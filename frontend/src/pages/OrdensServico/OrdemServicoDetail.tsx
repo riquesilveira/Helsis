@@ -311,13 +311,13 @@ export function OrdemServicoDetail() {
     // Negrito no WhatsApp = *texto*. O link fica numa linha só, limpo, pra o
     // WhatsApp transformar em link clicável ao enviar.
     const msg =
-      `*Atualização do seu atendimento* 🔧\n\n` +
+      `*Atualização do seu atendimento*\n\n` +
       `Olá, *${os.cliente.nome}*! Segue o andamento da sua ordem de serviço:\n\n` +
       `*OS:* #${formatarNumeroOS(os.numero)}\n` +
       `*Equipamento:* ${os.equipamento.tipo}\n` +
       `*Status:* ${textoStatus}\n\n` +
-      `📲 Acompanhe em tempo real pelo link abaixo:\n${link}\n\n` +
-      `Qualquer dúvida, é só responder por aqui. 🙂`;
+      `Acompanhe em tempo real:\n${link}\n\n` +
+      `Qualquer dúvida, é só responder por aqui.`;
     window.open(`https://wa.me/${telE164}?text=${encodeURIComponent(msg)}`, "_blank", "noopener");
     // Marca o status atual como já avisado — desabilita o botão até o próximo status.
     try {
