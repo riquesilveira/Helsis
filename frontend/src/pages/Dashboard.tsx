@@ -15,8 +15,13 @@ import { api } from "../services/api";
 import { Funcionario, OrdemServico } from "../types";
 import { formatarReais, tempoRelativo, formatarNumeroOS } from "../utils/formatters";
 import { Card, CardAction, CardContent, CardHeader, CardTitle } from "../components/shadcn/card";
-import { Badge } from "../components/shadcn/badge";
-import { Button } from "../components/shadcn/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../components/shadcn/select";
 import { StatusBadge } from "../components/StatusBadge";
 import { HospitalLogo } from "../components/HospitalLogo";
 import { PageHeader } from "../components/PageHeader";
@@ -270,7 +275,7 @@ function GastosPorCategoria({ dados }: { dados: { tipo: string; valor: number }[
 export function Dashboard() {
   const [ordens, setOrdens] = useState<OrdemServico[]>([]);
   const [funcionarios, setFuncionarios] = useState<Funcionario[]>([]);
-  const [abaTecnico, setAbaTecnico] = useState<string>("");
+  const [tecnicoFiltro, setTecnicoFiltro] = useState<string>("");
 
   useEffect(() => {
     api.get("/ordens-servico").then((r) => setOrdens(r.data)).catch(() => {});
@@ -352,40 +357,22 @@ export function Dashboard() {
     { tipo: "Alimentação", valor: semGastosVariaveis ? GASTOS_MOCK.alimentacao : somaPorCampo(concluidasNoMes, "custoAlimentacao") },
   ];
 
-  const hoje = new Date().toISOString().slice(0, 10);
-  const agendaReal = funcionarios.map((f) => {
-    const doDia = abertas
-      .filter((o) => o.funcionario?.id === f.id && o.dataAgendada?.slice(0, 10) === hoje)
-      .sort((a, b) => (a.dataAgendada ?? "").localeCompare(b.dataAgendada ?? ""));
-    return { funcionario: f, atendimentos: doDia };
-  });
+  // Técnicos que aparecem nas OS em aberto — alimenta o filtro do card abaixo.
+  const tecnicos = (() => {
+    const mapa = new Map<string, string>();
+    abertas.forEach((o) => {
+      if (o.funcionario?.id && o.funcionario.usuario?.nome) {
+        mapa.set(o.funcionario.id, o.funcionario.usuario.nome);
+      }
+    });
+    return [...mapa.entries()]
+      .map(([id, nome]) => ({ id, nome }))
+      .sort((a, b) => a.nome.localeCompare(b.nome));
+  })();
 
-  // Mock: sem nada agendado pra hoje (dados de seed antigos), distribui as OS
-  // em aberto entre os técnicos pra a agenda ficar apresentável na demo.
-  const temAgendaReal = agendaReal.some((a) => a.atendimentos.length > 0);
-  const agendaBase =
-    temAgendaReal || funcionarios.length === 0
-      ? agendaReal
-      : funcionarios.map((f, idx) => ({
-          funcionario: f,
-          atendimentos: abertas.filter((_, i) => i % funcionarios.length === idx),
-        }));
-
-  // Aba "Todos" agrega os atendimentos de todos os técnicos.
-  const todosAtendimentos = agendaBase.flatMap((a) => a.atendimentos);
-  const abasAgenda = [
-    { id: "todos", rotulo: "Todos", quantidade: todosAtendimentos.length, atendimentos: todosAtendimentos, funcionarioId: null as string | null },
-    ...agendaBase.map((a) => ({
-      id: a.funcionario.id,
-      rotulo: a.funcionario.usuario.nome.split(" ")[0],
-      quantidade: a.atendimentos.length,
-      atendimentos: a.atendimentos,
-      funcionarioId: a.funcionario.id as string | null,
-    })),
-  ];
-
-  const tecnicoAtivoId = abaTecnico || "todos";
-  const agendaAtiva = abasAgenda.find((a) => a.id === tecnicoAtivoId) ?? abasAgenda[0];
+  const abertasFiltradas = tecnicoFiltro
+    ? abertas.filter((o) => o.funcionario?.id === tecnicoFiltro)
+    : abertas;
 
   return (
     <div className="space-y-8">
@@ -427,78 +414,29 @@ export function Dashboard() {
       </div>
 
       <div>
-        <h2 className="text-base font-semibold text-foreground mb-3">Agenda diária</h2>
-        {funcionarios.length === 0 ? (
-          <Card className="px-5 py-4 text-sm text-muted-foreground">Nenhum técnico cadastrado ainda.</Card>
-        ) : (
-          <Card className="p-0">
-            {/* Abas: Todos + um por técnico */}
-            <div className="flex items-center gap-1 overflow-x-auto border-b border-border px-3 pt-2">
-              {abasAgenda.map(({ id, rotulo, quantidade }) => {
-                const ativo = id === tecnicoAtivoId;
-                return (
-                  <button
-                    key={id}
-                    onClick={() => setAbaTecnico(id)}
-                    className={`flex items-center gap-2 whitespace-nowrap rounded-t-lg border-b-2 px-3 py-2.5 text-sm transition-colors ${
-                      ativo
-                        ? "border-foreground text-foreground font-medium"
-                        : "border-transparent text-muted-foreground hover:text-foreground"
-                    }`}
-                  >
-                    {rotulo}
-                    <Badge variant={ativo ? "default" : "secondary"} className="codigo">
-                      {quantidade}
-                    </Badge>
-                  </button>
-                );
-              })}
-            </div>
-
-            {/* Atendimentos do técnico selecionado */}
-            <div className="divide-y divide-border">
-              {agendaAtiva && agendaAtiva.atendimentos.length > 0 ? (
-                agendaAtiva.atendimentos.map((os) => (
-                  <Link
-                    key={os.id}
-                    to={`/ordens-servico/${os.id}`}
-                    className="group flex items-center justify-between gap-4 px-5 py-3.5 transition-colors hover:bg-muted/50"
-                  >
-                    <div className="flex min-w-0 items-center gap-3">
-                      <HospitalLogo nome={os.cliente.nome} size={36} />
-                      <div className="min-w-0">
-                        <div className="flex items-center gap-2">
-                          <span className="codigo shrink-0 text-xs text-muted-foreground">#{formatarNumeroOS(os.numero)}</span>
-                          <p className="truncate text-sm font-semibold text-foreground">{os.cliente.nome}</p>
-                        </div>
-                        <p className="mt-0.5 truncate text-xs text-muted-foreground">{os.equipamento.tipo}</p>
-                      </div>
-                    </div>
-                    <div className="flex shrink-0 items-center gap-3">
-                      <StatusBadge status={os.statusAtual} />
-                      <ChevronRight size={16} className="text-muted-foreground transition-colors group-hover:text-foreground" />
-                    </div>
-                  </Link>
-                ))
-              ) : (
-                <div className="flex items-center justify-between px-5 py-6">
-                  <p className="text-sm text-muted-foreground">Livre hoje — nenhum atendimento agendado.</p>
-                  {agendaAtiva?.funcionarioId && (
-                    <Button asChild variant="link" size="sm">
-                      <Link to={`/funcionarios/${agendaAtiva.funcionarioId}/rota`}>Ver rota</Link>
-                    </Button>
-                  )}
-                </div>
-              )}
-            </div>
-          </Card>
-        )}
-      </div>
-
-      <div>
-        <h2 className="text-base font-semibold text-foreground mb-3">Ordens de serviço em aberto</h2>
+        <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
+          <h2 className="text-base font-semibold text-foreground">Ordens de serviço em aberto</h2>
+          {tecnicos.length > 0 && (
+            <Select
+              value={tecnicoFiltro || "TODOS"}
+              onValueChange={(v) => setTecnicoFiltro(v === "TODOS" ? "" : v)}
+            >
+              <SelectTrigger className="w-full sm:w-auto sm:min-w-[180px]">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="TODOS">Todos os técnicos</SelectItem>
+                {tecnicos.map((t) => (
+                  <SelectItem key={t.id} value={t.id}>
+                    {t.nome}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
+        </div>
         <Card className="p-0 divide-y divide-border">
-          {abertas.map((os) => (
+          {abertasFiltradas.map((os) => (
             <Link
               key={os.id}
               to={`/ordens-servico/${os.id}`}
@@ -527,8 +465,12 @@ export function Dashboard() {
               </div>
             </Link>
           ))}
-          {abertas.length === 0 && (
-            <p className="text-sm text-muted-foreground px-5 py-4">Nenhuma OS em aberto no momento.</p>
+          {abertasFiltradas.length === 0 && (
+            <p className="text-sm text-muted-foreground px-5 py-4">
+              {tecnicoFiltro
+                ? "Nenhuma OS em aberto para esse técnico."
+                : "Nenhuma OS em aberto no momento."}
+            </p>
           )}
         </Card>
       </div>
