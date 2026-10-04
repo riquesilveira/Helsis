@@ -392,7 +392,7 @@ export function ClienteDetail() {
                 )}
               </div>
             </div>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="grid gap-1.5">
                 <Label htmlFor="eq-marca">Marca</Label>
                 <div className="relative">
@@ -526,7 +526,7 @@ export function ClienteDetail() {
               <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                 Dados regulatórios
               </p>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div className="grid gap-1.5">
                   <Label htmlFor="eq-anvisa">Registro ANVISA</Label>
                   <Input
@@ -546,7 +546,7 @@ export function ClienteDetail() {
                   />
                 </div>
               </div>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div className="grid gap-1.5">
                   <Label htmlFor="eq-calib">Última calibração</Label>
                   <Input

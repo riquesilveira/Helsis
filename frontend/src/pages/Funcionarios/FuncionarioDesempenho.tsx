@@ -288,7 +288,7 @@ export function FuncionarioDesempenho() {
 
       <div>
         <h2 className="mb-3 text-sm font-medium text-foreground">Remuneração</h2>
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <Card size="sm">
             <CardContent>
               <p className="text-xs text-muted-foreground">Salário atual</p>
@@ -381,7 +381,7 @@ export function FuncionarioDesempenho() {
                 onChange={(e) => setEditForm({ ...editForm, email: e.target.value })}
               />
             </div>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="grid gap-1.5">
                 <Label htmlFor="edit-cargo">Cargo</Label>
                 <Input

@@ -100,7 +100,7 @@ export function ResumoMensalFuncionario() {
         </CardHeader>
 
         <CardContent className="px-8 print:px-0">
-          <div className="grid grid-cols-2 gap-5 mb-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 mb-8">
             <div>
               <p className="text-xs text-muted-foreground">Colaborador</p>
               <p className="text-sm font-medium text-foreground mt-0.5">{resumo.nome}</p>
@@ -111,7 +111,7 @@ export function ResumoMensalFuncionario() {
             </div>
             <div>
               <p className="text-xs text-muted-foreground">E-mail</p>
-              <p className="text-sm text-foreground mt-0.5">{resumo.email}</p>
+              <p className="text-sm text-foreground mt-0.5 break-words">{resumo.email}</p>
             </div>
             <div>
               <p className="text-xs text-muted-foreground">Regra de comissão</p>
@@ -119,6 +119,7 @@ export function ResumoMensalFuncionario() {
             </div>
           </div>
 
+          <div className="-mx-1 overflow-x-auto px-1 print:overflow-x-visible">
           <table className="w-full text-sm">
             <thead>
               <tr className="text-left text-xs text-muted-foreground border-b border-border">
@@ -156,6 +157,7 @@ export function ResumoMensalFuncionario() {
               )}
             </tbody>
           </table>
+          </div>
 
           <div className="flex items-center justify-between mt-3 pt-3 border-t border-border text-sm">
             <span className="text-muted-foreground">Subtotal de comissões</span>

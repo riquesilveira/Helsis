@@ -120,7 +120,7 @@ export function Configuracoes() {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <p className="text-xs text-muted-foreground">Função</p>
               <p className="mt-0.5 text-sm font-medium text-foreground">
@@ -154,7 +154,7 @@ export function Configuracoes() {
         </CardHeader>
         <CardContent>
           <form onSubmit={salvarPerfil} className="space-y-4">
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="grid gap-1.5">
                 <Label htmlFor="perfil-nome">Nome completo</Label>
                 <Input
@@ -208,7 +208,7 @@ export function Configuracoes() {
                 onChange={(e) => setSenhaAtual(e.target.value)}
               />
             </div>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="grid gap-1.5">
                 <Label htmlFor="senha-nova">Nova senha</Label>
                 <Input

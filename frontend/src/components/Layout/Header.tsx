@@ -88,7 +88,7 @@ export function Header() {
               <button
                 type="button"
                 aria-label="Menu do usuário"
-                className="rounded-full outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                className="flex items-center justify-center rounded-full outline-none focus-visible:ring-2 focus-visible:ring-ring pointer-coarse:size-11"
               >
                 <Avatar className="h-8 w-8">
                   <AvatarFallback className="bg-primary text-primary-foreground">

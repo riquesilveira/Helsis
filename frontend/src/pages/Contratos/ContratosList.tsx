@@ -379,7 +379,7 @@ export function ContratosList() {
               </span>
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="grid gap-1.5">
                 <Label htmlFor="ct-sla">SLA de resposta (horas)</Label>
                 <Input
@@ -401,7 +401,7 @@ export function ContratosList() {
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="grid gap-1.5">
                 <Label htmlFor="ct-inicio">Início da vigência</Label>
                 <Input

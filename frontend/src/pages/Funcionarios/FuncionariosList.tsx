@@ -319,7 +319,7 @@ export function FuncionariosList() {
                 onChange={(e) => setForm({ ...form, nome: e.target.value })}
               />
             </div>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="grid gap-1.5">
                 <Label htmlFor="func-email">E-mail (login)</Label>
                 <Input
@@ -345,7 +345,7 @@ export function FuncionariosList() {
                 />
               </div>
             </div>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="grid gap-1.5">
                 <Label htmlFor="func-cargo">Cargo</Label>
                 <Input
@@ -373,7 +373,7 @@ export function FuncionariosList() {
                 </div>
               </div>
             </div>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="grid gap-1.5">
                 <Label htmlFor="func-admissao">Data de admissão</Label>
                 <Input
@@ -474,7 +474,7 @@ export function FuncionariosList() {
                 onChange={(e) => setEditForm({ ...editForm, email: e.target.value })}
               />
             </div>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="grid gap-1.5">
                 <Label htmlFor="edit-cargo">Cargo</Label>
                 <Input

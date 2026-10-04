@@ -839,7 +839,7 @@ export function OrdemServicoDetail() {
         </CardContent>
       </Card>
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <Card>
           <CardContent>
             <p className="text-xs text-muted-foreground">Técnico responsável</p>
@@ -1365,7 +1365,7 @@ export function OrdemServicoDetail() {
               Nenhum anexo. Envie fotos da peça/equipamento ou laudos (imagem ou PDF, até 10 MB).
             </p>
           ) : (
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:grid-cols-3">
               {(os.anexos ?? []).map((anexo) => {
                 const ehImagem = /\.(png|jpe?g|webp|heic)$/i.test(anexo.url);
                 return (
@@ -1434,7 +1434,7 @@ export function OrdemServicoDetail() {
               A comissão do técnico incide só sobre a mão de obra — peça é custo repassado ao cliente.
             </p>
             <form onSubmit={handleSalvarFinanceiro}>
-              <div className="grid grid-cols-2 gap-4 mb-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
                 <div>
                   <p className="text-xs text-muted-foreground mb-1">Valor das peças</p>
                   <p className="codigo text-lg font-semibold text-foreground">
@@ -1453,7 +1453,7 @@ export function OrdemServicoDetail() {
                   />
                 </div>
               </div>
-              <div className="grid grid-cols-2 gap-4 mb-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
                 <div>
                   <p className="text-xs text-muted-foreground mb-1">Valor total do atendimento</p>
                   <p className="codigo text-lg font-semibold text-foreground">
@@ -1495,7 +1495,7 @@ export function OrdemServicoDetail() {
               <CardTitle>Fechamento financeiro deste atendimento</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <p className="text-xs text-muted-foreground">Mão de obra</p>
                   <p className="codigo text-lg font-semibold text-foreground mt-1">
@@ -1629,7 +1629,7 @@ export function OrdemServicoDetail() {
           <form onSubmit={handleSalvarDeslocamento} className="space-y-4">
             <div className="grid gap-1.5">
               <Label>Meio de transporte</Label>
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                 {([
                   { valor: "CARRO", rotulo: "Carro", Icone: Car },
                   { valor: "AVIAO", rotulo: "Avião", Icone: Plane },
@@ -1664,7 +1664,7 @@ export function OrdemServicoDetail() {
                 onChange={(e) => setDestinoCidade(e.target.value)}
               />
             </div>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="grid gap-1.5">
                 <Label htmlFor="custo-passagem">
                   {modalTransporte === "AVIAO" ? "Custo passagem (R$)" : "Custo combustível (R$)"}
@@ -1690,7 +1690,7 @@ export function OrdemServicoDetail() {
                 />
               </div>
             </div>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="grid gap-1.5">
                 <Label htmlFor="custo-alimentacao">Custo alimentação (R$)</Label>
                 <Input

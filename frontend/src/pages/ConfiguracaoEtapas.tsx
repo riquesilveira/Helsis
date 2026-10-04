@@ -107,12 +107,12 @@ export function ConfiguracaoEtapas() {
                 }`}
               >
                 <div className="flex items-start gap-2">
-                  <div className="flex flex-col gap-0.5 pt-1">
+                  <div className="-ml-1.5 flex flex-col gap-1 pt-0.5">
                     <button
                       type="button"
                       onClick={() => mover(i, -1)}
                       disabled={i === 0}
-                      className="text-muted-foreground hover:text-foreground disabled:opacity-30"
+                      className="flex size-7 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground disabled:opacity-30 pointer-coarse:size-10"
                       aria-label="Mover para cima"
                     >
                       <ChevronUp className="size-4" />
@@ -121,7 +121,7 @@ export function ConfiguracaoEtapas() {
                       type="button"
                       onClick={() => mover(i, 1)}
                       disabled={i === etapas.length - 1}
-                      className="text-muted-foreground hover:text-foreground disabled:opacity-30"
+                      className="flex size-7 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground disabled:opacity-30 pointer-coarse:size-10"
                       aria-label="Mover para baixo"
                     >
                       <ChevronDown className="size-4" />
