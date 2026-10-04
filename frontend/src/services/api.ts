@@ -20,7 +20,13 @@ api.interceptors.request.use((config) => {
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401) {
+    // O próprio login trata credenciais inválidas (erro inline). Sem esta guarda,
+    // um 401 de senha errada dispararia o redirect/remoção abaixo e recarregaria
+    // a página antes de mostrar a mensagem — parecendo que "não loga".
+    const url = error.config?.url ?? "";
+    const ehLogin = url.includes("/auth/login");
+
+    if (error.response?.status === 401 && !ehLogin) {
       const ativa = contaAtivaId();
       if (ativa) {
         removerConta(ativa); // já troca pra próxima ou manda ao /login

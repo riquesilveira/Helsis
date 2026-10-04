@@ -46,7 +46,7 @@ export function Login() {
           <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-primary">
             <Activity size={24} className="text-primary-foreground" />
           </div>
-          <p className="text-lg font-semibold tracking-tight text-foreground">Resso</p>
+          <p className="text-lg font-semibold tracking-tight text-foreground">Helsis</p>
         </div>
 
         <Card>
