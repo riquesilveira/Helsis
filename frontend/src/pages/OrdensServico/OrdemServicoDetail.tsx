@@ -92,8 +92,7 @@ const ROTULO_TIPO_ANEXO: Record<TipoAnexo, string> = {
   OUTRO: "Outro",
 };
 
-// Formata a duração medida da tarefa (só visível ao dono/gestor). O técnico
-// nunca vê tempo — o cronômetro roda nos bastidores.
+// Formata a duração FINAL de uma tarefa concluída (ex.: 42min, 1h15).
 function formatarDuracao(s: number): string {
   if (s < 60) return `${s}s`;
   const min = Math.round(s / 60);
@@ -101,6 +100,33 @@ function formatarDuracao(s: number): string {
   const h = Math.floor(min / 60);
   const m = min % 60;
   return m > 0 ? `${h}h${m.toString().padStart(2, "0")}` : `${h}h`;
+}
+
+// Formata o cronômetro ao vivo (precisão de segundos): mm:ss ou h:mm:ss.
+function formatarCronometro(segundos: number): string {
+  const s = Math.max(0, Math.floor(segundos));
+  const h = Math.floor(s / 3600);
+  const m = Math.floor((s % 3600) / 60);
+  const seg = s % 60;
+  const pad = (n: number) => n.toString().padStart(2, "0");
+  return h > 0 ? `${h}:${pad(m)}:${pad(seg)}` : `${pad(m)}:${pad(seg)}`;
+}
+
+// Cronômetro ao vivo de uma tarefa EM_ANDAMENTO — conta a partir de `iniciadoEm`
+// e atualiza a cada segundo. Visível ao técnico (ele acompanha o próprio tempo).
+function CronometroTarefa({ iniciadoEm }: { iniciadoEm: string }) {
+  const inicio = new Date(iniciadoEm).getTime();
+  const [agora, setAgora] = useState(() => Date.now());
+  useEffect(() => {
+    const id = setInterval(() => setAgora(Date.now()), 1000);
+    return () => clearInterval(id);
+  }, []);
+  return (
+    <span className="codigo inline-flex items-center gap-1.5 text-xs font-semibold tabular-nums text-status-reparo">
+      <span className="size-1.5 shrink-0 animate-pulse rounded-full bg-status-reparo" />
+      {formatarCronometro((agora - inicio) / 1000)}
+    </span>
+  );
 }
 
 // Badge de SLA a partir do status calculado no backend. SEM_CONTRATO não
@@ -1054,19 +1080,20 @@ export function OrdemServicoDetail() {
                         ({t.tarefaCatalogo.codigo})
                       </span>
                     </p>
-                    {t.status === "CONCLUIDA" && podeVerDuracao && (
-                      <p className="text-xs text-muted-foreground mt-0.5">
-                        {t.duracaoSegundos != null && (
-                          <span className="codigo">{formatarDuracao(t.duracaoSegundos)}</span>
-                        )}
-                        {t.funcionario?.usuario?.nome && (
-                          <>
-                            {t.duracaoSegundos != null ? " · " : ""}
-                            {t.funcionario.usuario.nome}
-                          </>
-                        )}
-                      </p>
-                    )}
+                    {t.status === "CONCLUIDA" &&
+                      (t.duracaoSegundos != null || (podeVerDuracao && t.funcionario?.usuario?.nome)) && (
+                        <p className="text-xs text-muted-foreground mt-0.5">
+                          {t.duracaoSegundos != null && (
+                            <span className="codigo">{formatarDuracao(t.duracaoSegundos)}</span>
+                          )}
+                          {podeVerDuracao && t.funcionario?.usuario?.nome && (
+                            <>
+                              {t.duracaoSegundos != null ? " · " : ""}
+                              {t.funcionario.usuario.nome}
+                            </>
+                          )}
+                        </p>
+                      )}
                   </div>
                   <div className="flex items-center gap-2 shrink-0">
                     {t.status === "PENDENTE" &&
@@ -1086,9 +1113,13 @@ export function OrdemServicoDetail() {
                       ))}
                     {t.status === "EM_ANDAMENTO" && (
                       <>
-                        <span className="inline-flex items-center rounded-md bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground">
-                          Em andamento
-                        </span>
+                        {t.iniciadoEm ? (
+                          <CronometroTarefa iniciadoEm={t.iniciadoEm} />
+                        ) : (
+                          <span className="inline-flex items-center rounded-md bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground">
+                            Em andamento
+                          </span>
+                        )}
                         {ehTecnico && (
                           <Button
                             variant="outline"
