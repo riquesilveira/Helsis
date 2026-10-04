@@ -1,7 +1,8 @@
 import { FormEvent, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Activity } from "lucide-react";
 import { api } from "../services/api";
+import { listarContas, salvarConta } from "../services/accountVault";
 import { Button } from "../components/shadcn/button";
 import {
   Card,
@@ -18,6 +19,8 @@ export function Login() {
   const [erro, setErro] = useState<string | null>(null);
   const [carregando, setCarregando] = useState(false);
   const navigate = useNavigate();
+  // Já existe alguma conta salva? Então este login é "adicionar outra conta".
+  const adicionandoConta = listarContas().length > 0;
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
@@ -27,6 +30,7 @@ export function Login() {
       const { data } = await api.post("/auth/login", { email, senha });
       localStorage.setItem("token", data.token);
       localStorage.setItem("usuario", JSON.stringify(data.usuario));
+      salvarConta(data.usuario, data.token);
       navigate("/");
     } catch {
       setErro("E-mail ou senha inválidos.");
@@ -48,9 +52,15 @@ export function Login() {
         <Card>
           <CardHeader>
             <CardTitle className="text-center text-base">
-              Sistema Inteligente de
-              <br />
-              Gestão de Serviços
+              {adicionandoConta ? (
+                "Adicionar outra conta"
+              ) : (
+                <>
+                  Sistema Inteligente de
+                  <br />
+                  Gestão de Serviços
+                </>
+              )}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -84,6 +94,12 @@ export function Login() {
               <Button type="submit" disabled={carregando} className="w-full">
                 {carregando ? "Entrando..." : "Entrar"}
               </Button>
+
+              {adicionandoConta && (
+                <Button asChild variant="ghost" className="w-full">
+                  <Link to="/">Cancelar</Link>
+                </Button>
+              )}
             </form>
           </CardContent>
         </Card>
