@@ -1523,8 +1523,9 @@ export function OrdemServicoDetail() {
                       variant="ghost"
                       size="icon-sm"
                       onClick={() => setAnexoParaExcluir(anexo)}
-                      className="absolute right-1.5 top-1.5 bg-background/80 text-danger opacity-0 backdrop-blur transition-opacity hover:text-danger group-hover:opacity-100"
+                      className="absolute right-1.5 top-1.5 bg-background/80 text-danger opacity-100 backdrop-blur transition-opacity hover:text-danger md:opacity-0 md:group-hover:opacity-100"
                       title="Excluir anexo"
+                      aria-label="Excluir anexo"
                     >
                       <Trash2 />
                     </Button>
