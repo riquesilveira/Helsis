@@ -9,6 +9,7 @@ import {
   Image as ImageIcon,
   MessageCircle,
   Paperclip,
+  Pause,
   Pencil,
   Plane,
   Play,
@@ -114,9 +115,16 @@ function formatarCronometro(segundos: number): string {
   return h > 0 ? `${h}:${pad(m)}:${pad(seg)}` : `${pad(m)}:${pad(seg)}`;
 }
 
-// Cronômetro ao vivo de uma tarefa EM_ANDAMENTO — conta a partir de `iniciadoEm`
-// e atualiza a cada segundo. Visível ao técnico (ele acompanha o próprio tempo).
-function CronometroTarefa({ iniciadoEm }: { iniciadoEm: string }) {
+// Cronômetro ao vivo de uma tarefa EM_ANDAMENTO — soma o tempo já acumulado
+// (pausas anteriores) ao segmento atual (desde `iniciadoEm`) e atualiza a cada
+// segundo. Visível ao técnico (ele acompanha o próprio tempo).
+function CronometroTarefa({
+  iniciadoEm,
+  acumuladaSegundos = 0,
+}: {
+  iniciadoEm: string;
+  acumuladaSegundos?: number;
+}) {
   const inicio = new Date(iniciadoEm).getTime();
   const [agora, setAgora] = useState(() => Date.now());
   useEffect(() => {
@@ -126,7 +134,17 @@ function CronometroTarefa({ iniciadoEm }: { iniciadoEm: string }) {
   return (
     <span className="codigo inline-flex items-center gap-1.5 text-xs font-semibold tabular-nums text-status-reparo">
       <span className="size-1.5 shrink-0 animate-pulse rounded-full bg-status-reparo" />
-      {formatarCronometro((agora - inicio) / 1000)}
+      {formatarCronometro(acumuladaSegundos + (agora - inicio) / 1000)}
+    </span>
+  );
+}
+
+// Cronômetro congelado de uma tarefa PAUSADA — mostra o tempo acumulado parado.
+function CronometroPausado({ acumuladaSegundos = 0 }: { acumuladaSegundos?: number }) {
+  return (
+    <span className="codigo inline-flex items-center gap-1.5 text-xs font-semibold tabular-nums text-muted-foreground">
+      <Pause className="size-3 shrink-0" />
+      {formatarCronometro(acumuladaSegundos)}
     </span>
   );
 }
@@ -1176,21 +1194,62 @@ export function OrdemServicoDetail() {
                     {t.status === "EM_ANDAMENTO" && (
                       <>
                         {t.iniciadoEm ? (
-                          <CronometroTarefa iniciadoEm={t.iniciadoEm} />
+                          <CronometroTarefa
+                            iniciadoEm={t.iniciadoEm}
+                            acumuladaSegundos={t.duracaoAcumuladaSegundos}
+                          />
                         ) : (
                           <span className="inline-flex items-center rounded-md bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground">
                             Em andamento
                           </span>
                         )}
                         {ehTecnico && (
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleStatusTarefa(t.id, "CONCLUIDA")}
-                            disabled={mutando}
-                          >
-                            Concluir
-                          </Button>
+                          <>
+                            <Button
+                              variant="outline"
+                              size="icon-sm"
+                              onClick={() => handleStatusTarefa(t.id, "PAUSADO")}
+                              disabled={mutando}
+                              title="Pausar tarefa"
+                              aria-label="Pausar tarefa"
+                            >
+                              <Pause />
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleStatusTarefa(t.id, "CONCLUIDA")}
+                              disabled={mutando}
+                            >
+                              Concluir
+                            </Button>
+                          </>
+                        )}
+                      </>
+                    )}
+                    {t.status === "PAUSADO" && (
+                      <>
+                        <CronometroPausado acumuladaSegundos={t.duracaoAcumuladaSegundos} />
+                        {ehTecnico && (
+                          <>
+                            <Button
+                              size="icon-sm"
+                              onClick={() => handleStatusTarefa(t.id, "EM_ANDAMENTO")}
+                              disabled={mutando}
+                              title="Retomar tarefa"
+                              aria-label="Retomar tarefa"
+                            >
+                              <Play />
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleStatusTarefa(t.id, "CONCLUIDA")}
+                              disabled={mutando}
+                            >
+                              Concluir
+                            </Button>
+                          </>
                         )}
                       </>
                     )}
@@ -1200,7 +1259,7 @@ export function OrdemServicoDetail() {
                         Concluída
                       </span>
                     )}
-                    {podeRemoverTarefa && (
+                    {podeRemoverTarefa && (t.status === "PENDENTE" || t.status === "CONCLUIDA") && (
                       <Button
                         variant="ghost"
                         size="icon-sm"

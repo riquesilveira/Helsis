@@ -63,24 +63,37 @@ export async function atualizarStatusTarefa(
   const agora = new Date();
   const data: Record<string, unknown> = { status: dados.status };
 
+  // Tempo já acumulado em segmentos fechados (pausas anteriores) + o segmento
+  // atual em andamento (se houver iniciadoEm aberto).
+  const acumulada = tarefa.duracaoAcumuladaSegundos ?? 0;
+  const segmentoAtual = tarefa.iniciadoEm
+    ? Math.max(0, Math.round((agora.getTime() - tarefa.iniciadoEm.getTime()) / 1000))
+    : 0;
+
   if (dados.status === StatusTarefa.EM_ANDAMENTO) {
-    // Só marca o início na primeira vez que entra em andamento — reabrir uma
-    // tarefa já iniciada não reinicia o relógio (o tempo total é acumulado a
-    // partir do primeiro início).
-    if (!tarefa.iniciadoEm) data.iniciadoEm = agora;
-    if (dados.funcionarioId) data.funcionarioId = dados.funcionarioId;
+    // Iniciar ou RETOMAR: abre um novo segmento (iniciadoEm = agora). O tempo já
+    // corrido fica preservado em duracaoAcumuladaSegundos.
+    data.iniciadoEm = agora;
+    if (dados.funcionarioId && !tarefa.funcionarioId) data.funcionarioId = dados.funcionarioId;
+    data.finalizadoEm = null;
+    data.duracaoSegundos = null;
+  } else if (dados.status === StatusTarefa.PAUSADO) {
+    // Pausar: fecha o segmento atual e soma no acumulado; zera o segmento aberto.
+    data.duracaoAcumuladaSegundos = acumulada + segmentoAtual;
+    data.iniciadoEm = null;
     data.finalizadoEm = null;
     data.duracaoSegundos = null;
   } else if (dados.status === StatusTarefa.CONCLUIDA) {
-    // Concluir sem ter iniciado (ex: tarefa relâmpago) — trata início = agora,
-    // duração 0, pra nunca gravar duração negativa/nula inconsistente.
-    const inicio = tarefa.iniciadoEm ?? agora;
-    if (!tarefa.iniciadoEm) data.iniciadoEm = agora;
+    // Concluir: duração total = acumulado + segmento atual (0 se nunca iniciou).
+    const total = acumulada + segmentoAtual;
     if (dados.funcionarioId && !tarefa.funcionarioId) data.funcionarioId = dados.funcionarioId;
+    data.duracaoAcumuladaSegundos = total;
+    data.iniciadoEm = null;
     data.finalizadoEm = agora;
-    data.duracaoSegundos = Math.max(0, Math.round((agora.getTime() - inicio.getTime()) / 1000));
+    data.duracaoSegundos = total;
   } else {
-    // Volta pra PENDENTE: zera o cronômetro.
+    // Volta pra PENDENTE: zera o cronômetro (acumulado inclusive).
+    data.duracaoAcumuladaSegundos = 0;
     data.iniciadoEm = null;
     data.finalizadoEm = null;
     data.duracaoSegundos = null;

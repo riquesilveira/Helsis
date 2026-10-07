@@ -373,6 +373,7 @@ model Solucao {
 enum StatusTarefa {
   PENDENTE     // adicionada à OS, ainda não iniciada
   EM_ANDAMENTO // técnico começou — cronômetro rodando (iniciadoEm setado)
+  PAUSADO      // cronômetro pausado — tempo corrido somado em duracaoAcumuladaSegundos
   CONCLUIDA    // finalizada — duracaoSegundos fixado
 }
 
@@ -402,9 +403,10 @@ model TarefaOS {
   funcionarioId    String?
   funcionario      Funcionario?   @relation(fields: [funcionarioId], references: [id])
   status           StatusTarefa   @default(PENDENTE)
-  iniciadoEm       DateTime? // marcado ao entrar em EM_ANDAMENTO
+  iniciadoEm       DateTime? // início do segmento ATUAL em andamento (resetado a cada retomada; nulo quando pausado/pendente)
   finalizadoEm     DateTime? // marcado ao entrar em CONCLUIDA
-  duracaoSegundos  Int? // finalizadoEm − iniciadoEm, fixado na conclusão
+  duracaoSegundos  Int? // tempo total fixado na conclusão (acumulado + último segmento)
+  duracaoAcumuladaSegundos Int @default(0) // soma dos segmentos já fechados (pausas anteriores)
   criadoEm         DateTime       @default(now())
   atualizadoEm     DateTime       @updatedAt
 

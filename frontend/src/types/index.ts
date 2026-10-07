@@ -184,7 +184,7 @@ export interface TarefaCatalogo {
   ativo?: boolean;
 }
 
-export type StatusTarefa = "PENDENTE" | "EM_ANDAMENTO" | "CONCLUIDA";
+export type StatusTarefa = "PENDENTE" | "EM_ANDAMENTO" | "PAUSADO" | "CONCLUIDA";
 
 // Execução de uma tarefa dentro de uma OS. O tempo (duracaoSegundos) é medido
 // nos bastidores — o técnico só muda o status; iniciadoEm/finalizadoEm e a
@@ -200,6 +200,7 @@ export interface TarefaOSItem {
   iniciadoEm?: string | null;
   finalizadoEm?: string | null;
   duracaoSegundos?: number | null;
+  duracaoAcumuladaSegundos?: number;
   criadoEm: string;
   atualizadoEm: string;
 }
