@@ -34,6 +34,7 @@ import {
   StatusOS,
   StatusTarefa,
   TarefaCatalogo,
+  TarefaOSItem,
   TipoAnexo,
 } from "../../types";
 import { useEtapasStatus } from "../../hooks/useEtapasStatus";
@@ -62,6 +63,7 @@ import {
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
@@ -260,6 +262,7 @@ export function OrdemServicoDetail() {
   const [tarefaCatalogoId, setTarefaCatalogoId] = useState("");
   const [adicionandoTarefa, setAdicionandoTarefa] = useState(false);
   const [tarefaMutando, setTarefaMutando] = useState<string | null>(null);
+  const [tarefaParaRemover, setTarefaParaRemover] = useState<TarefaOSItem | null>(null);
   const [erroTarefa, setErroTarefa] = useState<string | null>(null);
 
   // anexos (fotos/laudos)
@@ -673,6 +676,7 @@ export function OrdemServicoDetail() {
     setTarefaMutando(tarefaId);
     try {
       await api.delete(`/ordens-servico/${id}/tarefas/${tarefaId}`);
+      setTarefaParaRemover(null);
       carregar();
     } catch (err: any) {
       setErroTarefa(err?.response?.data?.erro ?? "Não foi possível remover a tarefa.");
@@ -1062,6 +1066,42 @@ export function OrdemServicoDetail() {
         </DialogContent>
       </Dialog>
 
+      {/* Modal de confirmação — remover tarefa */}
+      <Dialog
+        open={tarefaParaRemover !== null}
+        onOpenChange={(aberto) => {
+          if (!aberto) setTarefaParaRemover(null);
+        }}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Remover tarefa</DialogTitle>
+            <DialogDescription>
+              {tarefaParaRemover
+                ? `Tem certeza que deseja remover "${tarefaParaRemover.tarefaCatalogo.descricao}" desta ordem de serviço? Essa ação não pode ser desfeita.`
+                : ""}
+            </DialogDescription>
+          </DialogHeader>
+          {erroTarefa && <p className="text-sm text-danger">{erroTarefa}</p>}
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setTarefaParaRemover(null)}
+              disabled={tarefaMutando !== null}
+            >
+              Cancelar
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={() => tarefaParaRemover && handleRemoverTarefa(tarefaParaRemover.id)}
+              disabled={tarefaMutando !== null}
+            >
+              {tarefaMutando !== null ? "Removendo..." : "Remover tarefa"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       {/* Tarefas (cronometradas nos bastidores) */}
       <Card>
         <CardHeader className="border-b">
@@ -1102,9 +1142,12 @@ export function OrdemServicoDetail() {
                           size="sm"
                           onClick={() => handleStatusTarefa(t.id, "EM_ANDAMENTO")}
                           disabled={mutando}
+                          title="Iniciar tarefa"
+                          aria-label="Iniciar tarefa"
+                          className="max-md:size-8 max-md:p-0"
                         >
                           <Play />
-                          Iniciar
+                          <span className="hidden md:inline">Iniciar</span>
                         </Button>
                       ) : (
                         <span className="inline-flex items-center rounded-md bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground">
@@ -1142,10 +1185,11 @@ export function OrdemServicoDetail() {
                       <Button
                         variant="ghost"
                         size="icon-sm"
-                        onClick={() => handleRemoverTarefa(t.id)}
+                        onClick={() => setTarefaParaRemover(t)}
                         disabled={mutando}
                         className="text-danger hover:text-danger"
                         title="Remover tarefa"
+                        aria-label="Remover tarefa"
                       >
                         <Trash2 />
                       </Button>
