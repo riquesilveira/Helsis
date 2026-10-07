@@ -261,6 +261,7 @@ export function OrdemServicoDetail() {
   const [tarefasCatalogo, setTarefasCatalogo] = useState<TarefaCatalogo[]>([]);
   const [tarefaCatalogoId, setTarefaCatalogoId] = useState("");
   const [adicionandoTarefa, setAdicionandoTarefa] = useState(false);
+  const [modalTarefaAberto, setModalTarefaAberto] = useState(false);
   const [tarefaMutando, setTarefaMutando] = useState<string | null>(null);
   const [tarefaParaRemover, setTarefaParaRemover] = useState<TarefaOSItem | null>(null);
   const [erroTarefa, setErroTarefa] = useState<string | null>(null);
@@ -650,6 +651,7 @@ export function OrdemServicoDetail() {
     try {
       await api.post(`/ordens-servico/${id}/tarefas`, { tarefaCatalogoId });
       setTarefaCatalogoId("");
+      setModalTarefaAberto(false);
       carregar();
     } catch (err: any) {
       setErroTarefa(err?.response?.data?.erro ?? "Não foi possível adicionar a tarefa.");
@@ -1106,6 +1108,23 @@ export function OrdemServicoDetail() {
       <Card>
         <CardHeader className="border-b">
           <CardTitle>Tarefas</CardTitle>
+          {ehTecnico && (
+            <CardAction>
+              <Button
+                variant="outline"
+                size="sm"
+                className="border-foreground text-foreground transition-colors hover:bg-foreground hover:text-background"
+                onClick={() => {
+                  setErroTarefa(null);
+                  setTarefaCatalogoId("");
+                  setModalTarefaAberto(true);
+                }}
+              >
+                <Plus />
+                Adicionar
+              </Button>
+            </CardAction>
+          )}
         </CardHeader>
         <CardContent>
           <div className="divide-y divide-border">
@@ -1202,36 +1221,57 @@ export function OrdemServicoDetail() {
               <p className="text-sm text-muted-foreground py-3">Nenhuma tarefa adicionada.</p>
             )}
           </div>
-          {ehTecnico && (
-            <>
-              <form onSubmit={handleAdicionarTarefa} className="mt-4 flex items-center gap-2">
-                <Select value={tarefaCatalogoId} onValueChange={setTarefaCatalogoId}>
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Adicionar tarefa..." />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {tarefasCatalogoDisponivel.map((t) => (
-                      <SelectItem key={t.id} value={t.id}>
-                        {t.codigo} — {t.descricao}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <Button
-                  type="submit"
-                  size="sm"
-                  className="shrink-0"
-                  disabled={adicionandoTarefa || !tarefaCatalogoId}
-                >
-                  <Plus />
-                  {adicionandoTarefa ? "Adicionando..." : "Adicionar"}
-                </Button>
-              </form>
-              {erroTarefa && <p className="text-xs text-danger mt-2">{erroTarefa}</p>}
-            </>
+          {erroTarefa && !modalTarefaAberto && tarefaParaRemover === null && (
+            <p className="text-xs text-danger mt-2">{erroTarefa}</p>
           )}
         </CardContent>
       </Card>
+
+      {/* Modal: adicionar tarefa */}
+      <Dialog
+        open={modalTarefaAberto}
+        onOpenChange={(aberto) => {
+          if (!aberto) setModalTarefaAberto(false);
+        }}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Adicionar tarefa</DialogTitle>
+            <DialogDescription>
+              Escolha uma tarefa do catálogo para incluir nesta ordem de serviço.
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleAdicionarTarefa} className="space-y-4">
+            <Select value={tarefaCatalogoId} onValueChange={setTarefaCatalogoId}>
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Selecione uma tarefa..." />
+              </SelectTrigger>
+              <SelectContent>
+                {tarefasCatalogoDisponivel.map((t) => (
+                  <SelectItem key={t.id} value={t.id}>
+                    {t.codigo} — {t.descricao}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {erroTarefa && <p className="text-sm text-danger">{erroTarefa}</p>}
+            <DialogFooter>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setModalTarefaAberto(false)}
+                disabled={adicionandoTarefa}
+              >
+                Cancelar
+              </Button>
+              <Button type="submit" disabled={adicionandoTarefa || !tarefaCatalogoId}>
+                <Plus />
+                {adicionandoTarefa ? "Adicionando..." : "Adicionar"}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
 
       {/* Peças trocadas */}
       <Card>
