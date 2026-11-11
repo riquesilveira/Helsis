@@ -757,7 +757,7 @@ export function OrdemServicoDetail() {
     const MENSAGENS = {
       "sem-acesso": {
         titulo: "Você não tem acesso a esta OS",
-        texto: "Ela está atribuída a outra pessoa da equipe. Se precisar dela, fale com o responsável técnico.",
+        texto: "Ela está com outro técnico. Se precisar dela, peça ao gestor para transferi-la para você.",
       },
       "nao-encontrada": {
         titulo: "OS não encontrada",
