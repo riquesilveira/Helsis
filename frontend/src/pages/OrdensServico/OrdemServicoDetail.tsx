@@ -1165,10 +1165,13 @@ export function OrdemServicoDetail() {
               <Textarea
                 id="observacao-status"
                 rows={2}
-                required={novoStatus === "CANCELADO"}
+                // aria-required, não required: assim aparece a mensagem do app
+                // ("Informe o motivo..."), e não o balão nativo do navegador.
+                aria-required={novoStatus === "CANCELADO"}
+                aria-describedby="observacao-status-ajuda"
                 placeholder={
                   novoStatus === "CANCELADO"
-                    ? "Ex: OS aberta por engano, cliente desistiu do atendimento"
+                    ? "Ex: chamado aberto em duplicidade; cliente pediu o cancelamento"
                     : "Ex: peça trocada não resolveu, retornando ao reparo"
                 }
                 value={observacao}
@@ -1177,6 +1180,11 @@ export function OrdemServicoDetail() {
                   if (erroStatus) setErroStatus(null);
                 }}
               />
+              {/* A observação entra no histórico público (acompanhamento-publico
+                  devolve statusHistoricos.observacao e o portal a exibe). */}
+              <p id="observacao-status-ajuda" className="text-xs text-muted-foreground">
+                O cliente vê este texto no link de acompanhamento.
+              </p>
             </div>
             {(novoStatus === "AGUARDANDO_VALIDACAO" || novoStatus === "CONCLUIDO") && (
               <div className="rounded-md border border-status-validacao/30 bg-status-validacao/5 p-3">
