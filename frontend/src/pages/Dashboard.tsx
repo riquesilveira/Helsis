@@ -286,6 +286,9 @@ export function Dashboard() {
   const mesPassado = new Date(agora.getFullYear(), agora.getMonth() - 1, 1);
 
   const abertas = ordens.filter((o) => o.statusAtual !== "CONCLUIDO" && o.statusAtual !== "CANCELADO");
+  // Só "Recebido" ainda espera atendimento; o resto (diagnóstico, aguardando
+  // peça, em reparo, validação) já está com alguém.
+  const aguardandoAtendimento = abertas.filter((o) => o.statusAtual === "RECEBIDO").length;
 
   // "Fechadas no mês" = tiveram dataConclusao dentro do mês.
   const concluidasNoMes = ordens.filter((o) => mesmoMes(o.dataConclusao, agora));
@@ -380,11 +383,11 @@ export function Dashboard() {
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <CartaoMetrica
-          rotulo="Tickets abertos"
+          rotulo="OS em aberto"
           valor={abertas.length}
           icone={ClipboardList}
           to="/ordens-servico"
-          rodape="Aguardando atendimento"
+          rodape={`${aguardandoAtendimento} aguardando atendimento · ${abertas.length - aguardandoAtendimento} em andamento`}
         />
         <CartaoMetrica
           rotulo="Faturamento do mês"
