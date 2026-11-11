@@ -55,6 +55,8 @@ export type StatusManutencaoPreventiva = "ATRASADA" | "PROXIMA" | "EM_DIA";
 export interface EquipamentoComManutencao extends Equipamento {
   cliente: Cliente;
   statusPreventiva: StatusManutencaoPreventiva;
+  /** OS preventiva ainda aberta para o equipamento (espelha o include do backend). */
+  osPreventivaAberta: { id: string; numero: number } | null;
 }
 
 export type TipoComissao = "PERCENTUAL" | "FIXO";

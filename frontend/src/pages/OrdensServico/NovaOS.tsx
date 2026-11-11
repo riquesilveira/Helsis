@@ -80,8 +80,13 @@ export function NovaOS() {
         descricaoProblema,
       });
       navigate(`/ordens-servico/${data.id}`);
-    } catch {
-      setErro("Não foi possível abrir a OS. Confira os campos e tente novamente.");
+    } catch (err: any) {
+      // 409 = já existe preventiva aberta para o equipamento: a API diz qual.
+      setErro(
+        err?.response?.status === 409 && err?.response?.data?.erro
+          ? err.response.data.erro
+          : "Não foi possível abrir a OS. Confira os campos e tente novamente."
+      );
     } finally {
       setEnviando(false);
     }

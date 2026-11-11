@@ -6,6 +6,7 @@ import { PageHeader } from "../../components/PageHeader";
 import { Badge } from "../../components/shadcn/badge";
 import { Button } from "../../components/shadcn/button";
 import { Card, CardDescription, CardHeader, CardTitle } from "../../components/shadcn/card";
+import { formatarNumeroOS } from "../../utils/formatters";
 
 const ROTULO_STATUS: Record<StatusManutencaoPreventiva, string> = {
   ATRASADA: "Atrasada",
@@ -106,13 +107,22 @@ export function ManutencoesPreventivas() {
                 </div>
                 <div className="flex shrink-0 items-center gap-4">
                   <StatusPreventivaBadge status={eq.statusPreventiva} />
-                  <Button asChild variant="ghost" size="sm">
-                    <Link
-                      to={`/ordens-servico/nova?clienteId=${eq.cliente.id}&equipamentoId=${eq.id}&tipo=PREVENTIVA`}
-                    >
-                      Abrir OS preventiva →
-                    </Link>
-                  </Button>
+                  {/* Já existe preventiva aberta: leva até ela em vez de abrir outra. */}
+                  {eq.osPreventivaAberta ? (
+                    <Button asChild variant="ghost" size="sm">
+                      <Link to={`/ordens-servico/${eq.osPreventivaAberta.id}`}>
+                        OS #{formatarNumeroOS(eq.osPreventivaAberta.numero)} aberta →
+                      </Link>
+                    </Button>
+                  ) : (
+                    <Button asChild variant="ghost" size="sm">
+                      <Link
+                        to={`/ordens-servico/nova?clienteId=${eq.cliente.id}&equipamentoId=${eq.id}&tipo=PREVENTIVA`}
+                      >
+                        Abrir OS preventiva →
+                      </Link>
+                    </Button>
+                  )}
                 </div>
               </div>
             ))}

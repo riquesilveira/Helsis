@@ -1,3 +1,4 @@
+import { StatusOS, TipoOS } from "@prisma/client";
 import { prisma } from "../../lib/prisma";
 import { AppError } from "../../utils/AppError";
 
@@ -107,12 +108,26 @@ function calcularStatusPreventiva(proximaData: Date): StatusManutencaoPreventiva
 export async function listarManutencoesPreventivas() {
   const equipamentos = await prisma.equipamento.findMany({
     where: { frequenciaManutencaoMeses: { not: null } },
-    include: { cliente: true },
+    include: {
+      cliente: true,
+      // OS preventiva ainda aberta para o equipamento: a tela mostra o link
+      // para ela em vez de oferecer "Abrir OS preventiva" de novo.
+      ordensServico: {
+        where: {
+          tipo: TipoOS.PREVENTIVA,
+          statusAtual: { notIn: [StatusOS.CONCLUIDO, StatusOS.CANCELADO] },
+        },
+        select: { id: true, numero: true },
+        orderBy: { dataAbertura: "desc" },
+        take: 1,
+      },
+    },
   });
 
   return equipamentos
-    .map((eq) => ({
+    .map(({ ordensServico, ...eq }) => ({
       ...eq,
+      osPreventivaAberta: ordensServico[0] ?? null,
       statusPreventiva: eq.proximaManutencaoPreventiva
         ? calcularStatusPreventiva(eq.proximaManutencaoPreventiva)
         : ("ATRASADA" as StatusManutencaoPreventiva),

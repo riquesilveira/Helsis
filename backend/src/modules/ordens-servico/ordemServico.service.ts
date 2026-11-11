@@ -1,6 +1,7 @@
 import { ModalidadeAtendimento, StatusOS, TipoOS } from "@prisma/client";
 import { prisma } from "../../lib/prisma";
 import { AppError } from "../../utils/AppError";
+import { formatarNumeroOS } from "../../utils/formatarNumeroOS";
 import { notificarClienteSobreStatus } from "../notificacoes/notificacao.service";
 import { registrarManutencaoPreventivaConcluida, somarMeses } from "../equipamentos/equipamento.service";
 import { anexarSlaEmLista, resolverSlaDaOS } from "../contratos/contrato.service";
@@ -149,6 +150,25 @@ export async function buscarClientePorUsuarioId(usuarioId: string) {
 }
 
 export async function criarOrdemServico(dados: CriarOSInput) {
+  // Uma preventiva aberta por equipamento: evita OS duplicada (técnico indo
+  // duas vezes, cliente avisado duas vezes). Auditoria UX R3, 11/11/2026.
+  if (dados.tipo === TipoOS.PREVENTIVA) {
+    const aberta = await prisma.ordemServico.findFirst({
+      where: {
+        equipamentoId: dados.equipamentoId,
+        tipo: TipoOS.PREVENTIVA,
+        statusAtual: { notIn: [StatusOS.CONCLUIDO, StatusOS.CANCELADO] },
+      },
+      select: { numero: true },
+    });
+    if (aberta) {
+      throw new AppError(
+        `Já existe a OS preventiva #${formatarNumeroOS(aberta.numero)} aberta para este equipamento.`,
+        409
+      );
+    }
+  }
+
   const os = await prisma.ordemServico.create({
     data: {
       ...dados,
