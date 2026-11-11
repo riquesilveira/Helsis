@@ -1,8 +1,9 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
 import { api } from "../../services/api";
 import { StatusHistoricoItem, StatusOS } from "../../types";
 import { StatusTimeline } from "../../components/StatusTimeline";
+import { Button } from "../../components/shadcn/button";
 import { formatarNumeroOS } from "../../utils/formatters";
 
 interface AcompanhamentoPublico {
@@ -12,54 +13,49 @@ interface AcompanhamentoPublico {
   statusHistoricos: StatusHistoricoItem[];
 }
 
-// De quanto em quanto tempo a página busca o andamento de novo.
-const INTERVALO_ATUALIZACAO_MS = 60_000;
-
 /**
  * Tela que o cliente acessa por um link público (ex: enviado por WhatsApp/SMS)
  * para acompanhar o atendimento sem precisar criar conta — igual rastreio
- * de encomenda.
+ * de encomenda. Não se atualiza sozinha (evita carga na rota pública): mostra
+ * a hora da última busca e um botão "Atualizar".
  */
 export function AcompanharOS() {
   const { id } = useParams();
   const [dados, setDados] = useState<AcompanhamentoPublico | null>(null);
   const [erro, setErro] = useState<"nao-encontrado" | "falha" | null>(null);
   const [atualizadoEm, setAtualizadoEm] = useState<Date | null>(null);
+  const [buscando, setBuscando] = useState(false);
+  const ativo = useRef(true);
+
+  const buscar = useCallback(() => {
+    setBuscando(true);
+    api
+      .get(`/ordens-servico/${id}/acompanhamento-publico`)
+      .then((r) => {
+        if (!ativo.current) return;
+        setDados(r.data);
+        setErro(null);
+        setAtualizadoEm(new Date());
+      })
+      .catch((err: any) => {
+        if (!ativo.current) return;
+        // Se já há dados na tela, uma falha momentânea não apaga o que o
+        // cliente está vendo; o aviso aparece junto do botão "Atualizar".
+        const status: number | undefined = err?.response?.status;
+        setErro(status === 404 || status === 400 ? "nao-encontrado" : "falha");
+      })
+      .finally(() => {
+        if (ativo.current) setBuscando(false);
+      });
+  }, [id]);
 
   useEffect(() => {
-    let ativo = true;
-
-    function buscar() {
-      api
-        .get(`/ordens-servico/${id}/acompanhamento-publico`)
-        .then((r) => {
-          if (!ativo) return;
-          setDados(r.data);
-          setErro(null);
-          setAtualizadoEm(new Date());
-        })
-        .catch((err: any) => {
-          if (!ativo) return;
-          // Se já há dados na tela, uma falha momentânea não apaga o que o
-          // cliente está vendo — a próxima rodada tenta de novo.
-          const status: number | undefined = err?.response?.status;
-          setErro(status === 404 || status === 400 ? "nao-encontrado" : "falha");
-        });
-    }
-
+    ativo.current = true;
     buscar();
-    const timer = setInterval(buscar, INTERVALO_ATUALIZACAO_MS);
-    // Ao voltar para a aba (ex.: depois de trocar de app no celular), atualiza na hora.
-    const aoVoltar = () => {
-      if (document.visibilityState === "visible") buscar();
-    };
-    document.addEventListener("visibilitychange", aoVoltar);
     return () => {
-      ativo = false;
-      clearInterval(timer);
-      document.removeEventListener("visibilitychange", aoVoltar);
+      ativo.current = false;
     };
-  }, [id]);
+  }, [buscar]);
 
   if (!dados && erro) {
     return (
@@ -67,14 +63,17 @@ export function AcompanharOS() {
         <div className="max-w-sm text-center">
           <p className="text-base font-semibold text-foreground">
             {erro === "nao-encontrado"
-              ? "Não encontramos esse atendimento"
-              : "Não foi possível carregar o atendimento"}
+              ? "Não encontramos esse atendimento."
+              : "Não conseguimos carregar agora."}
           </p>
           <p className="mt-2 text-sm text-muted-foreground">
-            {erro === "nao-encontrado"
-              ? "Confira se o link está completo. Se o problema continuar, fale com a assistência técnica que enviou o link."
-              : "Verifique sua conexão. Vamos tentar de novo automaticamente em instantes."}
+            {erro === "nao-encontrado" ? "Confira o link que você recebeu." : "Tente de novo."}
           </p>
+          {erro === "falha" && (
+            <Button className="mt-5" onClick={buscar} disabled={buscando}>
+              {buscando ? "Carregando..." : "Tentar de novo"}
+            </Button>
+          )}
         </div>
       </div>
     );
@@ -103,15 +102,23 @@ export function AcompanharOS() {
 
         <StatusTimeline historico={dados.statusHistoricos} statusAtual={dados.statusAtual} paraCliente />
 
-        <p className="text-xs text-center text-muted-foreground" aria-live="polite">
-          Esta página se atualiza sozinha a cada minuto.
-          {atualizadoEm &&
-            ` Última atualização às ${atualizadoEm.toLocaleTimeString("pt-BR", {
-              hour: "2-digit",
-              minute: "2-digit",
-            })}.`}
-          {erro === "falha" && " Sem conexão no momento — tentando de novo."}
-        </p>
+        <div className="flex flex-col items-center gap-2 text-center" aria-live="polite">
+          {atualizadoEm && (
+            <p className="text-xs text-muted-foreground">
+              Atualizado às{" "}
+              {atualizadoEm.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
+            </p>
+          )}
+          <Button variant="outline" size="sm" onClick={buscar} disabled={buscando}>
+            {buscando ? "Atualizando..." : "Atualizar"}
+          </Button>
+          <p className="text-xs text-muted-foreground">
+            Toque em Atualizar para ver o andamento mais recente.
+          </p>
+          {erro === "falha" && (
+            <p className="text-xs text-danger">Não conseguimos atualizar agora. Tente de novo.</p>
+          )}
+        </div>
       </div>
     </div>
   );
