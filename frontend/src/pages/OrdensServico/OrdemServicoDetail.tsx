@@ -442,11 +442,17 @@ export function OrdemServicoDetail() {
     // Reabrindo, o padrão é voltar pra "Em reparo"; senão, a PRÓXIMA etapa do
     // fluxo (nunca uma anterior nem Cancelado — retroceder ou cancelar tem que
     // ser escolha explícita de quem abre o modal).
-    const preferido = reabrindo ? opcoes.find((op) => op.status === "EM_REPARO") : undefined;
-    const ordemAtual = opcoes.find((op) => op.status === os.statusAtual)?.ordem ?? -1;
-    const proxima = opcoes.find((op) => op.ordem > ordemAtual && op.status !== "CANCELADO");
-    const primeiro =
-      preferido ?? proxima ?? opcoes.find((op) => op.status !== os.statusAtual);
+    // Mesmo filtro do seletor do modal: só etapas ativas, sem o status atual e,
+    // fora do técnico, sem Concluído.
+    const permitidas = opcoes.filter(
+      (op) => op.status !== os.statusAtual && (ehTecnico || op.status !== "CONCLUIDO")
+    );
+    const preferido = reabrindo ? permitidas.find((op) => op.status === "EM_REPARO") : undefined;
+    // A ordem atual vem de todas as etapas: se a etapa da OS foi desativada
+    // depois, a "próxima" continua sendo a seguinte, não a primeira do fluxo.
+    const ordemAtual = etapas.find((e) => e.status === os.statusAtual)?.ordem ?? -1;
+    const proxima = permitidas.find((op) => op.ordem > ordemAtual && op.status !== "CANCELADO");
+    const primeiro = preferido ?? proxima ?? permitidas.find((op) => op.status !== "CANCELADO");
     if (primeiro) setNovoStatus(primeiro.status);
     setObservacao("");
     setNovaTentativa(false);
@@ -456,11 +462,12 @@ export function OrdemServicoDetail() {
 
   async function handleAtualizarStatus(e: FormEvent) {
     e.preventDefault();
-    // Desfechos encerram o atendimento e avisam o cliente — pedem confirmação.
-    if (novoStatus === "CONCLUIDO" || novoStatus === "CANCELADO") {
-      const acao = novoStatus === "CONCLUIDO" ? "Concluir" : "Cancelar";
+    // Cancelar encerra o atendimento sem resolver e avisa o cliente: pede um
+    // segundo passo. Concluir não pede, porque o diagnóstico (causa, defeito,
+    // solução) já obriga a parar e pensar.
+    if (novoStatus === "CANCELADO") {
       const ok = window.confirm(
-        `${acao} a OS #${os ? formatarNumeroOS(os.numero) : ""}? O cliente verá o novo status no acompanhamento.`
+        `Cancelar a OS #${os ? formatarNumeroOS(os.numero) : ""}? O cliente será avisado.`
       );
       if (!ok) return;
     }
@@ -1155,12 +1162,28 @@ export function OrdemServicoDetail() {
               </div>
             )}
             {erroStatus && <p className="text-xs text-danger">{erroStatus}</p>}
+            {etapas.find((e) => e.status === novoStatus)?.rotuloCliente && (
+              <p className="text-xs text-muted-foreground">
+                O cliente verá: “{etapas.find((e) => e.status === novoStatus)?.rotuloCliente}”
+              </p>
+            )}
             <div className="flex gap-2">
-              <Button type="submit" disabled={enviandoStatus}>
-                {enviandoStatus ? "Salvando..." : "Salvar status"}
+              <Button
+                type="submit"
+                disabled={enviandoStatus}
+                variant={novoStatus === "CANCELADO" ? "destructive" : "default"}
+              >
+                {enviandoStatus
+                  ? "Salvando..."
+                  : novoStatus === "CONCLUIDO"
+                    ? "Concluir OS"
+                    : novoStatus === "CANCELADO"
+                      ? "Cancelar OS"
+                      : "Salvar status"}
               </Button>
+              {/* Ao lado de "Cancelar OS", um botão "Cancelar" seria ambíguo. */}
               <Button type="button" variant="ghost" onClick={() => setModalStatusAberto(false)}>
-                Cancelar
+                {novoStatus === "CANCELADO" ? "Voltar" : "Cancelar"}
               </Button>
             </div>
           </form>
