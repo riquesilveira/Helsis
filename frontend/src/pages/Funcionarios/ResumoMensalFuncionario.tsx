@@ -54,14 +54,14 @@ export function ResumoMensalFuncionario() {
 
   return (
     <div className="max-w-2xl mx-auto space-y-5 print:max-w-none print:space-y-0">
-      <div className="flex items-center justify-between print:hidden">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between print:hidden">
         <Link
           to={`/funcionarios/${id}`}
           className="text-xs font-medium text-muted-foreground hover:text-foreground"
         >
-          ← Voltar pro desempenho
+          ← Voltar ao desempenho
         </Link>
-        <div className="flex items-center gap-4">
+        <div className="flex flex-wrap items-center justify-between gap-3 sm:justify-end sm:gap-4">
           <div className="flex items-center gap-2">
             <Button
               variant="outline"
@@ -71,7 +71,7 @@ export function ResumoMensalFuncionario() {
             >
               ‹
             </Button>
-            <span className="text-sm font-medium text-foreground w-36 text-center">
+            <span className="text-sm font-medium text-foreground w-36 text-center" aria-live="polite">
               {NOMES_MESES[mes - 1]} de {ano}
             </span>
             <Button
