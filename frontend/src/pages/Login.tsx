@@ -13,6 +13,22 @@ const DESTAQUES = [
   "Relatórios, contratos e comissões automáticos",
 ];
 
+// Cada falha pede uma ação diferente do usuário: só o 401 é credencial errada.
+// Tratar tudo como "senha inválida" faz a pessoa tentar de novo e, no caso do
+// limite de tentativas (429), prolongar o próprio bloqueio.
+function mensagemErroLogin(err: any): string {
+  const status: number | undefined = err?.response?.status;
+  const doServidor: string | undefined = err?.response?.data?.erro;
+  if (status === 401 || status === 400) return "E-mail ou senha inválidos.";
+  if (status === 429) {
+    return doServidor ?? "Muitas tentativas de login. Aguarde 15 minutos e tente novamente.";
+  }
+  if (!err?.response) {
+    return "Não foi possível falar com o servidor. Verifique sua internet e tente de novo em instantes.";
+  }
+  return "O servidor teve um problema ao entrar. Tente de novo em instantes.";
+}
+
 export function Login() {
   const [email, setEmail] = useState("");
   const [senha, setSenha] = useState("");
@@ -33,8 +49,8 @@ export function Login() {
       localStorage.setItem("usuario", JSON.stringify(data.usuario));
       salvarConta(data.usuario, data.token);
       navigate("/");
-    } catch {
-      setErro("E-mail ou senha inválidos.");
+    } catch (err: any) {
+      setErro(mensagemErroLogin(err));
     } finally {
       setCarregando(false);
     }
@@ -154,7 +170,7 @@ export function Login() {
             </div>
 
             {erro && (
-              <p className="rounded-lg bg-danger/10 px-3 py-2 text-sm text-danger">{erro}</p>
+              <p role="alert" className="rounded-lg bg-danger/10 px-3 py-2 text-sm text-danger">{erro}</p>
             )}
 
             <Button type="submit" disabled={carregando} className="w-full">
