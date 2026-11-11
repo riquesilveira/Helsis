@@ -164,6 +164,7 @@ async function main() {
         descricaoProblema: def.problema,
         numeroTentativas: 0,
         dataAgendada: def.agendaHora != null ? hojeAs(def.agendaHora) : null,
+        dataAbertura: new Date(base.getTime() - 2 * H),
         dataConclusao: def.status === StatusOS.CONCLUIDO ? base : null,
         resolvidoNaPrimeira: def.status === StatusOS.CONCLUIDO ? true : null,
         criadoEm: new Date(base.getTime() - 2 * H),

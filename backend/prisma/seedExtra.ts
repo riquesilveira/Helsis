@@ -42,6 +42,7 @@ async function criarOSFechada(input: {
       descricaoProblema: input.descricaoProblema,
       numeroTentativas: 0,
       resolvidoNaPrimeira: true,
+      dataAbertura: data, // sem isso fica now() e a conclusão cai antes da abertura
       dataConclusao: data,
       valorMaoDeObra: input.valorMaoDeObra,
       valorComissao: input.valorComissao,

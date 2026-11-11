@@ -17,6 +17,22 @@ export interface DesempenhoFuncionario {
 }
 
 /**
+ * Tempo médio entre abertura e conclusão, em horas. Ignora registros
+ * incoerentes (conclusão antes da abertura — ex.: dados importados/seed com
+ * dataAbertura = data da carga). Sem nenhum registro válido, devolve null
+ * (a tela mostra "—") em vez de um tempo negativo.
+ */
+export function calcularTempoMedioResolucaoHoras(
+  ordens: { dataAbertura: Date; dataConclusao: Date | null }[]
+): number | null {
+  const tempos = ordens
+    .filter((o) => o.dataConclusao)
+    .map((o) => (o.dataConclusao!.getTime() - o.dataAbertura.getTime()) / 3_600_000)
+    .filter((h) => Number.isFinite(h) && h >= 0);
+  return tempos.length > 0 ? tempos.reduce((a, b) => a + b, 0) / tempos.length : null;
+}
+
+/**
  * Calcula as métricas de desempenho de um técnico com base no histórico real
  * de ordens de serviço — é isso que o dono usa pra avaliar um pedido de
  * aumento de forma objetiva, em vez de "achismo".
@@ -46,14 +62,7 @@ export async function calcularDesempenhoFuncionario(
 
   const somaTentativas = ordensConcluidas.reduce((acc, o) => acc + o.numeroTentativas, 0);
 
-  const temposResolucaoHoras = ordensConcluidas
-    .filter((o) => o.dataConclusao)
-    .map((o) => (o.dataConclusao!.getTime() - o.dataAbertura.getTime()) / 3_600_000);
-
-  const tempoMedioResolucaoHoras =
-    temposResolucaoHoras.length > 0
-      ? temposResolucaoHoras.reduce((a, b) => a + b, 0) / temposResolucaoHoras.length
-      : null;
+  const tempoMedioResolucaoHoras = calcularTempoMedioResolucaoHoras(ordensConcluidas);
 
   const deslocamentos = await prisma.deslocamento.aggregate({
     where: { funcionarioId },

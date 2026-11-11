@@ -253,8 +253,8 @@ export function FuncionarioDesempenho() {
         <CartaoMetrica
           rotulo="Tempo médio de resolução"
           valor={
-            desempenho.tempoMedioResolucaoHoras
-              ? `${Math.round(desempenho.tempoMedioResolucaoHoras)}h`
+            desempenho.tempoMedioResolucaoHoras != null && desempenho.tempoMedioResolucaoHoras >= 0
+              ? `${Math.round(desempenho.tempoMedioResolucaoHoras).toLocaleString("pt-BR")}h`
               : "—"
           }
         />
