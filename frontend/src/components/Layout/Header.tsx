@@ -25,6 +25,8 @@ const CRUMB_LABELS: Record<string, string> = {
   "folha-de-ponto": "Folha de ponto",
   "minha-rota": "Minha rota",
   configuracoes: "Configurações",
+  produtividade: "Comparativo de produtividade",
+  contratos: "Contratos & SLA",
   rota: "Rota",
   resumo: "Resumo mensal",
 };
