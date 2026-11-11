@@ -434,10 +434,14 @@ export function OrdemServicoDetail() {
   function abrirModalStatus() {
     if (!os) return;
     const reabrindo = os.statusAtual === "CONCLUIDO" || os.statusAtual === "CANCELADO";
-    // Reabrindo, o padrão é voltar pra "Em reparo"; senão, o primeiro status
-    // diferente do atual.
+    // Reabrindo, o padrão é voltar pra "Em reparo"; senão, a PRÓXIMA etapa do
+    // fluxo (nunca uma anterior nem Cancelado — retroceder ou cancelar tem que
+    // ser escolha explícita de quem abre o modal).
     const preferido = reabrindo ? opcoes.find((op) => op.status === "EM_REPARO") : undefined;
-    const primeiro = preferido ?? opcoes.find((op) => op.status !== os.statusAtual);
+    const ordemAtual = opcoes.find((op) => op.status === os.statusAtual)?.ordem ?? -1;
+    const proxima = opcoes.find((op) => op.ordem > ordemAtual && op.status !== "CANCELADO");
+    const primeiro =
+      preferido ?? proxima ?? opcoes.find((op) => op.status !== os.statusAtual);
     if (primeiro) setNovoStatus(primeiro.status);
     setObservacao("");
     setNovaTentativa(false);
@@ -447,6 +451,14 @@ export function OrdemServicoDetail() {
 
   async function handleAtualizarStatus(e: FormEvent) {
     e.preventDefault();
+    // Desfechos encerram o atendimento e avisam o cliente — pedem confirmação.
+    if (novoStatus === "CONCLUIDO" || novoStatus === "CANCELADO") {
+      const acao = novoStatus === "CONCLUIDO" ? "Concluir" : "Cancelar";
+      const ok = window.confirm(
+        `${acao} a OS #${os ? formatarNumeroOS(os.numero) : ""}? O cliente verá o novo status no acompanhamento.`
+      );
+      if (!ok) return;
+    }
     setErroStatus(null);
     setEnviandoStatus(true);
     try {
