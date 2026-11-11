@@ -4,6 +4,7 @@ import { BrowserRouter } from "react-router-dom";
 import App from "./App";
 import { EtapasStatusProvider } from "./hooks/useEtapasStatus";
 import { migrarSessaoAtiva } from "./services/accountVault";
+import "@fontsource-variable/inter";
 import "./index.css";
 
 // Garante que uma sessão logada ANTES do trocador de contas existir entre no
