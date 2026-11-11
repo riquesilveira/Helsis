@@ -215,9 +215,9 @@ export function FuncionarioDesempenho() {
         Equipe & desempenho
       </Link>
 
-      <div className="flex items-start justify-between">
-        <div>
-          <div className="flex items-center gap-2">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div className="min-w-0">
+          <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
             <h1 className="text-xl font-semibold text-foreground">{desempenho.nome}</h1>
             <Button variant="link" size="sm" className="h-auto px-0 py-0 text-xs" onClick={abrirModalEditar}>
               Editar
@@ -225,7 +225,7 @@ export function FuncionarioDesempenho() {
           </div>
           <p className="mt-1 text-sm text-muted-foreground">{desempenho.cargo}</p>
         </div>
-        <div className="flex items-center gap-4">
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
           <Button asChild variant="link" size="sm" className="h-auto px-0 py-0 text-xs">
             <Link to={`/funcionarios/${id}/resumo`}>Resumo mensal (contracheque) →</Link>
           </Button>
