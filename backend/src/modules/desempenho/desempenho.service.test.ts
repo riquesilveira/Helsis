@@ -2,9 +2,23 @@ import { describe, it, expect, vi } from "vitest";
 
 vi.mock("../../lib/prisma", () => ({ prisma: {} }));
 
-import { calcularTempoMedioResolucaoHoras } from "./desempenho.service";
+import {
+  calcularMediaTentativasPorOrdem,
+  calcularTempoMedioResolucaoHoras,
+} from "./desempenho.service";
 
 const h = (horas: number) => new Date(Date.UTC(2026, 0, 1) + horas * 3_600_000);
+
+describe("calcularMediaTentativasPorOrdem", () => {
+  it("conta a tentativa que resolveu (numeroTentativas guarda só as falhas)", () => {
+    expect(calcularMediaTentativasPorOrdem([{ numeroTentativas: 0 }, { numeroTentativas: 0 }, { numeroTentativas: 0 }])).toBe(1);
+    expect(calcularMediaTentativasPorOrdem([{ numeroTentativas: 0 }, { numeroTentativas: 2 }])).toBe(2);
+  });
+
+  it("devolve 0 sem OS concluídas", () => {
+    expect(calcularMediaTentativasPorOrdem([])).toBe(0);
+  });
+});
 
 describe("calcularTempoMedioResolucaoHoras", () => {
   it("faz a média de abertura até conclusão", () => {

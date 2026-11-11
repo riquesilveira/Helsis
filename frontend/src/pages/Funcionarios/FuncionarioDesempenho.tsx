@@ -248,7 +248,14 @@ export function FuncionarioDesempenho() {
         <CartaoMetrica rotulo="OS concluídas" valor={String(desempenho.totalOrdensConcluidas)} />
         <CartaoMetrica
           rotulo="Média de tentativas por OS"
-          valor={desempenho.mediaTentativasPorOrdem.toFixed(1)}
+          valor={
+            desempenho.totalOrdensConcluidas > 0
+              ? desempenho.mediaTentativasPorOrdem.toLocaleString("pt-BR", {
+                  minimumFractionDigits: 1,
+                  maximumFractionDigits: 1,
+                })
+              : "—"
+          }
         />
         <CartaoMetrica
           rotulo="Tempo médio de resolução"

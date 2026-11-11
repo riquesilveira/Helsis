@@ -17,6 +17,17 @@ export interface DesempenhoFuncionario {
 }
 
 /**
+ * `numeroTentativas` guarda quantas tentativas FALHARAM antes de concluir
+ * (0 = resolveu na primeira). O total de tentativas de uma OS concluída é,
+ * portanto, numeroTentativas + 1 — a média nunca fica abaixo de 1.
+ */
+export function calcularMediaTentativasPorOrdem(ordens: { numeroTentativas: number }[]): number {
+  if (ordens.length === 0) return 0;
+  const soma = ordens.reduce((acc, o) => acc + Math.max(0, o.numeroTentativas) + 1, 0);
+  return soma / ordens.length;
+}
+
+/**
  * Tempo médio entre abertura e conclusão, em horas. Ignora registros
  * incoerentes (conclusão antes da abertura — ex.: dados importados/seed com
  * dataAbertura = data da carga). Sem nenhum registro válido, devolve null
@@ -59,9 +70,6 @@ export async function calcularDesempenhoFuncionario(
 
   const total = ordensConcluidas.length;
   const resolvidasPrimeira = ordensConcluidas.filter((o) => o.resolvidoNaPrimeira).length;
-
-  const somaTentativas = ordensConcluidas.reduce((acc, o) => acc + o.numeroTentativas, 0);
-
   const tempoMedioResolucaoHoras = calcularTempoMedioResolucaoHoras(ordensConcluidas);
 
   const deslocamentos = await prisma.deslocamento.aggregate({
@@ -91,7 +99,7 @@ export async function calcularDesempenhoFuncionario(
     totalOrdensConcluidas: total,
     resolvidasNaPrimeiraTentativa: resolvidasPrimeira,
     taxaResolucaoPrimeiraTentativa: total > 0 ? resolvidasPrimeira / total : 0,
-    mediaTentativasPorOrdem: total > 0 ? somaTentativas / total : 0,
+    mediaTentativasPorOrdem: calcularMediaTentativasPorOrdem(ordensConcluidas),
     tempoMedioResolucaoHoras,
     custoTotalDeslocamento,
     pecasTrocadasQueNaoResolveram: pecasQueNaoResolveram,
