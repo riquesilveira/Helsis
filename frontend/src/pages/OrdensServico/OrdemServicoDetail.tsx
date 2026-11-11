@@ -202,6 +202,9 @@ export function OrdemServicoDetail() {
   // CONCLUIDO fica disponível para todos os papéis (filtrado o status atual no
   // seletor, pra não "mudar" pro mesmo status).
   const [os, setOs] = useState<OrdemServico | null>(null);
+  const [erroCarregar, setErroCarregar] = useState<"sem-acesso" | "nao-encontrada" | "falha" | null>(
+    null
+  );
   const [pecas, setPecas] = useState<PecaCatalogo[]>([]);
   const [notificacoes, setNotificacoes] = useState<NotificacaoItem[]>([]);
 
@@ -292,12 +295,20 @@ export function OrdemServicoDetail() {
   const [anexoParaExcluir, setAnexoParaExcluir] = useState<AnexoItem | null>(null);
 
   function carregar() {
+    setErroCarregar(null);
     api.get(`/ordens-servico/${id}`).then((r) => {
       const dados: OrdemServico = r.data;
       setOs(dados);
       // Fix #5: inicializa novoStatus com o status atual da OS
       setNovoStatus(dados.statusAtual);
-    }).catch(() => {});
+    }).catch((err: any) => {
+      // Só mostra o erro se a OS ainda não está na tela; num recarregamento
+      // (depois de salvar algo) mantém os dados que já estão visíveis.
+      const status: number | undefined = err?.response?.status;
+      if (status === 403) setErroCarregar("sem-acesso");
+      else if (status === 404 || status === 400) setErroCarregar("nao-encontrada");
+      else setErroCarregar("falha");
+    });
   }
 
   function carregarNotificacoes() {
@@ -703,6 +714,39 @@ export function OrdemServicoDetail() {
     } finally {
       setTarefaMutando(null);
     }
+  }
+
+  if (!os && erroCarregar) {
+    const MENSAGENS = {
+      "sem-acesso": {
+        titulo: "Você não tem acesso a esta OS",
+        texto: "Ela está atribuída a outra pessoa da equipe. Se precisar dela, fale com o responsável técnico.",
+      },
+      "nao-encontrada": {
+        titulo: "OS não encontrada",
+        texto: "O link pode estar errado ou a ordem de serviço foi removida.",
+      },
+      falha: {
+        titulo: "Não foi possível carregar a OS",
+        texto: "Verifique sua conexão e tente de novo.",
+      },
+    } as const;
+    const msg = MENSAGENS[erroCarregar];
+    return (
+      <div className="mx-auto flex min-h-[50vh] max-w-md flex-col items-center justify-center px-4 text-center">
+        <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-danger/10 text-danger">
+          <AlertTriangle size={28} />
+        </div>
+        <h1 className="text-lg font-semibold text-foreground">{msg.titulo}</h1>
+        <p className="mt-2 text-sm text-muted-foreground">{msg.texto}</p>
+        <div className="mt-6 flex flex-wrap justify-center gap-2">
+          {erroCarregar === "falha" && <Button onClick={carregar}>Tentar de novo</Button>}
+          <Button asChild variant={erroCarregar === "falha" ? "outline" : "default"}>
+            <Link to="/ordens-servico">Voltar para Ordens de serviço</Link>
+          </Button>
+        </div>
+      </div>
+    );
   }
 
   if (!os) return <p className="text-sm text-muted-foreground">Carregando...</p>;
