@@ -276,6 +276,9 @@ export function OrdemServicoDetail() {
   const [valorMaoDeObra, setValorMaoDeObra] = useState("");
   const [valorComissao, setValorComissao] = useState("");
   const [salvandoFinanceiro, setSalvandoFinanceiro] = useState(false);
+  const [financeiroFeedback, setFinanceiroFeedback] = useState<
+    { tipo: "ok" | "erro"; texto: string } | null
+  >(null);
 
   // tarefas cronometradas (o tempo é medido nos bastidores; o técnico só
   // avança o status). Catálogo de tarefas alimenta o seletor de "adicionar".
@@ -642,13 +645,28 @@ export function OrdemServicoDetail() {
 
   async function handleSalvarFinanceiro(e: FormEvent) {
     e.preventDefault();
+    const maoDeObra = Number(valorMaoDeObra) || 0;
+    const comissao = valorComissao !== "" ? Number(valorComissao) : undefined;
+    const ok = window.confirm(
+      `Salvar o fechamento com mão de obra de ${formatarReais(maoDeObra)}` +
+        (comissao != null ? ` e comissão de ${formatarReais(comissao)}` : "") +
+        "? Esses valores entram no faturamento e na comissão do técnico."
+    );
+    if (!ok) return;
+    setFinanceiroFeedback(null);
     setSalvandoFinanceiro(true);
     try {
       await api.patch(`/ordens-servico/${id}/financeiro`, {
-        valorMaoDeObra: Number(valorMaoDeObra) || 0,
-        valorComissaoManual: valorComissao !== "" ? Number(valorComissao) : undefined,
+        valorMaoDeObra: maoDeObra,
+        valorComissaoManual: comissao,
       });
+      setFinanceiroFeedback({ tipo: "ok", texto: "Fechamento salvo." });
       carregar();
+    } catch (err: any) {
+      setFinanceiroFeedback({
+        tipo: "erro",
+        texto: err?.response?.data?.erro ?? "Não foi possível salvar o fechamento. Tente novamente.",
+      });
     } finally {
       setSalvandoFinanceiro(false);
     }
@@ -1720,9 +1738,21 @@ export function OrdemServicoDetail() {
                   />
                 </div>
               </div>
-              <Button type="submit" disabled={salvandoFinanceiro}>
-                {salvandoFinanceiro ? "Salvando..." : "Salvar fechamento"}
-              </Button>
+              <div className="flex flex-wrap items-center gap-3">
+                <Button type="submit" disabled={salvandoFinanceiro}>
+                  {salvandoFinanceiro ? "Salvando..." : "Salvar fechamento"}
+                </Button>
+                {financeiroFeedback && (
+                  <p
+                    role={financeiroFeedback.tipo === "erro" ? "alert" : "status"}
+                    className={`text-sm ${
+                      financeiroFeedback.tipo === "erro" ? "text-danger" : "text-status-concluido"
+                    }`}
+                  >
+                    {financeiroFeedback.texto}
+                  </p>
+                )}
+              </div>
             </form>
           </CardContent>
         </Card>
