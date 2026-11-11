@@ -16,6 +16,15 @@ import {
   SelectValue,
 } from "../../components/shadcn/select";
 
+// AAAA-MM-DD no fuso do navegador, daqui a N dias. Não usa toISOString(), que
+// é UTC: no Brasil, depois das 21h, "hoje" viraria o dia seguinte.
+function dataLocal(diasAFrente: number): string {
+  const d = new Date();
+  d.setDate(d.getDate() + diasAFrente);
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+}
+
 export function NovaOS() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
@@ -31,7 +40,9 @@ export function NovaOS() {
   const [clienteId, setClienteId] = useState(searchParams.get("clienteId") ?? "");
   const [equipamentoId, setEquipamentoId] = useState(searchParams.get("equipamentoId") ?? "");
   const [funcionarioId, setFuncionarioId] = useState("");
-  const [dataAgendada, setDataAgendada] = useState(() => new Date().toISOString().slice(0, 10));
+  // Começa vazia: sem data, a OS não cai sem querer na rota do dia (auditoria
+  // O10). Continua visível na rota do técnico em "outras em aberto".
+  const [dataAgendada, setDataAgendada] = useState("");
   const [modalidade, setModalidade] = useState<"VISITA_TECNICA" | "OFICINA" | "REMOTO">(
     "VISITA_TECNICA"
   );
@@ -192,14 +203,29 @@ export function NovaOS() {
 
             <div className="grid gap-1.5">
               <Label htmlFor="os-data">Data agendada da visita (opcional)</Label>
-              <Input
-                id="os-data"
-                type="date"
-                value={dataAgendada}
-                onChange={(e) => setDataAgendada(e.target.value)}
-              />
+              <div className="flex flex-wrap items-center gap-2">
+                <Input
+                  id="os-data"
+                  type="date"
+                  value={dataAgendada}
+                  onChange={(e) => setDataAgendada(e.target.value)}
+                  className="w-auto"
+                />
+                <Button type="button" variant="outline" size="sm" onClick={() => setDataAgendada(dataLocal(0))}>
+                  Hoje
+                </Button>
+                <Button type="button" variant="outline" size="sm" onClick={() => setDataAgendada(dataLocal(1))}>
+                  Amanhã
+                </Button>
+                {dataAgendada && (
+                  <Button type="button" variant="ghost" size="sm" onClick={() => setDataAgendada("")}>
+                    Limpar
+                  </Button>
+                )}
+              </div>
               <span className="text-xs text-muted-foreground">
-                É essa data que define em qual dia a OS aparece na rota do técnico.
+                É essa data que define em qual dia a OS aparece na rota do técnico. Sem data, ela
+                fica na rota dele como "em aberto", sem dia marcado.
               </span>
             </div>
 
