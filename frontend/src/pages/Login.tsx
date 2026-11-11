@@ -20,9 +20,13 @@ function mensagemErroLogin(err: any, segundosParaLiberar: number | null): string
   const status: number | undefined = err?.response?.status;
   if (status === 401 || status === 400) return "E-mail ou senha inválidos.";
   if (status === 429) {
-    if (segundosParaLiberar == null) return "Muitas tentativas. Tente de novo em alguns minutos.";
+    // O limite é por IP: quem acertou a senha pode ter sido bloqueado por um
+    // colega na mesma rede — por isso "nesta rede".
+    if (segundosParaLiberar == null) {
+      return "Muitas tentativas de login nesta rede. Tente de novo em alguns minutos.";
+    }
     const minutos = Math.max(1, Math.ceil(segundosParaLiberar / 60));
-    return `Muitas tentativas. Tente de novo em ${minutos} min.`;
+    return `Muitas tentativas de login nesta rede. Tente de novo em ${minutos} min.`;
   }
   return "Não foi possível conectar ao servidor. Tente de novo em instantes.";
 }
