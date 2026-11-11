@@ -645,6 +645,8 @@ export function OrdemServicoDetail() {
   }
 
   function handleValorMaoDeObraChange(v: string) {
+    // Editou de novo: o "Fechamento salvo." anterior deixa de valer.
+    setFinanceiroFeedback(null);
     setValorMaoDeObra(v);
     const numero = Number(v);
     if (!Number.isNaN(numero) && os?.funcionario?.tipoComissao) {
@@ -1773,7 +1775,10 @@ export function OrdemServicoDetail() {
                     min={0}
                     step="0.01"
                     value={valorComissao}
-                    onChange={(e) => setValorComissao(e.target.value)}
+                    onChange={(e) => {
+                      setFinanceiroFeedback(null);
+                      setValorComissao(e.target.value);
+                    }}
                     disabled={!os.funcionario}
                     placeholder={!os.funcionario ? "Atribua um técnico primeiro" : "0,00"}
                   />
