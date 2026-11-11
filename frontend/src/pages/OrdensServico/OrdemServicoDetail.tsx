@@ -469,6 +469,10 @@ export function OrdemServicoDetail() {
     // Cancelar encerra o atendimento sem resolver e avisa o cliente: pede um
     // segundo passo. Concluir não pede, porque o diagnóstico (causa, defeito,
     // solução) já obriga a parar e pensar.
+    if (novoStatus === "CANCELADO" && !observacao.trim()) {
+      setErroStatus("Informe o motivo do cancelamento.");
+      return;
+    }
     if (novoStatus === "CANCELADO" && !confirmandoCancelamento) {
       setConfirmandoCancelamento(true);
       return;
@@ -1108,13 +1112,23 @@ export function OrdemServicoDetail() {
               </Select>
             </div>
             <div className="grid gap-1.5">
-              <Label htmlFor="observacao-status">Observação (opcional)</Label>
+              <Label htmlFor="observacao-status">
+                {novoStatus === "CANCELADO" ? "Motivo do cancelamento" : "Observação (opcional)"}
+              </Label>
               <Textarea
                 id="observacao-status"
                 rows={2}
-                placeholder="Ex: peça trocada não resolveu, retornando ao reparo"
+                required={novoStatus === "CANCELADO"}
+                placeholder={
+                  novoStatus === "CANCELADO"
+                    ? "Ex: OS aberta por engano, cliente desistiu do atendimento"
+                    : "Ex: peça trocada não resolveu, retornando ao reparo"
+                }
                 value={observacao}
-                onChange={(e) => setObservacao(e.target.value)}
+                onChange={(e) => {
+                  setObservacao(e.target.value);
+                  if (erroStatus) setErroStatus(null);
+                }}
               />
             </div>
             {(novoStatus === "AGUARDANDO_VALIDACAO" || novoStatus === "CONCLUIDO") && (

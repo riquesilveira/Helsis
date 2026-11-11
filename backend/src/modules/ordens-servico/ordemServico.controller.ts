@@ -126,6 +126,12 @@ export async function criar(req: Request, res: Response) {
 export async function atualizarStatus(req: Request, res: Response) {
   const dados = atualizarStatusSchema.parse(req.body);
 
+  // Cancelar encerra o atendimento sem resolver e avisa o cliente: o motivo é
+  // obrigatório (decisão de produto, 11/11/2026), para qualquer papel.
+  if (dados.status === "CANCELADO" && !dados.observacao?.trim()) {
+    throw new AppError("Informe o motivo do cancelamento.", 400);
+  }
+
   // A CONCLUSÃO é do técnico que executa o serviço — quem faz, fecha. Gestão/
   // suporte não concluem (apenas designam técnico e reabrem chamados).
   if (dados.status === "CONCLUIDO" && req.usuario!.papel !== "TECNICO") {
