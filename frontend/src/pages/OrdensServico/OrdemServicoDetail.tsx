@@ -219,6 +219,9 @@ export function OrdemServicoDetail() {
   // Segundo passo do cancelamento, dentro do próprio modal (sem window.confirm,
   // cujo botão nativo "Cancelar" não cancela a OS — o oposto do que diz).
   const [confirmandoCancelamento, setConfirmandoCancelamento] = useState(false);
+  // Dono/Gestor não mudam o status do atendimento; só podem cancelar uma OS
+  // aberta (ex.: aberta por engano). Nesse modo o modal fica travado em Cancelado.
+  const [modoSoCancelar, setModoSoCancelar] = useState(false);
   const [observacao, setObservacao] = useState("");
   const [novaTentativa, setNovaTentativa] = useState(false);
   const [enviandoStatus, setEnviandoStatus] = useState(false);
@@ -461,6 +464,17 @@ export function OrdemServicoDetail() {
     setNovaTentativa(false);
     setErroStatus(null);
     setConfirmandoCancelamento(false);
+    setModoSoCancelar(false);
+    setModalStatusAberto(true);
+  }
+
+  function abrirModalCancelar() {
+    setNovoStatus("CANCELADO");
+    setObservacao("");
+    setNovaTentativa(false);
+    setErroStatus(null);
+    setConfirmandoCancelamento(false);
+    setModoSoCancelar(true);
     setModalStatusAberto(true);
   }
 
@@ -1060,6 +1074,15 @@ export function OrdemServicoDetail() {
                     Novo status
                   </Button>
                 )}
+              {/* Dono/Gestor não conduzem o atendimento, mas precisam poder
+                  cancelar uma OS aberta por engano (auditoria O7). */}
+              {os.statusAtual !== "CONCLUIDO" &&
+                os.statusAtual !== "CANCELADO" &&
+                (usuario?.papel === "DONO" || usuario?.papel === "GESTOR") && (
+                  <Button size="sm" variant="destructive" onClick={abrirModalCancelar}>
+                    Cancelar OS
+                  </Button>
+                )}
             </div>
           </CardAction>
         </CardHeader>
@@ -1078,13 +1101,16 @@ export function OrdemServicoDetail() {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>
-              {os.statusAtual === "CONCLUIDO" || os.statusAtual === "CANCELADO"
-                ? "Reabrir chamado"
-                : "Novo status"}
+              {modoSoCancelar
+                ? `Cancelar a OS #${formatarNumeroOS(os.numero)}`
+                : os.statusAtual === "CONCLUIDO" || os.statusAtual === "CANCELADO"
+                  ? "Reabrir chamado"
+                  : "Novo status"}
             </DialogTitle>
           </DialogHeader>
           <form onSubmit={handleAtualizarStatus} className="space-y-4">
-            <div className="grid gap-1.5">
+            {/* No modo "só cancelar" (Dono/Gestor) não há escolha de status. */}
+            <div className={modoSoCancelar ? "hidden" : "grid gap-1.5"}>
               <Label htmlFor="novo-status">Status</Label>
               <Select
                 value={novoStatus}
