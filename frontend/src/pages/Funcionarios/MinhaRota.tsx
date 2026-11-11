@@ -46,6 +46,7 @@ export function MinhaRota() {
           value={data}
           onChange={(e) => setData(e.target.value)}
           className="w-auto"
+          aria-label="Data da rota"
         />
         <span className="text-sm text-muted-foreground">{dataFormatada}</span>
       </div>
