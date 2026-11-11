@@ -225,7 +225,7 @@ export function NovaOS() {
               </div>
               <span className="text-xs text-muted-foreground">
                 É essa data que define em qual dia a OS aparece na rota do técnico. Sem data, ela
-                fica na rota dele como "em aberto", sem dia marcado.
+                aparece na rota do técnico em "Outras OS em aberto".
               </span>
             </div>
 
