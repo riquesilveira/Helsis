@@ -131,13 +131,34 @@ function CronometroTarefa({
     const id = setInterval(() => setAgora(Date.now()), 1000);
     return () => clearInterval(id);
   }, []);
+  const esquecido = agora - inicio > LIMITE_CRONOMETRO_SEM_PAUSA_MS;
   return (
-    <span className="codigo inline-flex items-center gap-1.5 text-xs font-semibold tabular-nums text-status-reparo">
-      <span className="size-1.5 shrink-0 animate-pulse rounded-full bg-status-reparo" />
-      {formatarCronometro(acumuladaSegundos + (agora - inicio) / 1000)}
+    <span className="inline-flex flex-wrap items-center gap-1.5">
+      <span
+        className={`codigo inline-flex items-center gap-1.5 text-xs font-semibold tabular-nums ${
+          esquecido ? "text-danger" : "text-status-reparo"
+        }`}
+      >
+        <span
+          className={`size-1.5 shrink-0 animate-pulse rounded-full ${esquecido ? "bg-danger" : "bg-status-reparo"}`}
+        />
+        {formatarCronometro(acumuladaSegundos + (agora - inicio) / 1000)}
+      </span>
+      {esquecido && (
+        <span
+          role="status"
+          className="rounded-full bg-danger/10 px-2 py-0.5 text-[11px] font-medium text-danger"
+        >
+          Mais de 5 h sem pausa. Esqueceu de pausar?
+        </span>
+      )}
     </span>
   );
 }
+
+// Trecho contínuo (desde o último início/retomada) a partir do qual o
+// cronômetro provavelmente foi esquecido. Decisão do Rique em 11/11/2026: 5 h.
+const LIMITE_CRONOMETRO_SEM_PAUSA_MS = 5 * 60 * 60 * 1000;
 
 // Cronômetro congelado de uma tarefa PAUSADA — mostra o tempo acumulado parado.
 function CronometroPausado({ acumuladaSegundos = 0 }: { acumuladaSegundos?: number }) {
