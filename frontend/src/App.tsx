@@ -73,6 +73,9 @@ const ComparativoProdutividade = lazy(() =>
 const SemPermissao = lazy(() =>
   import("./pages/SemPermissao").then((m) => ({ default: m.SemPermissao }))
 );
+const NaoEncontrada = lazy(() =>
+  import("./pages/NaoEncontrada").then((m) => ({ default: m.NaoEncontrada }))
+);
 
 // Pré-carrega em segundo plano (quando o navegador está ocioso) os chunks das
 // telas mais usadas, pra a navegação não esperar o download do JS. Vite dedup­lica
@@ -267,6 +270,8 @@ export default function App() {
             }
           />
           <Route path="/configuracoes" element={<Configuracoes />} />
+          {/* Coringa dentro do layout: logado vê o menu + aviso; deslogado cai no /login. */}
+          <Route path="*" element={<NaoEncontrada />} />
         </Route>
       </Routes>
     </Suspense>
