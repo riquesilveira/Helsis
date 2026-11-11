@@ -321,12 +321,17 @@ export function OrdensServicoList() {
                       </span>
                     </div>
                   </TableCell>
-                  <TableCell className="px-5 py-4">
+                  {/* w-full + max-w-0: a coluna Problema ocupa só o espaço que
+                      sobra e corta o texto, em vez de empurrar Status pra fora. */}
+                  <TableCell className="w-full max-w-0 px-5 py-4 whitespace-normal">
                     <div className="flex min-w-0 flex-col gap-0.5">
                       <span className="truncate text-xs font-bold text-foreground">
                         {os.equipamento.tipo}
                       </span>
-                      <span className="line-clamp-1 text-sm text-muted-foreground">
+                      <span
+                        className="truncate text-sm text-muted-foreground"
+                        title={os.descricaoProblema}
+                      >
                         {os.descricaoProblema}
                       </span>
                     </div>
