@@ -17,13 +17,15 @@ export interface DesempenhoFuncionario {
 }
 
 /**
- * `numeroTentativas` guarda quantas tentativas FALHARAM antes de concluir
- * (0 = resolveu na primeira). O total de tentativas de uma OS concluída é,
- * portanto, numeroTentativas + 1 — a média nunca fica abaixo de 1.
+ * Média de retornos por OS concluída. `numeroTentativas` guarda quantas
+ * tentativas FALHARAM antes de concluir (0 = resolveu na primeira), ou seja,
+ * quantas vezes foi preciso voltar. O cálculo é o de sempre; a tela é que
+ * passou a chamá-lo de "Retornos por OS (média)" em vez de "tentativas".
+ * Exposto na API como `mediaTentativasPorOrdem` (nome mantido por contrato).
  */
-export function calcularMediaTentativasPorOrdem(ordens: { numeroTentativas: number }[]): number {
+export function calcularMediaRetornosPorOrdem(ordens: { numeroTentativas: number }[]): number {
   if (ordens.length === 0) return 0;
-  const soma = ordens.reduce((acc, o) => acc + Math.max(0, o.numeroTentativas) + 1, 0);
+  const soma = ordens.reduce((acc, o) => acc + Math.max(0, o.numeroTentativas), 0);
   return soma / ordens.length;
 }
 
@@ -99,7 +101,7 @@ export async function calcularDesempenhoFuncionario(
     totalOrdensConcluidas: total,
     resolvidasNaPrimeiraTentativa: resolvidasPrimeira,
     taxaResolucaoPrimeiraTentativa: total > 0 ? resolvidasPrimeira / total : 0,
-    mediaTentativasPorOrdem: calcularMediaTentativasPorOrdem(ordensConcluidas),
+    mediaTentativasPorOrdem: calcularMediaRetornosPorOrdem(ordensConcluidas),
     tempoMedioResolucaoHoras,
     custoTotalDeslocamento,
     pecasTrocadasQueNaoResolveram: pecasQueNaoResolveram,

@@ -106,12 +106,13 @@ function TarefaCronometrada({ tarefa }: { tarefa: HistoricoTarefaFuncionario }) 
   );
 }
 
-function CartaoMetrica({ rotulo, valor }: { rotulo: string; valor: string }) {
+function CartaoMetrica({ rotulo, valor, ajuda }: { rotulo: string; valor: string; ajuda?: string }) {
   return (
     <Card size="sm">
       <CardContent>
         <p className="text-xs text-muted-foreground">{rotulo}</p>
         <p className="codigo mt-1 text-2xl font-semibold text-foreground">{valor}</p>
+        {ajuda && <p className="mt-1 text-[11px] text-muted-foreground">{ajuda}</p>}
       </CardContent>
     </Card>
   );
@@ -238,6 +239,8 @@ export function FuncionarioDesempenho() {
       <p className="max-w-md text-xs text-muted-foreground">
         Essas métricas são calculadas a partir do histórico real de ordens de serviço —
         é a base objetiva usada para avaliar pedidos de aumento.
+        {` Base: ${desempenho.totalOrdensConcluidas} OS concluída${desempenho.totalOrdensConcluidas === 1 ? "" : "s"}.`}
+        {desempenho.totalOrdensConcluidas < 10 && " Com menos de 10, use com cautela."}
       </p>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
@@ -247,7 +250,8 @@ export function FuncionarioDesempenho() {
         />
         <CartaoMetrica rotulo="OS concluídas" valor={String(desempenho.totalOrdensConcluidas)} />
         <CartaoMetrica
-          rotulo="Média de tentativas por OS"
+          rotulo="Retornos por OS (média)"
+          ajuda="Quantas vezes, em média, foi preciso voltar antes de resolver"
           valor={
             desempenho.totalOrdensConcluidas > 0
               ? desempenho.mediaTentativasPorOrdem.toLocaleString("pt-BR", {
