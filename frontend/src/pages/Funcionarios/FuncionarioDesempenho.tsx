@@ -247,6 +247,7 @@ export function FuncionarioDesempenho() {
         <CartaoMetrica
           rotulo="Taxa de acerto na 1ª visita"
           valor={`${Math.round(desempenho.taxaResolucaoPrimeiraTentativa * 100)}%`}
+          ajuda="Resolvidas sem precisar voltar, mesmo que alguma peça trocada na visita não tenha resolvido"
         />
         <CartaoMetrica rotulo="OS concluídas" valor={String(desempenho.totalOrdensConcluidas)} />
         <CartaoMetrica
@@ -276,6 +277,7 @@ export function FuncionarioDesempenho() {
         <CartaoMetrica
           rotulo="Peças trocadas sem resolver"
           valor={String(desempenho.pecasTrocadasQueNaoResolveram)}
+          ajuda="Inclui trocas na mesma visita em que o problema acabou resolvido"
         />
       </div>
 
