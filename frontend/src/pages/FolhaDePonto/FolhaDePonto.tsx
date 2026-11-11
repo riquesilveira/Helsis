@@ -59,9 +59,16 @@ export function FolhaDePonto() {
   const [funcionarios, setFuncionarios] = useState<Funcionario[]>([]);
   const [filtroFuncionario, setFiltroFuncionario] = useState("");
 
+  // Quem não tem cadastro de funcionário (ex.: o dono) não bate ponto: a API
+  // responde 404 e a parte pessoal da tela some, ficando só a folha da equipe.
+  const [semCadastro, setSemCadastro] = useState(false);
+
   function carregarMeus() {
-    api.get("/ponto/atual").then((r) => setAtual(r.data)).catch(() => {});
-    api.get("/ponto/meus").then((r) => setMeus(r.data)).catch(() => {});
+    const tratar404 = (err: any) => {
+      if (err?.response?.status === 404) setSemCadastro(true);
+    };
+    api.get("/ponto/atual").then((r) => setAtual(r.data)).catch(tratar404);
+    api.get("/ponto/meus").then((r) => setMeus(r.data)).catch(tratar404);
   }
 
   function carregarConsolidado() {
@@ -112,9 +119,15 @@ export function FolhaDePonto() {
     <div className="space-y-6">
       <PageHeader
         titulo="Folha de ponto"
-        subtitulo="Registre sua entrada e saída e acompanhe suas horas."
+        subtitulo={
+          semCadastro
+            ? "Acompanhe as horas registradas pela equipe."
+            : "Registre sua entrada e saída e acompanhe suas horas."
+        }
       />
 
+      {!semCadastro && (
+      <>
       {/* Cartão de bater ponto */}
       <Card>
         <CardContent className="flex flex-wrap items-center justify-between gap-4">
@@ -226,6 +239,8 @@ export function FolhaDePonto() {
           </Card>
         ))}
       </div>
+      </>
+      )}
 
       {/* Visão consolidada — gerente/dono */}
       {podeConsolidar && (
