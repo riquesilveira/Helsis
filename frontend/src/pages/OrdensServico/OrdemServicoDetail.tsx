@@ -312,6 +312,8 @@ export function OrdemServicoDetail() {
   }
 
   function carregarNotificacoes() {
+    // O histórico de notificações é restrito à gestão (o técnico recebe 403).
+    if (!podeDesignar) return;
     api.get(`/ordens-servico/${id}/notificacoes`).then((r) => setNotificacoes(r.data)).catch(() => {});
   }
 
@@ -909,6 +911,9 @@ export function OrdemServicoDetail() {
         </Card>
       )}
 
+      {/* Só a gestão tem acesso ao histórico de notificações; para o técnico o
+          card diria "nenhuma enviada", o que não é verdade. */}
+      {podeDesignar && (
       <Card>
         <CardHeader className="border-b">
           <CardTitle>Notificações enviadas ao cliente</CardTitle>
@@ -945,6 +950,7 @@ export function OrdemServicoDetail() {
           </div>
         </CardContent>
       </Card>
+      )}
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <Card>
