@@ -53,6 +53,11 @@ function paraInputDate(iso?: string | null) {
   return iso ? iso.slice(0, 10) : "";
 }
 
+// Mesmo critério do backend (calcularStatusPreventiva): data já passou = atrasada.
+function preventivaAtrasada(iso?: string | null) {
+  return Boolean(iso) && new Date(iso as string).getTime() < Date.now();
+}
+
 function formatarProximaData(iso?: string | null) {
   if (!iso) return null;
   return new Date(iso).toLocaleDateString("pt-BR");
@@ -278,12 +283,21 @@ export function ClienteDetail() {
                   {eq.numeroSerie ? ` — nº ${eq.numeroSerie}` : ""}
                 </p>
                 {eq.frequenciaManutencaoMeses ? (
-                  <p className="mt-1 flex items-center gap-1 text-[11px] font-medium text-foreground">
+                  <p
+                    className={`mt-1 flex flex-wrap items-center gap-1 text-[11px] font-medium ${
+                      preventivaAtrasada(eq.proximaManutencaoPreventiva) ? "text-danger" : "text-foreground"
+                    }`}
+                  >
                     <CalendarClock size={12} className="shrink-0" />
                     Preventiva a cada {eq.frequenciaManutencaoMeses} meses
                     {eq.proximaManutencaoPreventiva
-                      ? ` · próxima em ${formatarProximaData(eq.proximaManutencaoPreventiva)}`
+                      ? preventivaAtrasada(eq.proximaManutencaoPreventiva)
+                        ? ` · atrasada desde ${formatarProximaData(eq.proximaManutencaoPreventiva)}`
+                        : ` · próxima em ${formatarProximaData(eq.proximaManutencaoPreventiva)}`
                       : ""}
+                    {preventivaAtrasada(eq.proximaManutencaoPreventiva) && (
+                      <span className="rounded-full bg-danger/10 px-1.5 py-px text-[10px] text-danger">Atrasada</span>
+                    )}
                   </p>
                 ) : (
                   <p className="mt-1 text-[11px] text-muted-foreground">Sem manutenção preventiva agendada</p>
