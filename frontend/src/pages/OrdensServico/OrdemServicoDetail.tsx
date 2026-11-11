@@ -40,7 +40,7 @@ import {
 } from "../../types";
 import { useEtapasStatus } from "../../hooks/useEtapasStatus";
 import { StatusTimeline } from "../../components/StatusTimeline";
-import { TipoBadge } from "../../components/StatusBadge";
+import { StatusBadge, TipoBadge } from "../../components/StatusBadge";
 import { usuarioLogado } from "../../services/auth";
 import { formatarReais, tempoRelativo, formatarNumeroOS } from "../../utils/formatters";
 import {
@@ -783,6 +783,7 @@ export function OrdemServicoDetail() {
           <h1 className="text-xl font-semibold text-foreground">{os.cliente.nome}</h1>
           <div className="flex items-center gap-2">
             <p className="codigo text-sm text-muted-foreground">OS #{formatarNumeroOS(os.numero)}</p>
+            <StatusBadge status={os.statusAtual} />
             <TipoBadge tipo={os.tipo} />
             <span
               className="text-xs text-muted-foreground"
