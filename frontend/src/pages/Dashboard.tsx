@@ -440,22 +440,27 @@ export function Dashboard() {
             <Link
               key={os.id}
               to={`/ordens-servico/${os.id}`}
-              className="group flex items-center justify-between gap-4 px-5 py-3.5 hover:bg-muted/50 transition-colors"
+              className="group flex items-center justify-between gap-3 px-4 py-3.5 hover:bg-muted/50 transition-colors sm:gap-4 sm:px-5"
             >
               <div className="flex min-w-0 items-center gap-3">
                 <HospitalLogo nome={os.cliente.nome} size={40} />
                 <div className="min-w-0">
-                  <div className="flex items-center gap-2">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:gap-2">
                     <span className="codigo shrink-0 text-xs text-muted-foreground">#{formatarNumeroOS(os.numero)}</span>
-                    <p className="truncate text-sm font-semibold text-foreground">{os.cliente.nome}</p>
+                    <p className="text-sm font-semibold text-foreground sm:truncate">{os.cliente.nome}</p>
                   </div>
                   <p className="text-xs text-muted-foreground mt-0.5 truncate">
                     {os.equipamento.tipo} — {os.descricaoProblema}
                   </p>
+                  {/* No mobile, status e idade descem para a própria linha — assim o nome do cliente cabe. */}
+                  <div className="mt-1.5 flex items-center gap-2 sm:hidden">
+                    <StatusBadge status={os.statusAtual} />
+                    <span className="text-[11px] text-muted-foreground">{tempoRelativo(os.dataAbertura)}</span>
+                  </div>
                 </div>
               </div>
               <div className="flex shrink-0 items-center gap-3">
-                <div className="text-right">
+                <div className="hidden text-right sm:block">
                   <StatusBadge status={os.statusAtual} />
                   <p className="text-[11px] text-muted-foreground mt-1" title={new Date(os.dataAbertura).toLocaleString("pt-BR")}>
                     {tempoRelativo(os.dataAbertura)}
