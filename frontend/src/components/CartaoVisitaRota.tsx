@@ -8,7 +8,8 @@ const COR_STATUS: Record<string, string> = {
   RECEBIDO: "bg-status-recebido text-white",
   DIAGNOSTICO: "bg-status-diagnostico text-white",
   AGUARDANDO_PECA: "bg-status-aguardando text-white",
-  EM_REPARO: "bg-status-reparo text-white animate-pulse",
+  // Sem animate-pulse: a opacidade oscilando deixava o texto branco ilegível.
+  EM_REPARO: "bg-status-reparo text-white",
   AGUARDANDO_VALIDACAO: "bg-status-validacao text-white",
   CONCLUIDO: "bg-status-concluido text-white",
   CANCELADO: "bg-status-cancelado text-white",
