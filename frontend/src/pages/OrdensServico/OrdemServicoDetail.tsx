@@ -818,7 +818,7 @@ export function OrdemServicoDetail() {
       <div>
         <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5">
           <h1 className="text-xl font-semibold text-foreground">{os.cliente.nome}</h1>
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
             <p className="codigo text-sm text-muted-foreground">OS #{formatarNumeroOS(os.numero)}</p>
             <StatusBadge status={os.statusAtual} />
             <TipoBadge tipo={os.tipo} />
