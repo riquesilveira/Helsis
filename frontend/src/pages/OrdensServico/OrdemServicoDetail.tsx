@@ -216,6 +216,9 @@ export function OrdemServicoDetail() {
 
   // formulário de status
   const [novoStatus, setNovoStatus] = useState<StatusOS>("RECEBIDO");
+  // Segundo passo do cancelamento, dentro do próprio modal (sem window.confirm,
+  // cujo botão nativo "Cancelar" não cancela a OS — o oposto do que diz).
+  const [confirmandoCancelamento, setConfirmandoCancelamento] = useState(false);
   const [observacao, setObservacao] = useState("");
   const [novaTentativa, setNovaTentativa] = useState(false);
   const [enviandoStatus, setEnviandoStatus] = useState(false);
@@ -457,6 +460,7 @@ export function OrdemServicoDetail() {
     setObservacao("");
     setNovaTentativa(false);
     setErroStatus(null);
+    setConfirmandoCancelamento(false);
     setModalStatusAberto(true);
   }
 
@@ -465,11 +469,9 @@ export function OrdemServicoDetail() {
     // Cancelar encerra o atendimento sem resolver e avisa o cliente: pede um
     // segundo passo. Concluir não pede, porque o diagnóstico (causa, defeito,
     // solução) já obriga a parar e pensar.
-    if (novoStatus === "CANCELADO") {
-      const ok = window.confirm(
-        `Cancelar a OS #${os ? formatarNumeroOS(os.numero) : ""}? O cliente será avisado.`
-      );
-      if (!ok) return;
+    if (novoStatus === "CANCELADO" && !confirmandoCancelamento) {
+      setConfirmandoCancelamento(true);
+      return;
     }
     setErroStatus(null);
     setEnviandoStatus(true);
@@ -1078,7 +1080,13 @@ export function OrdemServicoDetail() {
           <form onSubmit={handleAtualizarStatus} className="space-y-4">
             <div className="grid gap-1.5">
               <Label htmlFor="novo-status">Status</Label>
-              <Select value={novoStatus} onValueChange={(v) => setNovoStatus(v as StatusOS)}>
+              <Select
+                value={novoStatus}
+                onValueChange={(v) => {
+                  setNovoStatus(v as StatusOS);
+                  setConfirmandoCancelamento(false);
+                }}
+              >
                 <SelectTrigger id="novo-status" className="w-full">
                   <SelectValue />
                 </SelectTrigger>
@@ -1163,6 +1171,11 @@ export function OrdemServicoDetail() {
                 O cliente verá: “{etapas.find((e) => e.status === novoStatus)?.rotuloCliente}”
               </p>
             )}
+            {confirmandoCancelamento && (
+              <p role="alert" className="text-sm font-medium text-foreground">
+                Cancelar a OS #{formatarNumeroOS(os.numero)}? O cliente será avisado.
+              </p>
+            )}
             <div className="flex gap-2">
               <Button
                 type="submit"
@@ -1171,14 +1184,23 @@ export function OrdemServicoDetail() {
               >
                 {enviandoStatus
                   ? "Salvando..."
-                  : novoStatus === "CONCLUIDO"
-                    ? "Concluir OS"
-                    : novoStatus === "CANCELADO"
-                      ? "Cancelar OS"
-                      : "Salvar status"}
+                  : confirmandoCancelamento
+                    ? "Sim, cancelar OS"
+                    : novoStatus === "CONCLUIDO"
+                      ? "Concluir OS"
+                      : novoStatus === "CANCELADO"
+                        ? "Cancelar OS"
+                        : "Salvar status"}
               </Button>
-              {/* Ao lado de "Cancelar OS", um botão "Cancelar" seria ambíguo. */}
-              <Button type="button" variant="ghost" onClick={() => setModalStatusAberto(false)}>
+              {/* Ao lado de "Cancelar OS", um botão "Cancelar" seria ambíguo. No
+                  passo de confirmação, "Voltar" volta ao modal sem cancelar. */}
+              <Button
+                type="button"
+                variant="ghost"
+                onClick={() =>
+                  confirmandoCancelamento ? setConfirmandoCancelamento(false) : setModalStatusAberto(false)
+                }
+              >
                 {novoStatus === "CANCELADO" ? "Voltar" : "Cancelar"}
               </Button>
             </div>
