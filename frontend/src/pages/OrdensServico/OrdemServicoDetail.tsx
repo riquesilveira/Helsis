@@ -136,18 +136,20 @@ function CronometroTarefa({
     <span className="inline-flex flex-wrap items-center gap-1.5">
       <span
         className={`codigo inline-flex items-center gap-1.5 text-xs font-semibold tabular-nums ${
-          esquecido ? "text-danger" : "text-status-reparo"
+          esquecido ? "text-status-aguardando" : "text-status-reparo"
         }`}
       >
         <span
-          className={`size-1.5 shrink-0 animate-pulse rounded-full ${esquecido ? "bg-danger" : "bg-status-reparo"}`}
+          className={`size-1.5 shrink-0 animate-pulse rounded-full ${
+            esquecido ? "bg-status-aguardando" : "bg-status-reparo"
+          }`}
         />
         {formatarCronometro(acumuladaSegundos + (agora - inicio) / 1000)}
       </span>
       {esquecido && (
         <span
           role="status"
-          className="rounded-full bg-danger/10 px-2 py-0.5 text-[11px] font-medium text-danger"
+          className="rounded-full bg-status-aguardando/10 px-2 py-0.5 text-[11px] font-medium text-status-aguardando"
         >
           Mais de 5 h sem pausa. Esqueceu de pausar?
         </span>
