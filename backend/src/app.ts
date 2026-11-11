@@ -10,6 +10,9 @@ export const app = express();
 app.use(cors({
   origin: process.env.FRONTEND_URL || "http://localhost:5173",
   credentials: true,
+  // O front (outro domínio) só lê cabeçalhos que forem expostos. Retry-After
+  // diz em quanto tempo o login libera depois do limite de tentativas (429).
+  exposedHeaders: ["Retry-After"],
 }));
 app.use(express.json());
 

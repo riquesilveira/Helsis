@@ -1,4 +1,4 @@
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Activity, Check, Eye, EyeOff } from "lucide-react";
 import { api } from "../services/api";
@@ -16,17 +16,21 @@ const DESTAQUES = [
 // Cada falha pede uma ação diferente do usuário: só o 401 é credencial errada.
 // Tratar tudo como "senha inválida" faz a pessoa tentar de novo e, no caso do
 // limite de tentativas (429), prolongar o próprio bloqueio.
-function mensagemErroLogin(err: any): string {
+function mensagemErroLogin(err: any, segundosParaLiberar: number | null): string {
   const status: number | undefined = err?.response?.status;
-  const doServidor: string | undefined = err?.response?.data?.erro;
   if (status === 401 || status === 400) return "E-mail ou senha inválidos.";
   if (status === 429) {
-    return doServidor ?? "Muitas tentativas de login. Aguarde 15 minutos e tente novamente.";
+    if (segundosParaLiberar == null) return "Muitas tentativas. Tente de novo em alguns minutos.";
+    const minutos = Math.max(1, Math.ceil(segundosParaLiberar / 60));
+    return `Muitas tentativas. Tente de novo em ${minutos} min.`;
   }
-  if (!err?.response) {
-    return "Não foi possível falar com o servidor. Verifique sua internet e tente de novo em instantes.";
-  }
-  return "O servidor teve um problema ao entrar. Tente de novo em instantes.";
+  return "Não foi possível conectar ao servidor. Tente de novo em instantes.";
+}
+
+// Retry-After (segundos) que o limitador de login manda no 429; null se não vier.
+function lerRetryAfter(err: any): number | null {
+  const valor = Number(err?.response?.headers?.["retry-after"]);
+  return Number.isFinite(valor) && valor > 0 ? valor : null;
 }
 
 export function Login() {
@@ -35,6 +39,9 @@ export function Login() {
   const [mostrarSenha, setMostrarSenha] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
   const [carregando, setCarregando] = useState(false);
+  const [bloqueado, setBloqueado] = useState(false);
+  const timerBloqueio = useRef<number | undefined>(undefined);
+  useEffect(() => () => window.clearTimeout(timerBloqueio.current), []);
   const navigate = useNavigate();
   // Já existe alguma conta salva? Então este login é "adicionar outra conta".
   const adicionandoConta = listarContas().length > 0;
@@ -50,7 +57,18 @@ export function Login() {
       salvarConta(data.usuario, data.token);
       navigate("/");
     } catch (err: any) {
-      setErro(mensagemErroLogin(err));
+      const segundos = err?.response?.status === 429 ? lerRetryAfter(err) : null;
+      setErro(mensagemErroLogin(err, segundos));
+      // Bloqueado pelo limite: o botão fica desabilitado até o prazo passar,
+      // para a pessoa não prolongar o bloqueio tentando de novo.
+      if (segundos != null) {
+        setBloqueado(true);
+        window.clearTimeout(timerBloqueio.current);
+        timerBloqueio.current = window.setTimeout(() => {
+          setBloqueado(false);
+          setErro(null);
+        }, segundos * 1000);
+      }
     } finally {
       setCarregando(false);
     }
@@ -173,7 +191,7 @@ export function Login() {
               <p role="alert" className="rounded-lg bg-danger/10 px-3 py-2 text-sm text-danger">{erro}</p>
             )}
 
-            <Button type="submit" disabled={carregando} className="w-full">
+            <Button type="submit" disabled={carregando || bloqueado} className="w-full">
               {carregando ? "Entrando..." : adicionandoConta ? "Entrar com esta conta" : "Entrar"}
             </Button>
 
