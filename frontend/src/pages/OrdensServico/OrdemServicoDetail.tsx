@@ -654,12 +654,8 @@ export function OrdemServicoDetail() {
     e.preventDefault();
     const maoDeObra = Number(valorMaoDeObra) || 0;
     const comissao = valorComissao !== "" ? Number(valorComissao) : undefined;
-    const ok = window.confirm(
-      `Salvar o fechamento com mão de obra de ${formatarReais(maoDeObra)}` +
-        (comissao != null ? ` e comissão de ${formatarReais(comissao)}` : "") +
-        "? Esses valores entram no faturamento e na comissão do técnico."
-    );
-    if (!ok) return;
+    // Sem confirmação prévia: o formulário continua editável e o valor pode
+    // ser corrigido e salvo de novo. O que faltava era o retorno.
     setFinanceiroFeedback(null);
     setSalvandoFinanceiro(true);
     try {
