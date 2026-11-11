@@ -25,11 +25,13 @@ export function MinhaRota() {
     api.get("/funcionarios/me/rota", { params: { data } }).then((r) => setRota(r.data)).catch(() => {});
   }, [data]);
 
-  const dataFormatada = new Date(`${data}T00:00:00`).toLocaleDateString("pt-BR", {
+  const dataPorExtenso = new Date(`${data}T00:00:00`).toLocaleDateString("pt-BR", {
     weekday: "long",
     day: "2-digit",
     month: "long",
   });
+  // Só a primeira letra maiúscula ("Quarta-feira, 11 de novembro").
+  const dataFormatada = dataPorExtenso.charAt(0).toUpperCase() + dataPorExtenso.slice(1);
 
   return (
     <div className="space-y-6 max-w-2xl">
@@ -45,7 +47,7 @@ export function MinhaRota() {
           onChange={(e) => setData(e.target.value)}
           className="w-auto"
         />
-        <span className="text-sm text-muted-foreground capitalize">{dataFormatada}</span>
+        <span className="text-sm text-muted-foreground">{dataFormatada}</span>
       </div>
 
       <div>
