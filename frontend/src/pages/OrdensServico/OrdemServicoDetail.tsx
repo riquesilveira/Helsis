@@ -1868,11 +1868,23 @@ export function OrdemServicoDetail() {
               </Select>
             </div>
             {erroPeca && (
-              <p className="text-xs text-danger">{erroPeca}</p>
+              <p role="alert" className="text-xs text-danger">{erroPeca}</p>
             )}
-            <Button type="submit" disabled={enviandoPeca} className="w-full">
-              {enviandoPeca ? "Salvando..." : "Registrar peça"}
-            </Button>
+            <DialogFooter>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => {
+                  setModalPecaAberto(false);
+                  setErroPeca(null);
+                }}
+              >
+                Cancelar
+              </Button>
+              <Button type="submit" disabled={enviandoPeca || !pecaCatalogoId}>
+                {enviandoPeca ? "Salvando..." : "Registrar peça"}
+              </Button>
+            </DialogFooter>
           </form>
         </DialogContent>
       </Dialog>
