@@ -152,7 +152,7 @@ export function Login() {
                   id="login-senha"
                   type={mostrarSenha ? "text" : "password"}
                   autoComplete="current-password"
-                  placeholder="••••••••"
+                  placeholder="Sua senha"
                   value={senha}
                   onChange={(e) => setSenha(e.target.value)}
                   required
