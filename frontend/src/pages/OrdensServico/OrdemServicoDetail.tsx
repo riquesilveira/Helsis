@@ -1100,7 +1100,12 @@ export function OrdemServicoDetail() {
               {os.statusAtual !== "CONCLUIDO" &&
                 os.statusAtual !== "CANCELADO" &&
                 (usuario?.papel === "DONO" || usuario?.papel === "GESTOR") && (
-                  <Button size="sm" variant="destructive" onClick={abrirModalCancelar}>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="text-destructive hover:text-destructive"
+                    onClick={abrirModalCancelar}
+                  >
                     Cancelar OS
                   </Button>
                 )}
