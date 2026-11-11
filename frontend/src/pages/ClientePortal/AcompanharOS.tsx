@@ -58,7 +58,7 @@ export function AcompanharOS() {
           )}
         </div>
 
-        <StatusTimeline historico={dados.statusHistoricos} statusAtual={dados.statusAtual} />
+        <StatusTimeline historico={dados.statusHistoricos} statusAtual={dados.statusAtual} paraCliente />
 
         <p className="text-xs text-center text-muted-foreground">
           Essa página é atualizada automaticamente conforme o técnico avança no atendimento.

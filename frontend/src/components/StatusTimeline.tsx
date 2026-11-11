@@ -28,11 +28,18 @@ function formatarData(iso: string) {
  */
 export function StatusTimeline({
   historico,
+  paraCliente = false,
 }: {
   historico: StatusHistoricoItem[];
   statusAtual?: StatusOS;
+  /** No portal do cliente, usa o "Texto mostrado ao cliente" de cada etapa
+   *  (Configurações › Fluxo de etapas) em vez do rótulo interno. */
+  paraCliente?: boolean;
 }) {
-  const { rotulo } = useEtapasStatus();
+  const { rotulo: rotuloInterno, etapas } = useEtapasStatus();
+  const rotulo = (status: StatusOS) =>
+    (paraCliente ? etapas.find((e) => e.status === status)?.rotuloCliente : undefined) ??
+    rotuloInterno(status);
   const eventos = historico.slice().reverse();
 
   return (
