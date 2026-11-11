@@ -95,11 +95,12 @@ export function NovaOS() {
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="grid gap-1.5">
-              <Label>Tipo de atendimento</Label>
-              <div className="flex gap-2">
+              <Label id="os-tipo-label">Tipo de atendimento</Label>
+              <div className="flex gap-2" role="group" aria-labelledby="os-tipo-label">
                 <Button
                   type="button"
                   variant={tipo === "CORRETIVA" ? "default" : "outline"}
+                  aria-pressed={tipo === "CORRETIVA"}
                   onClick={() => handleTipoChange("CORRETIVA")}
                   className="flex-1"
                 >
@@ -107,6 +108,7 @@ export function NovaOS() {
                 </Button>
                 <Button
                   type="button"
+                  aria-pressed={tipo === "PREVENTIVA"}
                   variant={tipo === "PREVENTIVA" ? "default" : "outline"}
                   onClick={() => handleTipoChange("PREVENTIVA")}
                   className="flex-1"

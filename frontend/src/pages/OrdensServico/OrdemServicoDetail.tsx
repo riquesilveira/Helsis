@@ -1585,7 +1585,7 @@ export function OrdemServicoDetail() {
           <CardAction>
             <div className="flex items-center gap-2">
               <Select value={tipoAnexo} onValueChange={(v) => setTipoAnexo(v as TipoAnexo)}>
-                <SelectTrigger className="h-7 w-[110px] text-xs">
+                <SelectTrigger aria-label="Tipo do anexo" className="h-7 w-[110px] text-xs">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>

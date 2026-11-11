@@ -113,7 +113,7 @@ export function ConfiguracaoEtapas() {
                       onClick={() => mover(i, -1)}
                       disabled={i === 0}
                       className="flex size-7 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground disabled:opacity-30 pointer-coarse:size-10"
-                      aria-label="Mover para cima"
+                      aria-label={`Subir etapa ${etapa.rotulo || etapa.status}`}
                     >
                       <ChevronUp className="size-4" />
                     </button>
@@ -122,7 +122,7 @@ export function ConfiguracaoEtapas() {
                       onClick={() => mover(i, 1)}
                       disabled={i === etapas.length - 1}
                       className="flex size-7 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground disabled:opacity-30 pointer-coarse:size-10"
-                      aria-label="Mover para baixo"
+                      aria-label={`Descer etapa ${etapa.rotulo || etapa.status}`}
                     >
                       <ChevronDown className="size-4" />
                     </button>

@@ -233,7 +233,8 @@ export function OrdensServicoList() {
           <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             type="text"
-            placeholder="Buscar por cliente, nº da OS ou equipamento..."
+            placeholder="Cliente, nº da OS ou equipamento"
+            aria-label="Buscar por cliente, número da OS ou equipamento"
             value={busca}
             onChange={(e) => setBusca(e.target.value)}
             className="pl-9"
