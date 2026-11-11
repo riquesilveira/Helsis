@@ -34,9 +34,9 @@
   --color-status-recebido: #6b7280;      /* cinza — recém-chegado */
   --color-status-diagnostico: #3f6fa3;   /* azul aço — em avaliação (etapa off) */
   --color-status-reparo: #2563eb;        /* azul — conserto em andamento */
-  --color-status-validacao: #9a5fbf;     /* violeta — validação (etapa off) */
-  --color-status-aguardando: #ea7317;    /* laranja — esperando peça */
-  --color-status-concluido: #22a45d;     /* verde (mais claro) — concluído */
+  --color-status-validacao: #7e4aa6;     /* violeta — validação (etapa off) */
+  --color-status-aguardando: #c2410c;    /* laranja — esperando peça */
+  --color-status-concluido: #15803d;     /* verde — concluído */
   --color-status-cancelado: var(--color-danger);      /* vermelho — cancelado */
 
   --font-sans: Inter, system-ui, sans-serif;
