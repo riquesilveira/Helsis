@@ -1620,14 +1620,14 @@ export function OrdemServicoDetail() {
               const IconeTransporte = foiAviao ? Plane : Car;
               return (
                 <div key={d.id} className="py-3 flex items-start justify-between gap-3">
-                  <div className="flex items-start gap-2.5">
+                  <div className="flex min-w-0 items-start gap-2.5">
                     <span
                       className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground"
                       title={foiAviao ? "Avião" : "Carro"}
                     >
                       <IconeTransporte size={15} />
                     </span>
-                    <div>
+                    <div className="min-w-0">
                     <p className="text-sm text-foreground">
                       {d.origemCidade ?? "—"} → {d.destinoCidade ?? "—"}
                       {d.diasViagem != null && (
@@ -1636,7 +1636,7 @@ export function OrdemServicoDetail() {
                         </span>
                       )}
                     </p>
-                    <div className="flex gap-3 mt-0.5">
+                    <div className="mt-0.5 flex flex-wrap gap-x-3 gap-y-0.5">
                       {d.custoPassagem != null && d.custoPassagem > 0 && (
                         <span className="text-xs text-muted-foreground">
                           {foiAviao ? "Passagem" : "Combustível"}: {formatarReais(d.custoPassagem)}
@@ -1653,11 +1653,18 @@ export function OrdemServicoDetail() {
                         </span>
                       )}
                     </div>
+                    {/* No celular o total ganha linha própria (à direita ele
+                        saía da tela em 375 px). */}
+                    {custoTotal > 0 && (
+                      <p className="codigo mt-1 text-xs font-medium text-foreground sm:hidden">
+                        Total: {formatarReais(custoTotal)}
+                      </p>
+                    )}
                     </div>
                   </div>
                   <div className="flex items-center gap-2 shrink-0">
                     {custoTotal > 0 && (
-                      <span className="codigo text-xs text-muted-foreground">
+                      <span className="codigo hidden text-xs text-muted-foreground sm:inline">
                         {formatarReais(custoTotal)}
                       </span>
                     )}
