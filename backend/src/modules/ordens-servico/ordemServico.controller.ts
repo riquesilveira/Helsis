@@ -296,6 +296,8 @@ export async function registrarAnexo(req: Request, res: Response) {
   if (!req.file) throw new AppError("Nenhum arquivo enviado.", 400);
 
   const { tipo, descricao } = registrarAnexoSchema.parse(req.body);
+  // Recusa antes de gravar o binário: OS cancelada não aceita anexo (409).
+  await osService.garantirOSEditavel(req.params.id);
 
   // Quem anexou — só se o usuário tiver perfil de funcionário (DONO pode não ter).
   let funcionarioId: string | null = null;

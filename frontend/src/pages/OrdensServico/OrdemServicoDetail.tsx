@@ -832,6 +832,9 @@ export function OrdemServicoDetail() {
   if (!os) return <p className="text-sm text-muted-foreground">Carregando...</p>;
 
   const semTecnico = !os.funcionario;
+  // OS cancelada é somente leitura: sem peça, deslocamento, anexo nem
+  // fechamento financeiro. O backend também recusa (409). Reabrir libera.
+  const osCancelada = os.statusAtual === "CANCELADO";
   const valorPecas = (os.pecasTrocadas ?? []).reduce(
     (soma, p) => soma + (p.precoUnitario ?? 0) * p.quantidade,
     0
@@ -850,6 +853,12 @@ export function OrdemServicoDetail() {
 
   return (
     <div className="mx-auto max-w-5xl space-y-6">
+      {osCancelada && (
+        <p role="status" className="rounded-lg bg-muted px-3 py-2 text-sm text-muted-foreground">
+          OS cancelada: somente leitura. Para registrar peça, deslocamento, anexo ou fechamento,
+          reabra o chamado.
+        </p>
+      )}
       <Link
         to="/ordens-servico"
         className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
@@ -1542,6 +1551,7 @@ export function OrdemServicoDetail() {
       <Card>
         <CardHeader className="border-b">
           <CardTitle>Peças trocadas</CardTitle>
+          {!osCancelada && (
           <CardAction>
             <Button
               variant="outline"
@@ -1555,6 +1565,7 @@ export function OrdemServicoDetail() {
               Registrar peça
             </Button>
           </CardAction>
+          )}
         </CardHeader>
         <CardContent>
           <div className="divide-y divide-border">
@@ -1602,7 +1613,7 @@ export function OrdemServicoDetail() {
       <Card>
         <CardHeader className="border-b">
           <CardTitle>Deslocamentos</CardTitle>
-          {podeVerFinanceiro && (
+          {podeVerFinanceiro && !osCancelada && (
             <CardAction>
               <Button
                 variant="outline"
@@ -1675,7 +1686,7 @@ export function OrdemServicoDetail() {
                         {formatarReais(custoTotal)}
                       </span>
                     )}
-                    {podeVerFinanceiro && (
+                    {podeVerFinanceiro && !osCancelada && (
                       <>
                         <Button
                           variant="ghost"
@@ -1714,6 +1725,7 @@ export function OrdemServicoDetail() {
       <Card>
         <CardHeader className="border-b">
           <CardTitle>Anexos</CardTitle>
+          {!osCancelada && (
           <CardAction>
             <div className="flex items-center gap-2">
               <Select value={tipoAnexo} onValueChange={(v) => setTipoAnexo(v as TipoAnexo)}>
@@ -1744,6 +1756,7 @@ export function OrdemServicoDetail() {
               </Button>
             </div>
           </CardAction>
+          )}
         </CardHeader>
         <CardContent>
           {erroAnexo && <p className="text-xs text-danger mb-3">{erroAnexo}</p>}
@@ -1791,6 +1804,7 @@ export function OrdemServicoDetail() {
                     <span className="absolute left-1.5 top-1.5 rounded bg-background/80 px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground backdrop-blur">
                       {ROTULO_TIPO_ANEXO[anexo.tipo]}
                     </span>
+                    {!osCancelada && (
                     <Button
                       variant="ghost"
                       size="icon-sm"
@@ -1801,6 +1815,7 @@ export function OrdemServicoDetail() {
                     >
                       <Trash2 />
                     </Button>
+                    )}
                   </div>
                 );
               })}
@@ -1838,6 +1853,7 @@ export function OrdemServicoDetail() {
                     step="0.01"
                     value={valorMaoDeObra}
                     onChange={(e) => handleValorMaoDeObraChange(e.target.value)}
+                    disabled={osCancelada}
                   />
                 </div>
               </div>
@@ -1868,15 +1884,17 @@ export function OrdemServicoDetail() {
                       setFinanceiroFeedback(null);
                       setValorComissao(e.target.value);
                     }}
-                    disabled={!os.funcionario}
+                    disabled={!os.funcionario || osCancelada}
                     placeholder={!os.funcionario ? "Atribua um técnico primeiro" : "0,00"}
                   />
                 </div>
               </div>
               <div className="flex flex-wrap items-center gap-3">
-                <Button type="submit" disabled={salvandoFinanceiro}>
-                  {salvandoFinanceiro ? "Salvando..." : "Salvar fechamento"}
-                </Button>
+                {!osCancelada && (
+                  <Button type="submit" disabled={salvandoFinanceiro}>
+                    {salvandoFinanceiro ? "Salvando..." : "Salvar fechamento"}
+                  </Button>
+                )}
                 {financeiroFeedback && (
                   <p
                     role={financeiroFeedback.tipo === "erro" ? "alert" : "status"}

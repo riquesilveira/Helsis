@@ -36,6 +36,17 @@ describe("atualizarFinanceiro — cálculo de comissão", () => {
     });
   });
 
+  it("409 e nada gravado quando a OS está cancelada", async () => {
+    os.findUnique.mockResolvedValue({
+      statusAtual: "CANCELADO",
+      funcionario: { tipoComissao: "PERCENTUAL", valorComissao: 10 },
+    });
+    await expect(atualizarFinanceiro("os-1", { valorMaoDeObra: 1000 })).rejects.toMatchObject({
+      statusCode: 409,
+    });
+    expect(os.update).not.toHaveBeenCalled();
+  });
+
   it("PERCENTUAL: comissão = mão de obra × percentual / 100", () => {
     os.findUnique.mockResolvedValue({
       funcionario: { tipoComissao: "PERCENTUAL", valorComissao: 10 },

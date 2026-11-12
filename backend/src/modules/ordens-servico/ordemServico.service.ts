@@ -332,8 +332,30 @@ export async function atualizarDescricao(osId: string, descricaoProblema: string
   });
 }
 
+/**
+ * OS cancelada é somente leitura: não aceita peça, deslocamento, anexo nem
+ * fechamento financeiro (decisão de 12/11/2026). A trava fica no backend, não
+ * só na UI (regra financeira, ver CLAUDE.md). Reabrir o chamado libera.
+ */
+export const MENSAGEM_OS_CANCELADA =
+  "Esta OS está cancelada e não aceita alterações. Reabra o chamado para editar.";
+
+export function exigirOSNaoCancelada(os: { statusAtual: StatusOS }) {
+  if (os.statusAtual === StatusOS.CANCELADO) throw new AppError(MENSAGEM_OS_CANCELADA, 409);
+}
+
+export async function garantirOSEditavel(osId: string) {
+  const os = await prisma.ordemServico.findUnique({
+    where: { id: osId },
+    select: { statusAtual: true },
+  });
+  if (!os) throw new AppError("Ordem de serviço não encontrada.", 404);
+  exigirOSNaoCancelada(os);
+}
+
 export async function registrarPecaTrocada(osId: string, dados: RegistrarPecaInput) {
   const os = await buscarOrdemServicoPorId(osId);
+  exigirOSNaoCancelada(os);
 
   const garantiaAte = dados.garantiaMeses
     ? somarMeses(new Date(), dados.garantiaMeses)
@@ -376,6 +398,7 @@ export async function atualizarFinanceiro(osId: string, dados: AtualizarFinancei
     include: { funcionario: true },
   });
   if (!os) throw new AppError("Ordem de serviço não encontrada.", 404);
+  exigirOSNaoCancelada(os);
 
   let valorComissao: number | null = dados.valorComissaoManual ?? null;
 
@@ -400,7 +423,7 @@ export async function atualizarFinanceiro(osId: string, dados: AtualizarFinancei
  * métricas de despesa no dashboard.
  */
 export async function registrarDeslocamento(osId: string, dados: RegistrarDeslocamentoInput) {
-  await buscarOrdemServicoPorId(osId);
+  exigirOSNaoCancelada(await buscarOrdemServicoPorId(osId));
 
   return prisma.deslocamento.create({
     data: {
@@ -422,6 +445,7 @@ export async function atualizarDeslocamento(
   ordemServicoId: string,
   dados: AtualizarDeslocamentoInput
 ) {
+  await garantirOSEditavel(ordemServicoId);
   const deslocamento = await prisma.deslocamento.findUnique({ where: { id: deslocamentoId } });
   if (!deslocamento || deslocamento.ordemServicoId !== ordemServicoId) {
     throw new AppError("Deslocamento não encontrado nesta ordem de serviço.", 404);
@@ -442,6 +466,7 @@ export async function atualizarDeslocamento(
 }
 
 export async function excluirDeslocamento(deslocamentoId: string, ordemServicoId: string) {
+  await garantirOSEditavel(ordemServicoId);
   const deslocamento = await prisma.deslocamento.findUnique({ where: { id: deslocamentoId } });
   if (!deslocamento || deslocamento.ordemServicoId !== ordemServicoId) {
     throw new AppError("Deslocamento não encontrado nesta ordem de serviço.", 404);
@@ -464,7 +489,7 @@ export interface RegistrarAnexoInput {
 }
 
 export async function registrarAnexo(osId: string, dados: RegistrarAnexoInput) {
-  await buscarOrdemServicoPorId(osId);
+  exigirOSNaoCancelada(await buscarOrdemServicoPorId(osId));
   return prisma.anexo.create({
     data: {
       ordemServicoId: osId,
@@ -479,6 +504,7 @@ export async function registrarAnexo(osId: string, dados: RegistrarAnexoInput) {
 }
 
 export async function excluirAnexo(anexoId: string, ordemServicoId: string) {
+  await garantirOSEditavel(ordemServicoId);
   const anexo = await prisma.anexo.findUnique({ where: { id: anexoId } });
   if (!anexo || anexo.ordemServicoId !== ordemServicoId) {
     throw new AppError("Anexo não encontrado nesta ordem de serviço.", 404);
