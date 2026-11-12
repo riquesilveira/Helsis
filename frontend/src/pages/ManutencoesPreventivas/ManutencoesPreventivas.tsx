@@ -112,7 +112,7 @@ export function ManutencoesPreventivas() {
                     Preventiva a cada {eq.frequenciaManutencaoMeses} meses ·{" "}
                     {eq.proximaManutencaoPreventiva
                       ? `próxima em ${formatarData(eq.proximaManutencaoPreventiva)}`
-                      : "Sem data definida"}
+                      : "sem data definida"}
                   </p>
                 </div>
                 <div className="flex flex-wrap items-center justify-between gap-3 sm:shrink-0 sm:justify-end sm:gap-4">
