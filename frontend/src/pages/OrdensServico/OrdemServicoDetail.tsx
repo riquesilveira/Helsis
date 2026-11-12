@@ -859,12 +859,6 @@ export function OrdemServicoDetail() {
 
   return (
     <div className="mx-auto max-w-5xl space-y-6">
-      {osCancelada && (
-        <p role="status" className="rounded-lg bg-muted px-3 py-2 text-sm text-muted-foreground">
-          OS cancelada: somente leitura. Para registrar peça, deslocamento, anexo ou fechamento,
-          reabra o chamado.
-        </p>
-      )}
       <Link
         to="/ordens-servico"
         className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
@@ -900,6 +894,15 @@ export function OrdemServicoDetail() {
           </div>
         )}
       </div>
+
+      {/* Logo depois do cabeçalho; texto alinhado à mensagem 409 da API e ao
+          botão "Reabrir chamado" do card Acompanhamento. */}
+      {osCancelada && (
+        <p role="status" className="rounded-lg bg-muted px-3 py-2 text-sm text-muted-foreground">
+          Esta OS está cancelada e não aceita alterações. Para registrar peça, deslocamento, anexo
+          ou fechamento, use “Reabrir chamado”, em Acompanhamento.
+        </p>
+      )}
 
       <Card>
         <CardHeader className="border-b">
