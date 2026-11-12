@@ -125,13 +125,18 @@ function CartaoMetrica({
         .replace(".", ",")}% vs. mês passado`
     : rodape;
   const conteudo = (
-    <Card className={`h-full gap-2${to ? " transition-shadow hover:shadow-md" : ""}`}>
+    <Card
+      className={`h-full gap-2 [--card-spacing:--spacing(4)] sm:[--card-spacing:--spacing(6)]${
+        to ? " transition-shadow hover:shadow-md" : ""
+      }`}
+    >
       <CardHeader className="flex flex-row items-center justify-between space-y-0">
         <CardTitle className="text-sm font-medium">{rotulo}</CardTitle>
         <Icone className="h-4 w-4 text-muted-foreground" />
       </CardHeader>
       <CardContent>
-        <div className="text-2xl font-bold tabular-nums">{valor}</div>
+        {/* nowrap: em 375 px (2 colunas) "R$" ficava numa linha e o número na outra. */}
+        <div className="whitespace-nowrap text-lg font-bold tabular-nums sm:text-2xl">{valor}</div>
         {legenda && <p className="mt-1 text-xs text-muted-foreground">{legenda}</p>}
       </CardContent>
     </Card>
