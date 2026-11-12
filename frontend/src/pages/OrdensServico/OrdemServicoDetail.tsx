@@ -1258,6 +1258,13 @@ export function OrdemServicoDetail() {
                 type="submit"
                 disabled={enviandoStatus}
                 variant={novoStatus === "CANCELADO" ? "destructive" : "default"}
+                // No passo final, vermelho sólido com texto branco (#c0453e,
+                // 5,05:1): o destructive padrão é rosa claro e parecia desabilitado.
+                className={
+                  confirmandoCancelamento
+                    ? "bg-destructive text-white hover:bg-destructive/90 focus-visible:ring-destructive/40"
+                    : undefined
+                }
               >
                 {enviandoStatus
                   ? "Salvando..."
