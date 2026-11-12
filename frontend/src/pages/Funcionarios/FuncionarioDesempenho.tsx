@@ -265,9 +265,12 @@ export function FuncionarioDesempenho() {
         <CartaoMetrica
           rotulo="Tempo médio de resolução"
           valor={
-            desempenho.tempoMedioResolucaoHoras != null && desempenho.tempoMedioResolucaoHoras >= 0
-              ? `${Math.round(desempenho.tempoMedioResolucaoHoras).toLocaleString("pt-BR")}h`
-              : "—"
+            desempenho.tempoMedioResolucaoHoras == null || desempenho.tempoMedioResolucaoHoras < 0
+              ? "—"
+              : // Abaixo de 1 h, arredondar dava "0h", que parece "nada".
+                desempenho.tempoMedioResolucaoHoras < 1
+                ? "menos de 1h"
+                : `${Math.round(desempenho.tempoMedioResolucaoHoras).toLocaleString("pt-BR")}h`
           }
         />
         <CartaoMetrica
