@@ -50,7 +50,7 @@ export interface EquipamentoCatalogoItem {
   modelo: string;
 }
 
-export type StatusManutencaoPreventiva = "ATRASADA" | "PROXIMA" | "EM_DIA";
+export type StatusManutencaoPreventiva = "ATRASADA" | "PROXIMA" | "EM_DIA" | "SEM_DATA";
 
 export interface EquipamentoComManutencao extends Equipamento {
   cliente: Cliente;

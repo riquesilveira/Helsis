@@ -12,6 +12,7 @@ const ROTULO_STATUS: Record<StatusManutencaoPreventiva, string> = {
   ATRASADA: "Atrasada",
   PROXIMA: "Próxima",
   EM_DIA: "Em dia",
+  SEM_DATA: "Sem data",
 };
 
 // Fundo suave (10% da cor) + texto forte, no estilo do StatusBadge das OS.
@@ -19,12 +20,14 @@ const CLASSE_STATUS: Record<StatusManutencaoPreventiva, string> = {
   ATRASADA: "bg-danger/10 text-danger",
   PROXIMA: "bg-status-diagnostico/10 text-status-diagnostico",
   EM_DIA: "bg-status-concluido/10 text-status-concluido",
+  SEM_DATA: "bg-muted text-muted-foreground",
 };
 
 const PONTO_STATUS: Record<StatusManutencaoPreventiva, string> = {
   ATRASADA: "bg-danger",
   PROXIMA: "bg-status-diagnostico",
   EM_DIA: "bg-status-concluido",
+  SEM_DATA: "bg-muted-foreground",
 };
 
 function StatusPreventivaBadge({ status }: { status: StatusManutencaoPreventiva }) {
@@ -106,8 +109,10 @@ export function ManutencoesPreventivas() {
                     {eq.cliente.nome} <span className="text-muted-foreground">·</span> {eq.tipo}
                   </p>
                   <p className="mt-0.5 text-xs text-muted-foreground">
-                    Preventiva a cada {eq.frequenciaManutencaoMeses} meses · próxima em{" "}
-                    {formatarData(eq.proximaManutencaoPreventiva)}
+                    Preventiva a cada {eq.frequenciaManutencaoMeses} meses ·{" "}
+                    {eq.proximaManutencaoPreventiva
+                      ? `próxima em ${formatarData(eq.proximaManutencaoPreventiva)}`
+                      : "Sem data definida"}
                   </p>
                 </div>
                 <div className="flex flex-wrap items-center justify-between gap-3 sm:shrink-0 sm:justify-end sm:gap-4">

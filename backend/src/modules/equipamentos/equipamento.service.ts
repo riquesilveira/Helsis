@@ -87,7 +87,9 @@ export async function atualizarEquipamento(id: string, dados: Partial<Equipament
   return prisma.equipamento.update({ where: { id }, data: dadosAtualizacao });
 }
 
-export type StatusManutencaoPreventiva = "ATRASADA" | "PROXIMA" | "EM_DIA";
+// SEM_DATA: tem frequência, mas a próxima data não foi definida. Antes caía
+// em ATRASADA, o que não é verdade.
+export type StatusManutencaoPreventiva = "ATRASADA" | "PROXIMA" | "EM_DIA" | "SEM_DATA";
 
 function calcularStatusPreventiva(proximaData: Date): StatusManutencaoPreventiva {
   const hoje = new Date();
@@ -130,7 +132,7 @@ export async function listarManutencoesPreventivas() {
       osPreventivaAberta: ordensServico[0] ?? null,
       statusPreventiva: eq.proximaManutencaoPreventiva
         ? calcularStatusPreventiva(eq.proximaManutencaoPreventiva)
-        : ("ATRASADA" as StatusManutencaoPreventiva),
+        : ("SEM_DATA" as StatusManutencaoPreventiva),
     }))
     .sort((a, b) => {
       const dataA = a.proximaManutencaoPreventiva?.getTime() ?? 0;
