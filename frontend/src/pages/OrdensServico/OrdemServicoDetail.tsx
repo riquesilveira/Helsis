@@ -1187,10 +1187,9 @@ export function OrdemServicoDetail() {
                   if (erroStatus) setErroStatus(null);
                 }}
               />
-              {/* A observação entra no histórico público (acompanhamento-publico
-                  devolve statusHistoricos.observacao e o portal a exibe). */}
+              {/* A observação é interna: acompanhamento-publico não a devolve. */}
               <p id="observacao-status-ajuda" className="text-xs text-muted-foreground">
-                O cliente vê este texto no link de acompanhamento.
+                Só a equipe vê este texto. O cliente vê apenas a etapa.
               </p>
             </div>
             {(novoStatus === "AGUARDANDO_VALIDACAO" || novoStatus === "CONCLUIDO") && (

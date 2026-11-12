@@ -546,7 +546,9 @@ export async function buscarAcompanhamentoPublico(id: string) {
       equipamento: { select: { tipo: true, marca: true, modelo: true } },
       statusHistoricos: {
         orderBy: { criadoEm: "asc" },
-        select: { status: true, observacao: true, criadoEm: true },
+        // Sem `observacao`: ela é interna (decisão de 12/11/2026). O portal não
+        // tem login, e o texto pode ter detalhe que o cliente não deve ver.
+        select: { status: true, criadoEm: true },
       },
     },
   });
