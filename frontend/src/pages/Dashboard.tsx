@@ -136,7 +136,8 @@ function CartaoMetrica({
       </CardHeader>
       <CardContent>
         {/* nowrap: em 375 px (2 colunas) "R$" ficava numa linha e o número na outra. */}
-        <div className="whitespace-nowrap text-lg font-bold tabular-nums sm:text-2xl">{valor}</div>
+        {/* text-base abaixo de sm: com text-lg, "R$ 130.000,00" estourava os 124 px do card a 375 px. */}
+        <div className="whitespace-nowrap text-base font-bold tabular-nums sm:text-2xl">{valor}</div>
         {legenda && <p className="mt-1 text-xs text-muted-foreground">{legenda}</p>}
       </CardContent>
     </Card>

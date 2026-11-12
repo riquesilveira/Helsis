@@ -1,7 +1,9 @@
 // Sempre 2 casas (R$ 2.483,33). Sem o máximo, o padrão do toLocaleString
 // (3 casas) deixava "R$ 2.483,333" em médias e divisões.
+// Entre "R$" e o número vai um espaço sem quebra (U+00A0), para o símbolo
+// nunca ficar numa linha e o valor na outra, em nenhuma tela.
 export function formatarReais(valor: number): string {
-  return `R$ ${valor.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  return `R$ ${valor.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }
 
 // Número da OS exibido como protocolo agrupado em pares (ex.: 132750 → 13-27-50).
