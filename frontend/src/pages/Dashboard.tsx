@@ -90,10 +90,11 @@ const GASTOS_MOCK = {
   alimentacao: 1490,
 };
 
-/** Formata valores em reais de forma compacta pros eixos (ex: R$5,4k). */
+/** Formata valores em reais de forma compacta (ex: R$ 5,4k; abaixo de mil, R$ 287,50). */
 function reaisCompacto(v: number): string {
-  if (v >= 1000) return `R$${(v / 1000).toLocaleString("pt-BR", { maximumFractionDigits: 1 })}k`;
-  return `R$${v}`;
+  if (v >= 1000) return `R$ ${(v / 1000).toLocaleString("pt-BR", { maximumFractionDigits: 1 })}k`;
+  // Abaixo de mil saía cru ("R$287.5"): ponto decimal e sem as duas casas.
+  return formatarReais(v);
 }
 
 /** % de variação em relação ao mês anterior. null quando não há base de comparação. */
