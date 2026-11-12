@@ -203,25 +203,46 @@ export function NovaOS() {
 
             <div className="grid gap-1.5">
               <Label htmlFor="os-data">Data agendada da visita (opcional)</Label>
-              <div className="flex flex-wrap items-center gap-2">
+              {/* Celular: campo em linha própria e os atalhos juntos embaixo.
+                  A partir de sm, tudo numa linha. O atalho que corresponde à
+                  data escolhida fica marcado (aria-pressed). */}
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
                 <Input
                   id="os-data"
                   type="date"
                   value={dataAgendada}
                   onChange={(e) => setDataAgendada(e.target.value)}
-                  className="w-auto"
+                  className="w-full sm:w-auto"
                 />
-                <Button type="button" variant="outline" size="sm" onClick={() => setDataAgendada(dataLocal(0))}>
-                  Hoje
-                </Button>
-                <Button type="button" variant="outline" size="sm" onClick={() => setDataAgendada(dataLocal(1))}>
-                  Amanhã
-                </Button>
-                {dataAgendada && (
-                  <Button type="button" variant="ghost" size="sm" onClick={() => setDataAgendada("")}>
+                <div className="flex items-center gap-2" role="group" aria-label="Atalhos de data">
+                  {[
+                    { rotulo: "Hoje", valor: dataLocal(0) },
+                    { rotulo: "Amanhã", valor: dataLocal(1) },
+                  ].map((atalho) => {
+                    const ativo = dataAgendada === atalho.valor;
+                    return (
+                      <Button
+                        key={atalho.rotulo}
+                        type="button"
+                        variant={ativo ? "default" : "outline"}
+                        size="sm"
+                        aria-pressed={ativo}
+                        onClick={() => setDataAgendada(atalho.valor)}
+                      >
+                        {atalho.rotulo}
+                      </Button>
+                    );
+                  })}
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setDataAgendada("")}
+                    disabled={!dataAgendada}
+                  >
                     Limpar
                   </Button>
-                )}
+                </div>
               </div>
               <span className="text-xs text-muted-foreground">
                 É essa data que define em qual dia a OS aparece na rota do técnico. Sem data, ela
