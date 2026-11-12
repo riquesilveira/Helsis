@@ -95,7 +95,12 @@ export function ManutencoesPreventivas() {
           )}
           {!carregando &&
             equipamentos.map((eq) => (
-              <div key={eq.id} className="flex items-center justify-between gap-4 px-5 py-4">
+              // No celular empilha (texto em cima, selo e botão embaixo); a
+              // partir de sm volta a ser uma linha com as ações à direita.
+              <div
+                key={eq.id}
+                className="flex flex-col gap-3 px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:gap-4 sm:px-5"
+              >
                 <div className="min-w-0">
                   <p className="text-sm text-foreground">
                     {eq.cliente.nome} <span className="text-muted-foreground">·</span> {eq.tipo}
@@ -105,7 +110,7 @@ export function ManutencoesPreventivas() {
                     {formatarData(eq.proximaManutencaoPreventiva)}
                   </p>
                 </div>
-                <div className="flex shrink-0 items-center gap-4">
+                <div className="flex flex-wrap items-center justify-between gap-3 sm:shrink-0 sm:justify-end sm:gap-4">
                   <StatusPreventivaBadge status={eq.statusPreventiva} />
                   {/* Já existe preventiva aberta: leva até ela em vez de abrir outra. */}
                   {eq.osPreventivaAberta ? (
