@@ -245,6 +245,7 @@ export function OrdemServicoDetail() {
   // Dono/Gestor não mudam o status do atendimento; só podem cancelar uma OS
   // aberta (ex.: aberta por engano). Nesse modo o modal fica travado em Cancelado.
   const [modoSoCancelar, setModoSoCancelar] = useState(false);
+  const [avisoStatus, setAvisoStatus] = useState<string | null>(null);
   const [observacao, setObservacao] = useState("");
   const [novaTentativa, setNovaTentativa] = useState(false);
   const [enviandoStatus, setEnviandoStatus] = useState(false);
@@ -488,6 +489,7 @@ export function OrdemServicoDetail() {
     setErroStatus(null);
     setConfirmandoCancelamento(false);
     setModoSoCancelar(false);
+    setAvisoStatus(null);
     setModalStatusAberto(true);
   }
 
@@ -498,6 +500,7 @@ export function OrdemServicoDetail() {
     setErroStatus(null);
     setConfirmandoCancelamento(false);
     setModoSoCancelar(true);
+    setAvisoStatus(null);
     setModalStatusAberto(true);
   }
 
@@ -530,6 +533,9 @@ export function OrdemServicoDetail() {
       setObservacao("");
       setNovaTentativa(false);
       setModalStatusAberto(false);
+      // Retorno de sucesso só no cancelamento (retest N1). Não promete aviso
+      // ao cliente: a notificação sai em segundo plano e pode falhar.
+      setAvisoStatus(novoStatus === "CANCELADO" ? "OS cancelada." : null);
       carregar();
       // pequeno atraso: a notificação é enviada em segundo plano no backend
       setTimeout(carregarNotificacoes, 1200);
@@ -1124,6 +1130,14 @@ export function OrdemServicoDetail() {
           </CardAction>
         </CardHeader>
         <CardContent>
+          {avisoStatus && (
+            <p
+              role="status"
+              className="mb-3 rounded-lg bg-status-concluido/10 px-3 py-2 text-sm font-medium text-status-concluido"
+            >
+              {avisoStatus}
+            </p>
+          )}
           <StatusTimeline historico={os.statusHistoricos} statusAtual={os.statusAtual} />
         </CardContent>
       </Card>
