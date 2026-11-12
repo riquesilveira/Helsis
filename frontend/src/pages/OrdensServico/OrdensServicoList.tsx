@@ -78,16 +78,22 @@ const COR_STATUS_DOT: Record<StatusOS, string> = {
 
 export function OrdensServicoList() {
   const navigate = useNavigate();
-  const { opcoes } = useEtapasStatus();
-  const abasStatus = useMemo<{ chave: StatusOS | "todos"; rotulo: string }[]>(
-    () => [
-      { chave: "todos", rotulo: "Todos" },
-      ...opcoes.map((op) => ({ chave: op.status, rotulo: op.rotulo })),
-    ],
-    [opcoes]
-  );
-
+  const { etapas } = useEtapasStatus();
   const [ordens, setOrdens] = useState<OrdemServico[]>([]);
+  // Uma aba por etapa ativa, mais as etapas desativadas que ainda têm OS
+  // (ex.: "Em diagnóstico" desligada depois de haver OS nela). Assim as
+  // contagens das abas sempre somam o total de "Todos".
+  const abasStatus = useMemo<{ chave: StatusOS | "todos"; rotulo: string }[]>(() => {
+    const statusComOS = new Set(ordens.map((o) => o.statusAtual));
+    const visiveis = etapas
+      .filter((e) => e.ativo || statusComOS.has(e.status))
+      .sort((a, b) => a.ordem - b.ordem);
+    return [
+      { chave: "todos", rotulo: "Todos" },
+      ...visiveis.map((e) => ({ chave: e.status, rotulo: e.rotulo })),
+    ];
+  }, [etapas, ordens]);
+
   const [carregando, setCarregando] = useState(true);
   const [statusFiltro, setStatusFiltro] = useState<StatusOS | "todos">("todos");
   const [periodo, setPeriodo] = useState<Periodo>("todas");
