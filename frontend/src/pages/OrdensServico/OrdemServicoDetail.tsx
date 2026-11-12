@@ -1136,7 +1136,8 @@ export function OrdemServicoDetail() {
           {avisoStatus && (
             <p
               role="status"
-              className="mb-3 rounded-lg bg-status-concluido/10 px-3 py-2 text-sm font-medium text-status-concluido"
+              // Neutra: o verde é a cor do Concluído e sugeriria OS resolvida.
+              className="mb-3 rounded-lg bg-muted px-3 py-2 text-sm font-medium text-foreground"
             >
               {avisoStatus}
             </p>
