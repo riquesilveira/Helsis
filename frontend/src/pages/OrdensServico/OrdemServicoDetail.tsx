@@ -1178,7 +1178,7 @@ export function OrdemServicoDetail() {
                 aria-describedby="observacao-status-ajuda"
                 placeholder={
                   novoStatus === "CANCELADO"
-                    ? "Ex: chamado aberto em duplicidade; cliente pediu o cancelamento"
+                    ? "Ex: OS aberta por engano; cliente desistiu do atendimento"
                     : "Ex: peça trocada não resolveu, retornando ao reparo"
                 }
                 value={observacao}
@@ -1189,7 +1189,7 @@ export function OrdemServicoDetail() {
               />
               {/* A observação é interna: acompanhamento-publico não a devolve. */}
               <p id="observacao-status-ajuda" className="text-xs text-muted-foreground">
-                Só a equipe vê este texto. O cliente vê apenas a etapa.
+                Só a equipe vê esta observação.
               </p>
             </div>
             {(novoStatus === "AGUARDANDO_VALIDACAO" || novoStatus === "CONCLUIDO") && (
