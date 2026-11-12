@@ -260,6 +260,7 @@ async function resolverExecutor(req: Request, osId: string): Promise<string | un
 export async function adicionarTarefa(req: Request, res: Response) {
   const { tarefaCatalogoId } = adicionarTarefaSchema.parse(req.body);
   await resolverExecutor(req, req.params.id); // valida permissão do técnico
+  await osService.garantirOSEditavel(req.params.id); // OS cancelada: 409
   const tarefa = await tarefaOSService.adicionarTarefa(req.params.id, tarefaCatalogoId);
   res.status(201).json(tarefa);
 }
@@ -267,6 +268,9 @@ export async function adicionarTarefa(req: Request, res: Response) {
 export async function atualizarStatusTarefa(req: Request, res: Response) {
   const { status } = atualizarStatusTarefaSchema.parse(req.body);
   const funcionarioId = await resolverExecutor(req, req.params.id);
+  // Em OS cancelada só "Pausar" passa: serve para parar um cronômetro que
+  // ficou rodando. Iniciar, retomar e concluir respondem 409.
+  if (status !== StatusTarefa.PAUSADO) await osService.garantirOSEditavel(req.params.id);
   const tarefa = await tarefaOSService.atualizarStatusTarefa(req.params.id, req.params.tarefaId, {
     status,
     funcionarioId,
@@ -276,6 +280,7 @@ export async function atualizarStatusTarefa(req: Request, res: Response) {
 
 export async function removerTarefa(req: Request, res: Response) {
   await resolverExecutor(req, req.params.id); // valida que a OS é do técnico
+  await osService.garantirOSEditavel(req.params.id); // OS cancelada: 409
   await tarefaOSService.removerTarefa(req.params.id, req.params.tarefaId);
   res.status(204).end();
 }

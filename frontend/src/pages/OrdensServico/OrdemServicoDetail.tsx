@@ -1355,7 +1355,7 @@ export function OrdemServicoDetail() {
       <Card>
         <CardHeader className="border-b">
           <CardTitle>Tarefas</CardTitle>
-          {ehTecnico && (
+          {ehTecnico && !osCancelada && (
             <CardAction>
               <Button
                 variant="outline"
@@ -1403,7 +1403,7 @@ export function OrdemServicoDetail() {
                   </div>
                   <div className="flex items-center gap-2 shrink-0">
                     {t.status === "PENDENTE" &&
-                      (ehTecnico ? (
+                      (ehTecnico && !osCancelada ? (
                         <Button
                           size="sm"
                           onClick={() => handleStatusTarefa(t.id, "EM_ANDAMENTO")}
@@ -1444,14 +1444,18 @@ export function OrdemServicoDetail() {
                             >
                               <Pause />
                             </Button>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => handleStatusTarefa(t.id, "CONCLUIDA")}
-                              disabled={mutando}
-                            >
-                              Concluir
-                            </Button>
+                            {/* OS cancelada: só "Pausar" fica, para parar um
+                                cronômetro esquecido (o backend recusa o resto). */}
+                            {!osCancelada && (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handleStatusTarefa(t.id, "CONCLUIDA")}
+                                disabled={mutando}
+                              >
+                                Concluir
+                              </Button>
+                            )}
                           </>
                         )}
                       </>
@@ -1459,7 +1463,7 @@ export function OrdemServicoDetail() {
                     {t.status === "PAUSADO" && (
                       <>
                         <CronometroPausado acumuladaSegundos={t.duracaoAcumuladaSegundos} />
-                        {ehTecnico && (
+                        {ehTecnico && !osCancelada && (
                           <>
                             <Button
                               size="icon-sm"
@@ -1488,7 +1492,7 @@ export function OrdemServicoDetail() {
                         Concluída
                       </span>
                     )}
-                    {podeRemoverTarefa && (t.status === "PENDENTE" || t.status === "CONCLUIDA") && (
+                    {podeRemoverTarefa && !osCancelada && (t.status === "PENDENTE" || t.status === "CONCLUIDA") && (
                       <Button
                         variant="ghost"
                         size="icon-sm"
