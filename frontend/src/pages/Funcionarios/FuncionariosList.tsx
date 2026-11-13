@@ -59,12 +59,14 @@ const FORM_VAZIO = {
 const PAPEIS_FUNCIONARIO: { valor: string; rotulo: string }[] = [
   { valor: "TECNICO", rotulo: "Técnico (N1)" },
   { valor: "SUPORTE", rotulo: "Suporte Técnico (N2)" },
-  { valor: "GESTOR", rotulo: "Gerente Técnico (N3)" },
+  // O papel de acesso se chama "Gestor" em todo o sistema (menu, cabeçalho,
+  // cadastro). "Gerente Técnico" seria cargo, que é o campo livre "Cargo".
+  { valor: "GESTOR", rotulo: "Gestor (N3)" },
 ];
 
 const ROTULO_PAPEL: Record<string, string> = {
   DONO: "Diretor Técnico",
-  GESTOR: "Gerente Técnico",
+  GESTOR: "Gestor",
   SUPORTE: "Suporte Técnico",
   TECNICO: "Técnico",
 };
