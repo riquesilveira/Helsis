@@ -130,11 +130,13 @@ export function FuncionarioDesempenho() {
   const [editEspecialidades, setEditEspecialidades] = useState<string[]>([]);
   const [novaEsp, setNovaEsp] = useState("");
   const [salvandoEdit, setSalvandoEdit] = useState(false);
+  const [erroEdit, setErroEdit] = useState<string | null>(null);
 
   // formulário de comissão
   const [tipoComissao, setTipoComissao] = useState<"" | TipoComissao>("");
   const [valorComissao, setValorComissao] = useState("");
   const [salvandoComissao, setSalvandoComissao] = useState(false);
+  const [erroComissao, setErroComissao] = useState<string | null>(null);
 
   function carregarFuncionario() {
     api.get(`/funcionarios/${id}`).then((r) => {
@@ -154,6 +156,7 @@ export function FuncionarioDesempenho() {
     });
     setEditEspecialidades(funcionario.especialidades ?? []);
     setNovaEsp("");
+    setErroEdit(null);
     setModalEditar(true);
   }
 
@@ -167,6 +170,7 @@ export function FuncionarioDesempenho() {
 
   async function salvarEdicao(e: FormEvent) {
     e.preventDefault();
+    setErroEdit(null);
     setSalvandoEdit(true);
     try {
       await api.patch(`/funcionarios/${id}`, {
@@ -179,6 +183,9 @@ export function FuncionarioDesempenho() {
       setModalEditar(false);
       carregarFuncionario();
       api.get(`/desempenho/${id}`).then((r) => setDesempenho(r.data)).catch(() => {});
+    } catch (err: any) {
+      // Antes só havia try/finally: um 403 (ou qualquer falha) ficava mudo.
+      setErroEdit(err?.response?.data?.erro ?? "Não foi possível salvar as alterações. Tente novamente.");
     } finally {
       setSalvandoEdit(false);
     }
@@ -192,6 +199,7 @@ export function FuncionarioDesempenho() {
 
   async function salvarComissao(e: FormEvent) {
     e.preventDefault();
+    setErroComissao(null);
     setSalvandoComissao(true);
     try {
       await api.patch(`/funcionarios/${id}/comissao`, {
@@ -199,6 +207,9 @@ export function FuncionarioDesempenho() {
         valorComissao: tipoComissao ? Number(valorComissao) : null,
       });
       carregarFuncionario();
+    } catch (err: any) {
+      setErroComissao(err?.response?.data?.erro ?? "Não foi possível salvar a comissão. Tente novamente.");
+      carregarFuncionario(); // volta o formulário ao valor salvo
     } finally {
       setSalvandoComissao(false);
     }
@@ -365,6 +376,11 @@ export function FuncionarioDesempenho() {
                 />
               </div>
             )}
+            {erroComissao && (
+              <p role="alert" className="text-sm text-danger">
+                {erroComissao}
+              </p>
+            )}
             <Button type="submit" disabled={salvandoComissao}>
               {salvandoComissao ? "Salvando..." : "Salvar comissão"}
             </Button>
@@ -459,6 +475,11 @@ export function FuncionarioDesempenho() {
                 </Button>
               </div>
             </div>
+            {erroEdit && (
+              <p role="alert" className="text-sm text-danger">
+                {erroEdit}
+              </p>
+            )}
             <Button type="submit" disabled={salvandoEdit} className="w-full">
               {salvandoEdit ? "Salvando..." : "Salvar alterações"}
             </Button>
