@@ -899,8 +899,8 @@ export function OrdemServicoDetail() {
           continua editável de propósito, então não dizer "nenhuma alteração". */}
       {osCancelada && (
         <p role="status" className="rounded-lg bg-muted px-3 py-2 text-sm text-muted-foreground">
-          Esta OS está cancelada. Peça, deslocamento, anexo, financeiro e tarefas só podem ser
-          alterados depois de reabrir o chamado.
+          Esta OS está cancelada. Para mexer em peças, deslocamentos, anexos, fechamento ou
+          tarefas, use “Reabrir chamado”, em Acompanhamento.
         </p>
       )}
 
