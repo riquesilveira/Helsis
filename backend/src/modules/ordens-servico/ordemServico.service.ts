@@ -5,6 +5,7 @@ import { formatarNumeroOS } from "../../utils/formatarNumeroOS";
 import { notificarClienteSobreStatus } from "../notificacoes/notificacao.service";
 import { registrarManutencaoPreventivaConcluida, somarMeses } from "../equipamentos/equipamento.service";
 import { anexarSlaEmLista, resolverSlaDaOS } from "../contratos/contrato.service";
+import { pausarTarefasEmAndamento } from "../tarefas/tarefaOS.service";
 
 export interface CriarOSInput {
   clienteId: string;
@@ -297,6 +298,14 @@ export async function atualizarStatus(osId: string, dados: AtualizarStatusInput)
     data: dadosAtualizacao,
     include: { statusHistoricos: { orderBy: { criadoEm: "asc" } } },
   });
+
+  // Cancelou: pausa os cronômetros que estavam rodando, para não contarem
+  // tempo numa OS encerrada (decisão de 12/11/2026). Aguardado, para a tela
+  // já recarregar com as tarefas pausadas. A trava de tarefas em OS cancelada
+  // (só "Pausar" passa) continua valendo depois.
+  if (dados.status === StatusOS.CANCELADO) {
+    await pausarTarefasEmAndamento(osId);
+  }
 
   // Quando uma manutenção PREVENTIVA é concluída, o plano do equipamento
   // avança automaticamente para a próxima data prevista — é isso que

@@ -34,6 +34,47 @@ export async function adicionarTarefa(ordemServicoId: string, tarefaCatalogoId: 
   });
 }
 
+/**
+ * Campos de uma pausa: fecha o segmento atual (desde iniciadoEm), soma no
+ * acumulado e zera o segmento aberto. Usado pelo botão "Pausar" e pela pausa
+ * automática ao cancelar a OS.
+ */
+export function camposDePausa(
+  tarefa: { duracaoAcumuladaSegundos: number | null; iniciadoEm: Date | null },
+  agora: Date
+) {
+  const acumulada = tarefa.duracaoAcumuladaSegundos ?? 0;
+  const segmentoAtual = tarefa.iniciadoEm
+    ? Math.max(0, Math.round((agora.getTime() - tarefa.iniciadoEm.getTime()) / 1000))
+    : 0;
+  return {
+    status: StatusTarefa.PAUSADO,
+    duracaoAcumuladaSegundos: acumulada + segmentoAtual,
+    iniciadoEm: null,
+    finalizadoEm: null,
+    duracaoSegundos: null,
+  };
+}
+
+/**
+ * Pausa todas as tarefas EM_ANDAMENTO de uma OS (decisão de 12/11/2026: ao
+ * cancelar a OS, cronômetro rodando conta tempo à toa). O tempo já corrido
+ * fica no acumulado; reabrir a OS e retomar continua de onde parou.
+ * Devolve quantas tarefas foram pausadas.
+ */
+export async function pausarTarefasEmAndamento(ordemServicoId: string, agora = new Date()) {
+  const emAndamento = await prisma.tarefaOS.findMany({
+    where: { ordemServicoId, status: StatusTarefa.EM_ANDAMENTO },
+    select: { id: true, duracaoAcumuladaSegundos: true, iniciadoEm: true },
+  });
+  await prisma.$transaction(
+    emAndamento.map((t) =>
+      prisma.tarefaOS.update({ where: { id: t.id }, data: camposDePausa(t, agora) })
+    )
+  );
+  return emAndamento.length;
+}
+
 export interface AtualizarStatusTarefaInput {
   status: StatusTarefa;
   /**
@@ -78,11 +119,7 @@ export async function atualizarStatusTarefa(
     data.finalizadoEm = null;
     data.duracaoSegundos = null;
   } else if (dados.status === StatusTarefa.PAUSADO) {
-    // Pausar: fecha o segmento atual e soma no acumulado; zera o segmento aberto.
-    data.duracaoAcumuladaSegundos = acumulada + segmentoAtual;
-    data.iniciadoEm = null;
-    data.finalizadoEm = null;
-    data.duracaoSegundos = null;
+    Object.assign(data, camposDePausa(tarefa, agora));
   } else if (dados.status === StatusTarefa.CONCLUIDA) {
     // Concluir: duração total = acumulado + segmento atual (0 se nunca iniciou).
     const total = acumulada + segmentoAtual;
