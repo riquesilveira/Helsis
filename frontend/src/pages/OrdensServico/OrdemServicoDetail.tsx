@@ -1386,7 +1386,8 @@ export function OrdemServicoDetail() {
                   <div className="min-w-0">
                     <p className="text-sm text-foreground">
                       {t.tarefaCatalogo.descricao}{" "}
-                      <span className="codigo text-xs text-muted-foreground">
+                      {/* nowrap: em 375 px o código quebrava no hífen ("(T-" / "AUD1)"). */}
+                      <span className="codigo whitespace-nowrap text-xs text-muted-foreground">
                         ({t.tarefaCatalogo.codigo})
                       </span>
                     </p>
