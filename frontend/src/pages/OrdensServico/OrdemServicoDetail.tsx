@@ -895,12 +895,12 @@ export function OrdemServicoDetail() {
         )}
       </div>
 
-      {/* Logo depois do cabeçalho; texto alinhado à mensagem 409 da API e ao
-          botão "Reabrir chamado" do card Acompanhamento. */}
+      {/* Logo depois do cabeçalho. Lista o que trava: a descrição do problema
+          continua editável de propósito, então não dizer "nenhuma alteração". */}
       {osCancelada && (
         <p role="status" className="rounded-lg bg-muted px-3 py-2 text-sm text-muted-foreground">
-          Esta OS está cancelada e não aceita alterações. Para registrar peça, deslocamento, anexo
-          ou fechamento, use “Reabrir chamado”, em Acompanhamento.
+          Esta OS está cancelada. Peça, deslocamento, anexo, financeiro e tarefas só podem ser
+          alterados depois de reabrir o chamado.
         </p>
       )}
 
