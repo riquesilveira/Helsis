@@ -2,6 +2,7 @@ import { FormEvent, useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { ArrowLeft, TrendingDown, TrendingUp, Minus, X } from "lucide-react";
 import { api } from "../../services/api";
+import { usuarioLogado } from "../../services/auth";
 import {
   DesempenhoFuncionario,
   Funcionario,
@@ -137,6 +138,9 @@ export function FuncionarioDesempenho() {
   const [valorComissao, setValorComissao] = useState("");
   const [salvandoComissao, setSalvandoComissao] = useState(false);
   const [erroComissao, setErroComissao] = useState<string | null>(null);
+  // Editar funcionário (inclui salário) e configurar comissão são só do Dono
+  // (PATCH /funcionarios/:id e /:id/comissao autorizam só DONO).
+  const ehDono = usuarioLogado()?.papel === "DONO";
 
   function carregarFuncionario() {
     api.get(`/funcionarios/${id}`).then((r) => {
@@ -231,9 +235,11 @@ export function FuncionarioDesempenho() {
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
             <h1 className="text-xl font-semibold text-foreground">{desempenho.nome}</h1>
-            <Button variant="link" size="sm" className="h-auto px-0 py-0 text-xs" onClick={abrirModalEditar}>
-              Editar
-            </Button>
+            {ehDono && (
+              <Button variant="link" size="sm" className="h-auto px-0 py-0 text-xs" onClick={abrirModalEditar}>
+                Editar
+              </Button>
+            )}
           </div>
           <p className="mt-1 text-sm text-muted-foreground">{desempenho.cargo}</p>
         </div>
@@ -343,6 +349,19 @@ export function FuncionarioDesempenho() {
           </CardDescription>
         </CardHeader>
         <CardContent>
+          {!ehDono ? (
+            // Gestor e outros papéis: só leitura (PATCH /comissao autoriza só o Dono).
+            <p className="text-sm text-foreground">
+              {funcionario.tipoComissao === "PERCENTUAL"
+                ? `${Number(funcionario.valorComissao ?? 0).toLocaleString("pt-BR")}% sobre a mão de obra`
+                : funcionario.tipoComissao === "FIXO"
+                  ? `${formatarReais(Number(funcionario.valorComissao ?? 0))} fixo por atendimento concluído`
+                  : "Nenhuma (só salário fixo)"}
+              <span className="mt-1 block text-xs text-muted-foreground">
+                Só o Dono altera a comissão.
+              </span>
+            </p>
+          ) : (
           <form onSubmit={salvarComissao} className="space-y-4">
             <div className="grid gap-1.5">
               <Label htmlFor="tipo-comissao">Tipo de comissão</Label>
@@ -385,6 +404,7 @@ export function FuncionarioDesempenho() {
               {salvandoComissao ? "Salvando..." : "Salvar comissão"}
             </Button>
           </form>
+          )}
         </CardContent>
       </Card>
 

@@ -2,6 +2,7 @@ import { FormEvent, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { Plus, X } from "lucide-react";
 import { api } from "../../services/api";
+import { usuarioLogado } from "../../services/auth";
 import { Funcionario } from "../../types";
 import { PageHeader } from "../../components/PageHeader";
 import { Card } from "../../components/shadcn/card";
@@ -72,6 +73,9 @@ export function FuncionariosList() {
   const [funcionarios, setFuncionarios] = useState<Funcionario[]>([]);
   const [carregando, setCarregando] = useState(true);
   const [modalAberto, setModalAberto] = useState(false);
+  // Cadastrar e editar funcionário (inclui salário) é só do Dono: POST e
+  // PATCH /funcionarios autorizam só DONO. O Gestor vê a equipe em leitura.
+  const ehDono = usuarioLogado()?.papel === "DONO";
   const [form, setForm] = useState(FORM_VAZIO);
   const [especialidades, setEspecialidades] = useState<string[]>([]);
   const [novaEspecialidade, setNovaEspecialidade] = useState("");
@@ -182,10 +186,12 @@ export function FuncionariosList() {
         titulo="Equipe & desempenho"
         subtitulo="Técnicos e colaboradores da operação."
         acoes={
-          <Button onClick={() => setModalAberto(true)}>
-            <Plus />
-            Novo funcionário
-          </Button>
+          ehDono ? (
+            <Button onClick={() => setModalAberto(true)}>
+              <Plus />
+              Novo funcionário
+            </Button>
+          ) : undefined
         }
       />
 
@@ -240,9 +246,11 @@ export function FuncionariosList() {
                     R$ {Number(f.salarioAtual).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
                   </TableCell>
                   <TableCell className="px-5 py-4 text-right">
-                    <Button variant="ghost" size="sm" onClick={() => abrirModalEditar(f)}>
-                      Editar
-                    </Button>
+                    {ehDono && (
+                      <Button variant="ghost" size="sm" onClick={() => abrirModalEditar(f)}>
+                        Editar
+                      </Button>
+                    )}
                   </TableCell>
                 </TableRow>
               ))}
@@ -290,11 +298,13 @@ export function FuncionariosList() {
                   </span>
                 </div>
               </div>
-              <div className="mt-3 flex justify-end gap-1 border-t border-border pt-2">
-                <Button variant="ghost" size="sm" onClick={() => abrirModalEditar(f)}>
-                  Editar
-                </Button>
-              </div>
+              {ehDono && (
+                <div className="mt-3 flex justify-end gap-1 border-t border-border pt-2">
+                  <Button variant="ghost" size="sm" onClick={() => abrirModalEditar(f)}>
+                    Editar
+                  </Button>
+                </div>
+              )}
             </Card>
           ))}
         {!carregando && funcionarios.length === 0 && (

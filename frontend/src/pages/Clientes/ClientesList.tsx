@@ -2,6 +2,7 @@ import { FormEvent, useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Eye, MoreVertical, Pencil, Plus, Search, Trash2, Wrench } from "lucide-react";
 import { api } from "../../services/api";
+import { usuarioLogado } from "../../services/auth";
 import { Cliente } from "../../types";
 import { PageHeader } from "../../components/PageHeader";
 import { HospitalLogo } from "../../components/HospitalLogo";
@@ -63,6 +64,8 @@ export function ClientesList() {
   const [salvando, setSalvando] = useState(false);
   const [editandoId, setEditandoId] = useState<string | null>(null);
   const [clienteExcluir, setClienteExcluir] = useState<Cliente | null>(null);
+  // Excluir cliente é só do Dono (DELETE /clientes/:id autoriza só DONO).
+  const ehDono = usuarioLogado()?.papel === "DONO";
   const [excluindo, setExcluindo] = useState(false);
   const [erroExcluir, setErroExcluir] = useState("");
 
@@ -271,10 +274,14 @@ export function ClientesList() {
                       <MenuAcoes
                         cliente={c}
                         onEditar={() => abrirEdicao(c)}
-                        onExcluir={() => {
-                          setErroExcluir("");
-                          setClienteExcluir(c);
-                        }}
+                        onExcluir={
+                          ehDono
+                            ? () => {
+                                setErroExcluir("");
+                                setClienteExcluir(c);
+                              }
+                            : undefined
+                        }
                       />
                     </div>
                   </TableCell>
@@ -331,10 +338,14 @@ export function ClientesList() {
                 <MenuAcoes
                   cliente={c}
                   onEditar={() => abrirEdicao(c)}
-                  onExcluir={() => {
-                    setErroExcluir("");
-                    setClienteExcluir(c);
-                  }}
+                  onExcluir={
+                    ehDono
+                      ? () => {
+                          setErroExcluir("");
+                          setClienteExcluir(c);
+                        }
+                      : undefined
+                  }
                 />
               </div>
             </Card>
@@ -477,7 +488,8 @@ function MenuAcoes({
 }: {
   cliente: Cliente;
   onEditar: () => void;
-  onExcluir: () => void;
+  /** Só o Dono exclui cliente (a API recusa os outros papéis com 403). */
+  onExcluir?: () => void;
 }) {
   const navigate = useNavigate();
 
@@ -501,11 +513,15 @@ function MenuAcoes({
           <Wrench />
           Nova OS
         </DropdownMenuItem>
-        <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={onExcluir} className="text-danger focus:text-danger">
-          <Trash2 />
-          Excluir
-        </DropdownMenuItem>
+        {onExcluir && (
+          <>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={onExcluir} className="text-danger focus:text-danger">
+              <Trash2 />
+              Excluir
+            </DropdownMenuItem>
+          </>
+        )}
       </DropdownMenuContent>
     </DropdownMenu>
   );
