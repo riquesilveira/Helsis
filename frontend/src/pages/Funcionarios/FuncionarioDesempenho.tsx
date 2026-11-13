@@ -119,6 +119,8 @@ function CartaoMetrica({ rotulo, valor, ajuda }: { rotulo: string; valor: string
   );
 }
 
+const MSG_COMISSAO_POSITIVA = "A comissão precisa ser maior que zero.";
+
 export function FuncionarioDesempenho() {
   const { id } = useParams();
   const [desempenho, setDesempenho] = useState<DesempenhoFuncionario | null>(null);
@@ -204,6 +206,12 @@ export function FuncionarioDesempenho() {
   async function salvarComissao(e: FormEvent) {
     e.preventDefault();
     setErroComissao(null);
+    // A API recusa valor <= 0 com o texto do Zod em inglês ("Number must be
+    // greater than 0"). Confere antes de enviar e mostra em português.
+    if (tipoComissao && !(Number(valorComissao) > 0)) {
+      setErroComissao(MSG_COMISSAO_POSITIVA);
+      return;
+    }
     setSalvandoComissao(true);
     try {
       await api.patch(`/funcionarios/${id}/comissao`, {
@@ -212,7 +220,12 @@ export function FuncionarioDesempenho() {
       });
       carregarFuncionario();
     } catch (err: any) {
-      setErroComissao(err?.response?.data?.erro ?? "Não foi possível salvar a comissão. Tente novamente.");
+      const erroApi: string | undefined = err?.response?.data?.erro;
+      setErroComissao(
+        err?.response?.status === 400 && erroApi?.includes("greater than 0")
+          ? MSG_COMISSAO_POSITIVA
+          : erroApi ?? "Não foi possível salvar a comissão. Tente novamente."
+      );
       carregarFuncionario(); // volta o formulário ao valor salvo
     } finally {
       setSalvandoComissao(false);
