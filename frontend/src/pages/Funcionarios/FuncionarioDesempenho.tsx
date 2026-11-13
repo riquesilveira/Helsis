@@ -356,7 +356,8 @@ export function FuncionarioDesempenho() {
 
       <Card className="max-w-md">
         <CardHeader>
-          <CardTitle className="text-sm">Configurar comissão</CardTitle>
+          {/* Só o Dono altera; para os outros o bloco é leitura e não "configura". */}
+          <CardTitle className="text-sm">{ehDono ? "Configurar comissão" : "Comissão"}</CardTitle>
           <CardDescription className="text-xs">
             A comissão incide só sobre o valor de mão de obra de cada atendimento — nunca sobre peças.
           </CardDescription>
