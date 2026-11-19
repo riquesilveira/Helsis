@@ -934,6 +934,22 @@ export function OrdemServicoDetail() {
         </p>
       )}
 
+      {/* J-7: concluída sem fechamento financeiro (mão de obra nunca salva).
+          Só aviso: a regra de comissão não muda. */}
+      {os.statusAtual === "CONCLUIDO" && os.valorMaoDeObra == null && (
+        <p
+          role="status"
+          className="rounded-lg bg-status-aguardando/10 px-3 py-2 text-sm font-medium text-status-aguardando"
+        >
+          Fechamento pendente.{" "}
+          <span className="font-normal">
+            {podeVerFinanceiro
+              ? "Preencha a mão de obra e salve em “Fechamento financeiro”, mais abaixo."
+              : "O valor e a comissão desta OS ainda não foram fechados pela gestão."}
+          </span>
+        </p>
+      )}
+
       <Card>
         <CardHeader className="border-b">
           <CardTitle>Problema relatado</CardTitle>

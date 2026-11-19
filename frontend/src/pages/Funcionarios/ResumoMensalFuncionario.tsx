@@ -138,6 +138,11 @@ export function ResumoMensalFuncionario() {
                 <tr key={a.ordemServicoId}>
                   <td className="py-2.5 text-muted-foreground">
                     Comissão — OS #{formatarNumeroOS(a.numero)} ({a.clienteNome})
+                    {a.fechamentoPendente && (
+                      <span className="ml-2 inline-flex rounded-full bg-status-aguardando/10 px-2 py-0.5 text-[11px] font-medium text-status-aguardando print:border print:border-current">
+                        Fechamento pendente
+                      </span>
+                    )}
                     <span className="block text-xs text-muted-foreground mt-0.5">
                       Mão de obra {formatarReais(a.valorMaoDeObra)} · concluída em{" "}
                       {new Date(a.dataConclusao).toLocaleDateString("pt-BR")}

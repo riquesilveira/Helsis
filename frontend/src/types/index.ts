@@ -298,6 +298,8 @@ export interface ItemComissaoResumo {
   dataConclusao: string;
   valorMaoDeObra: number;
   valorComissao: number;
+  /** Concluída sem fechamento financeiro (espelha o backend). */
+  fechamentoPendente: boolean;
 }
 
 export interface ResumoMensal {

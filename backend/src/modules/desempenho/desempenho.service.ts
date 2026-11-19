@@ -135,6 +135,8 @@ export interface ItemComissaoResumo {
   dataConclusao: string;
   valorMaoDeObra: number;
   valorComissao: number;
+  /** Concluída sem fechamento financeiro (mão de obra nunca salva): os R$ 0,00 não são definitivos. */
+  fechamentoPendente: boolean;
 }
 
 export interface ResumoMensal {
@@ -188,6 +190,8 @@ export async function calcularResumoMensal(
     dataConclusao: o.dataConclusao!.toISOString(),
     valorMaoDeObra: Number(o.valorMaoDeObra ?? 0),
     valorComissao: Number(o.valorComissao ?? 0),
+    // Só sinaliza; o cálculo e os totais não mudam (J-7).
+    fechamentoPendente: o.valorMaoDeObra == null,
   }));
 
   const totalComissoes = atendimentos.reduce((soma, a) => soma + a.valorComissao, 0);
