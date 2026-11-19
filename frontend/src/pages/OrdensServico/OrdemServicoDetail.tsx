@@ -947,7 +947,7 @@ export function OrdemServicoDetail() {
           Fechamento pendente.{" "}
           <span className="font-normal">
             {podeVerFinanceiro
-              ? "Preencha a mão de obra e salve em “Fechamento financeiro”, mais abaixo."
+              ? "Preencha a mão de obra (mesmo que seja R$ 0,00) e salve em “Fechamento financeiro”, mais abaixo."
               : "O valor e a comissão desta OS ainda não foram fechados pela gestão."}
           </span>
         </p>
