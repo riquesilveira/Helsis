@@ -13,6 +13,18 @@ interface AcompanhamentoPublico {
   statusHistoricos: StatusHistoricoItem[];
 }
 
+// J-3: o que acontece a seguir, em texto simples para o cliente. Sem texto
+// para um status, a linha não aparece.
+const PROXIMO_PASSO: Partial<Record<StatusOS, string>> = {
+  RECEBIDO: "Próximo passo: a equipe vai analisar o chamado e agendar o atendimento.",
+  DIAGNOSTICO: "Próximo passo: o técnico está identificando a causa do problema.",
+  AGUARDANDO_PECA: "Próximo passo: assim que a peça chegar, o reparo continua.",
+  EM_REPARO: "Próximo passo: o técnico termina o reparo e testa o equipamento.",
+  AGUARDANDO_VALIDACAO: "Próximo passo: validação final antes de liberar o equipamento.",
+  CONCLUIDO: "O equipamento está liberado. Se o problema voltar, fale com a assistência técnica.",
+  CANCELADO: "Se precisar de um novo atendimento, fale com a assistência técnica.",
+};
+
 /**
  * Tela que o cliente acessa por um link público (ex: enviado por WhatsApp/SMS)
  * para acompanhar o atendimento sem precisar criar conta — igual rastreio
@@ -99,6 +111,12 @@ export function AcompanharOS() {
             </p>
           )}
         </div>
+
+        {PROXIMO_PASSO[dados.statusAtual] && (
+          <p className="rounded-lg bg-card px-4 py-3 text-sm text-foreground ring-1 ring-foreground/10">
+            {PROXIMO_PASSO[dados.statusAtual]}
+          </p>
+        )}
 
         <StatusTimeline historico={dados.statusHistoricos} statusAtual={dados.statusAtual} paraCliente />
 
