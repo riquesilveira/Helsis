@@ -565,7 +565,10 @@ export function OrdemServicoDetail() {
       setModalStatusAberto(false);
       // Retorno de sucesso só no cancelamento (retest N1). Não promete aviso
       // ao cliente: a notificação sai em segundo plano e pode falhar.
-      setAvisoStatus(novoStatus === "CANCELADO" ? "OS cancelada." : null);
+      // J-4: também na conclusão. Mesma regra: não promete aviso ao cliente.
+      setAvisoStatus(
+        novoStatus === "CANCELADO" ? "OS cancelada." : novoStatus === "CONCLUIDO" ? "OS concluída." : null
+      );
       carregar();
       // pequeno atraso: a notificação é enviada em segundo plano no backend
       setTimeout(carregarNotificacoes, 1200);
