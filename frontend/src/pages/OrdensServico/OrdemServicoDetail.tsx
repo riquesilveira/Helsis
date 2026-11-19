@@ -1318,11 +1318,19 @@ export function OrdemServicoDetail() {
             {(novoStatus === "AGUARDANDO_VALIDACAO" || novoStatus === "CONCLUIDO") && (
               <div className="rounded-md border border-status-validacao/30 bg-status-validacao/5 p-3">
                 <p className="text-xs font-medium text-foreground mb-2">Diagnóstico (padronizado)</p>
+                {/* J-5: catálogo vazio deixava as listas mudas. */}
+                {causas.length === 0 && defeitos.length === 0 && solucoes.length === 0 ? (
+                  <p className="text-xs text-muted-foreground">
+                    Nenhuma causa, defeito ou solução cadastrada no Catálogo de diagnóstico. O
+                    diagnóstico é opcional: você pode seguir sem ele.
+                  </p>
+                ) : (
+                <>
                 <div className="grid gap-1.5 mb-4">
                   <Label htmlFor="causa-diag">Causa</Label>
-                  <Select value={causaId} onValueChange={setCausaId}>
+                  <Select value={causaId} onValueChange={setCausaId} disabled={causas.length === 0}>
                     <SelectTrigger id="causa-diag" className="w-full">
-                      <SelectValue placeholder="Selecione…" />
+                      <SelectValue placeholder={causas.length ? "Selecione… (opcional)" : "Nenhuma causa cadastrada"} />
                     </SelectTrigger>
                     <SelectContent>
                       {causas.map((c) => (
@@ -1335,9 +1343,9 @@ export function OrdemServicoDetail() {
                 </div>
                 <div className="grid gap-1.5 mb-4">
                   <Label htmlFor="defeito-diag">Defeito</Label>
-                  <Select value={defeitoId} onValueChange={setDefeitoId}>
+                  <Select value={defeitoId} onValueChange={setDefeitoId} disabled={defeitos.length === 0}>
                     <SelectTrigger id="defeito-diag" className="w-full">
-                      <SelectValue placeholder="Selecione…" />
+                      <SelectValue placeholder={defeitos.length ? "Selecione… (opcional)" : "Nenhum defeito cadastrado"} />
                     </SelectTrigger>
                     <SelectContent>
                       {defeitos.map((d) => (
@@ -1350,9 +1358,9 @@ export function OrdemServicoDetail() {
                 </div>
                 <div className="grid gap-1.5">
                   <Label htmlFor="solucao-diag">Solução</Label>
-                  <Select value={solucaoId} onValueChange={setSolucaoId}>
+                  <Select value={solucaoId} onValueChange={setSolucaoId} disabled={solucoes.length === 0}>
                     <SelectTrigger id="solucao-diag" className="w-full">
-                      <SelectValue placeholder="Selecione…" />
+                      <SelectValue placeholder={solucoes.length ? "Selecione… (opcional)" : "Nenhuma solução cadastrada"} />
                     </SelectTrigger>
                     <SelectContent>
                       {solucoes.map((s) => (
@@ -1363,6 +1371,8 @@ export function OrdemServicoDetail() {
                     </SelectContent>
                   </Select>
                 </div>
+                </>
+                )}
               </div>
             )}
             {erroStatus && <p className="text-xs text-danger">{erroStatus}</p>}
