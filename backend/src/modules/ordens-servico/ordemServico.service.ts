@@ -613,5 +613,13 @@ export async function buscarAcompanhamentoPublico(id: string) {
   });
 
   if (!os) throw new AppError("Ordem de serviço não encontrada.", 404);
-  return os;
+  // Designar/reatribuir técnico grava um histórico com o MESMO status (para a
+  // equipe ver quem passou para quem). Para o cliente isso repetia a etapa
+  // ("Recebemos seu chamado" duas vezes). No portal, uma entrada por etapa:
+  // mantém a primeira de cada sequência de status iguais.
+  return { ...os, statusHistoricos: semEtapasRepetidas(os.statusHistoricos) };
+}
+
+export function semEtapasRepetidas<T extends { status: StatusOS }>(historico: T[]): T[] {
+  return historico.filter((h, i) => i === 0 || h.status !== historico[i - 1].status);
 }
