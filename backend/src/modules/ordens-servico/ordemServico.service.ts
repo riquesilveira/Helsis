@@ -199,15 +199,24 @@ export async function criarOrdemServico(dados: CriarOSInput) {
   return os;
 }
 
+const SO_DATA = /^\d{4}-\d{2}-\d{2}$/;
+
 /**
- * Converte a data da visita vinda do formulário. "AAAA-MM-DD" vira meia-noite
- * no fuso do servidor, o mesmo que buscarRotaFuncionario usa para montar o
- * dia; new Date("AAAA-MM-DD") seria meia-noite UTC, que no Brasil cai às 21h
- * do dia anterior e põe a OS na rota errada. Data e hora completas passam
+ * Converte a data da visita vinda do formulário. "AAAA-MM-DD" vira MEIO-DIA
+ * no fuso do servidor. Meio-dia cai no mesmo dia com o servidor em UTC
+ * (produção) ou em BRT (local): dentro da janela do dia que
+ * buscarRotaFuncionario monta, e mostrado no navegador no Brasil como o
+ * mesmo dia (12:00Z = 09:00 BRT). Meia-noite UTC, o que new Date("AAAA-MM-DD")
+ * faz, aparecia no Brasil como o dia anterior. Data e hora completas passam
  * como estão.
  */
 export function paraDataAgendada(valor: string): Date {
-  return /^\d{4}-\d{2}-\d{2}$/.test(valor) ? new Date(`${valor}T00:00:00`) : new Date(valor);
+  return SO_DATA.test(valor) ? new Date(`${valor}T12:00:00`) : new Date(valor);
+}
+
+/** Dia pedido pela rota ("AAAA-MM-DD") como meia-noite no fuso do servidor. */
+export function paraDiaLocal(valor: string): Date {
+  return SO_DATA.test(valor) ? new Date(`${valor}T00:00:00`) : new Date(valor);
 }
 
 /**

@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import { z } from "zod";
 import * as funcionarioService from "./funcionario.service";
-import { buscarRotaFuncionario } from "../ordens-servico/ordemServico.service";
+import { buscarRotaFuncionario, paraDiaLocal } from "../ordens-servico/ordemServico.service";
 
 const criarFuncionarioSchema = z.object({
   nome: z.string().min(2),
@@ -66,7 +66,9 @@ export async function atualizarComissao(req: Request, res: Response) {
 // sem o parâmetro, assume hoje.
 export async function rota(req: Request, res: Response) {
   const dataParam = req.query.data as string | undefined;
-  const data = dataParam ? new Date(dataParam) : new Date();
+  // paraDiaLocal: new Date("AAAA-MM-DD") é meia-noite UTC e, com o servidor
+  // em BRT, a janela do dia ia para o dia anterior.
+  const data = dataParam ? paraDiaLocal(dataParam) : new Date();
   res.json(await buscarRotaFuncionario(req.params.id, data));
 }
 
@@ -75,6 +77,6 @@ export async function rota(req: Request, res: Response) {
 export async function minhaRota(req: Request, res: Response) {
   const funcionario = await funcionarioService.buscarFuncionarioPorUsuarioId(req.usuario!.id);
   const dataParam = req.query.data as string | undefined;
-  const data = dataParam ? new Date(dataParam) : new Date();
+  const data = dataParam ? paraDiaLocal(dataParam) : new Date();
   res.json(await buscarRotaFuncionario(funcionario.id, data));
 }
