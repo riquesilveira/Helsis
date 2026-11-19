@@ -38,6 +38,12 @@ router.patch(
   autorizar("DONO", "GESTOR", "SUPORTE"),
   asyncHandler(osController.atribuirTecnico)
 );
+// Agendar/reagendar a visita: quem designa o técnico também define o dia.
+router.patch(
+  "/:id/agendamento",
+  autorizar("DONO", "GESTOR", "SUPORTE"),
+  asyncHandler(osController.agendarVisita)
+);
 router.patch(
   "/:id/financeiro",
   autorizar("DONO", "GESTOR"),

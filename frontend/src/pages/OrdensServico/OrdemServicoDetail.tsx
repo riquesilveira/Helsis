@@ -106,6 +106,13 @@ function formatarDuracao(s: number): string {
 }
 
 // Formata o cronômetro ao vivo (precisão de segundos): mm:ss ou h:mm:ss.
+// AAAA-MM-DD no fuso do navegador (para o input type="date"); toISOString()
+// seria UTC e, no Brasil depois das 21h, mostraria o dia seguinte.
+function dataLocalISO(d: Date): string {
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+}
+
 function formatarCronometro(segundos: number): string {
   const s = Math.max(0, Math.floor(segundos));
   const h = Math.floor(s / 3600);
@@ -236,6 +243,11 @@ export function OrdemServicoDetail() {
   const [tecnicoSelecionado, setTecnicoSelecionado] = useState("");
   const [atribuindo, setAtribuindo] = useState(false);
   const [erroAtribuir, setErroAtribuir] = useState<string | null>(null);
+
+  // agendamento da visita (J-1): define ou muda o dia sem abrir nova OS
+  const [dataVisita, setDataVisita] = useState("");
+  const [agendando, setAgendando] = useState(false);
+  const [erroAgendar, setErroAgendar] = useState<string | null>(null);
 
   // formulário de status
   const [novoStatus, setNovoStatus] = useState<StatusOS>("RECEBIDO");
@@ -449,6 +461,24 @@ export function OrdemServicoDetail() {
       setAtribuindo(false);
     }
   }
+
+  async function salvarAgendamento(valor: string | null) {
+    setErroAgendar(null);
+    setAgendando(true);
+    try {
+      await api.patch(`/ordens-servico/${id}/agendamento`, { dataAgendada: valor });
+      carregar();
+    } catch (err: any) {
+      setErroAgendar(err?.response?.data?.erro ?? "Não foi possível salvar a data da visita.");
+    } finally {
+      setAgendando(false);
+    }
+  }
+
+  // Campo de data sempre reflete o que está salvo (no fuso local).
+  useEffect(() => {
+    setDataVisita(os?.dataAgendada ? dataLocalISO(new Date(os.dataAgendada)) : "");
+  }, [os?.dataAgendada]);
 
   // inicializa os campos de fechamento financeiro quando a OS carrega
   // (mas não toda vez que ela é recarregada, pra não sobrescrever o que
@@ -1063,6 +1093,53 @@ export function OrdemServicoDetail() {
                   {atribuindo ? "Salvando..." : os.funcionario ? "Reatribuir" : "Designar"}
                 </Button>
                 {erroAtribuir && <p className="text-xs text-danger">{erroAtribuir}</p>}
+              </form>
+            )}
+
+            {/* Visita agendada (J-1): é a data que põe a OS na "Rota do dia". */}
+            <p className="mt-4 text-xs text-muted-foreground">Visita agendada</p>
+            <p className="mt-1 text-sm text-foreground">
+              {os.dataAgendada
+                ? new Date(os.dataAgendada).toLocaleDateString("pt-BR")
+                : "Sem data (fica em “Outras OS em aberto” na rota do técnico)"}
+            </p>
+            {podeDesignar && os.statusAtual !== "CONCLUIDO" && os.statusAtual !== "CANCELADO" && (
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  salvarAgendamento(dataVisita || null);
+                }}
+                className="mt-2 flex flex-wrap items-center gap-2"
+              >
+                <Input
+                  type="date"
+                  aria-label="Data da visita"
+                  value={dataVisita}
+                  onChange={(e) => setDataVisita(e.target.value)}
+                  className="w-full sm:w-auto"
+                />
+                <Button
+                  type="submit"
+                  size="sm"
+                  disabled={
+                    agendando ||
+                    dataVisita === (os.dataAgendada ? dataLocalISO(new Date(os.dataAgendada)) : "")
+                  }
+                >
+                  {agendando ? "Salvando..." : os.dataAgendada ? "Reagendar" : "Agendar"}
+                </Button>
+                {os.dataAgendada && (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    disabled={agendando}
+                    onClick={() => salvarAgendamento(null)}
+                  >
+                    Remover data
+                  </Button>
+                )}
+                {erroAgendar && <p className="w-full text-xs text-danger">{erroAgendar}</p>}
               </form>
             )}
           </CardContent>

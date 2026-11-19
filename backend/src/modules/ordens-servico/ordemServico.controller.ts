@@ -45,6 +45,13 @@ const atribuirTecnicoSchema = z.object({
   funcionarioId: z.string().uuid(),
 });
 
+const agendarVisitaSchema = z.object({
+  dataAgendada: z
+    .string()
+    .refine((v) => !isNaN(Date.parse(v)), "Data inválida.")
+    .nullable(),
+});
+
 const atualizarFinanceiroSchema = z.object({
   valorMaoDeObra: z.number().nonnegative(),
   valorComissaoManual: z.number().nonnegative().optional(),
@@ -188,6 +195,11 @@ export async function atribuirTecnico(req: Request, res: Response) {
   const { funcionarioId } = atribuirTecnicoSchema.parse(req.body);
   const os = await osService.atribuirTecnico(req.params.id, funcionarioId);
   res.json(os);
+}
+
+export async function agendarVisita(req: Request, res: Response) {
+  const { dataAgendada } = agendarVisitaSchema.parse(req.body);
+  res.json(await osService.agendarVisita(req.params.id, dataAgendada));
 }
 
 export async function atualizarFinanceiro(req: Request, res: Response) {

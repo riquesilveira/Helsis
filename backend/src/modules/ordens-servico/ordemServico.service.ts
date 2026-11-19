@@ -173,7 +173,7 @@ export async function criarOrdemServico(dados: CriarOSInput) {
   const os = await prisma.ordemServico.create({
     data: {
       ...dados,
-      dataAgendada: dados.dataAgendada ? new Date(dados.dataAgendada) : undefined,
+      dataAgendada: dados.dataAgendada ? paraDataAgendada(dados.dataAgendada) : undefined,
       statusAtual: StatusOS.RECEBIDO,
       statusHistoricos: {
         create: {
@@ -197,6 +197,30 @@ export async function criarOrdemServico(dados: CriarOSInput) {
   );
 
   return os;
+}
+
+/**
+ * Converte a data da visita vinda do formulário. "AAAA-MM-DD" vira meia-noite
+ * no fuso do servidor, o mesmo que buscarRotaFuncionario usa para montar o
+ * dia; new Date("AAAA-MM-DD") seria meia-noite UTC, que no Brasil cai às 21h
+ * do dia anterior e põe a OS na rota errada. Data e hora completas passam
+ * como estão.
+ */
+export function paraDataAgendada(valor: string): Date {
+  return /^\d{4}-\d{2}-\d{2}$/.test(valor) ? new Date(`${valor}T00:00:00`) : new Date(valor);
+}
+
+/**
+ * Define, muda ou limpa (null) a data da visita de uma OS já aberta. É essa
+ * data que põe a OS na "Rota do dia" do técnico. OS cancelada não aceita.
+ */
+export async function agendarVisita(osId: string, dataAgendada: string | null) {
+  exigirOSNaoCancelada(await buscarOrdemServicoPorId(osId));
+  return prisma.ordemServico.update({
+    where: { id: osId },
+    data: { dataAgendada: dataAgendada ? paraDataAgendada(dataAgendada) : null },
+    select: { id: true, dataAgendada: true },
+  });
 }
 
 /**
