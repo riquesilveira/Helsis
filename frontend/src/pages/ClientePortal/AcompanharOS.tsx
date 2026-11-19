@@ -17,7 +17,7 @@ interface AcompanhamentoPublico {
 // para um status, a linha não aparece.
 const PROXIMO_PASSO: Partial<Record<StatusOS, string>> = {
   RECEBIDO: "Próximo passo: a equipe vai analisar o chamado e agendar o atendimento.",
-  DIAGNOSTICO: "Próximo passo: o técnico está identificando a causa do problema.",
+  DIAGNOSTICO: "Próximo passo: o técnico identifica a causa e define o reparo.",
   AGUARDANDO_PECA: "Próximo passo: assim que a peça chegar, o reparo continua.",
   EM_REPARO: "Próximo passo: o técnico termina o reparo e testa o equipamento.",
   AGUARDANDO_VALIDACAO: "Próximo passo: validação final antes de liberar o equipamento.",
