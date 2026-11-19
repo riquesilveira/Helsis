@@ -1120,7 +1120,7 @@ export function OrdemServicoDetail() {
             <p className="mt-1 text-sm text-foreground">
               {os.dataAgendada
                 ? new Date(os.dataAgendada).toLocaleDateString("pt-BR")
-                : "Sem data (fica em “Outras OS em aberto” na rota do técnico)"}
+                : "Sem data. Aparece em “Outras OS em aberto” na rota do técnico."}
             </p>
             {podeDesignar && os.statusAtual !== "CONCLUIDO" && os.statusAtual !== "CANCELADO" && (
               <form
