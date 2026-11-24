@@ -36,12 +36,18 @@ const textoOpcional = z
   .optional()
   .transform((v) => (v ? v : null));
 
-const empresaSchema = z.object({
+export const empresaSchema = z.object({
   nome: textoOpcional,
   telefone: textoOpcional,
+  // Só dígitos. Com 10 ou 11 dígitos (DDD + número, sem DDI), entra o 55 do
+  // Brasil: sem DDI o link wa.me não abre.
   whatsapp: textoOpcional
-    .transform((v) => (v ? v.replace(/\D/g, "") || null : null))
-    .refine((v) => v == null || (v.length >= 10 && v.length <= 15), "WhatsApp: informe DDI + DDD + número, só dígitos."),
+    .transform((v) => {
+      const digitos = v ? v.replace(/\D/g, "") : "";
+      if (!digitos) return null;
+      return digitos.length === 10 || digitos.length === 11 ? `55${digitos}` : digitos;
+    })
+    .refine((v) => v == null || (v.length >= 12 && v.length <= 15), "WhatsApp: informe DDD + número, só dígitos."),
   email: textoOpcional.refine((v) => v == null || z.string().email().safeParse(v).success, "E-mail inválido."),
 });
 

@@ -84,11 +84,11 @@ export function ConfiguracaoEmpresa() {
                 inputMode="numeric"
                 value={form.whatsapp ?? ""}
                 onChange={(e) => campo("whatsapp", e.target.value)}
-                placeholder="5511999998888"
+                placeholder="11999998888"
                 aria-describedby="empresa-whatsapp-ajuda"
               />
               <span id="empresa-whatsapp-ajuda" className="text-xs text-muted-foreground">
-                Com DDI e DDD, só números.
+                Com DDD, só números. O 55 do Brasil entra sozinho.
               </span>
             </div>
           </div>
