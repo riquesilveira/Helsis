@@ -30,7 +30,7 @@ quanto sai, com o quê) pro dono da empresa.
 | Papel | O que faz no sistema |
 |---|---|
 | **Dono** (`DONO`) | Acompanha financeiro (painel), aprova/configura comissão e salário, vê desempenho da equipe, gera resumo mensal, cadastra clientes/equipamentos/peças. |
-| **Gestor** (`GESTOR`) | ⚠️ Hoje tem **exatamente as mesmas permissões que Dono** em todo o sistema — o papel existe no modelo de dados mas nenhuma regra ainda diferencia os dois. Se a ideia é ter uma hierarquia real (ex: Gestor não vê salário, ou não configura comissão), isso ainda precisa ser desenhado e implementado. |
+| **Gestor** (`GESTOR`) | Tem as mesmas funções do Dono, **exceto dinheiro e cadastro de equipe**: não altera salário nem configura comissão de funcionário, não cadastra nem edita funcionário e não exclui cliente. Essas ações são só do Dono. **Isso é uma decisão tomada em 12/11/2026, não uma lacuna.** A API recusa com 403 (rotas de `/funcionarios` e `DELETE /clientes/:id`) e a tela esconde os controles, ou mostra só leitura. O Gestor continua com o resto: painel, OS (designar, agendar, cancelar e fechamento financeiro), clientes, equipe e desempenho em leitura, produtividade, contratos, catálogo e configuração das etapas. |
 | **Técnico** (`TECNICO`) | Vê e atualiza sua própria rota do dia, muda status de OS, registra peça trocada, vê o próprio desempenho, vê a própria comissão calculada em cada atendimento (só leitura). |
 | **Cliente** | Acompanha o status do próprio chamado por um link público, sem login (`/acompanhar/:id`). Recebe notificação (SMS/WhatsApp) a cada mudança de status. |
 
@@ -119,7 +119,7 @@ quanto sai, com o quê) pro dono da empresa.
 - Multi-empresa (multi-tenant).
 - App mobile nativo (hoje é web responsivo, mas pensado pra desktop).
 - Pagamento online / split de pagamento.
-- Diferenciação real de permissão entre Dono e Gestor (ver seção 2).
+- Dar ao Gestor salário, comissão e cadastro de funcionário: fica fora **por decisão** de 12/11/2026, não por lacuna. Essas ações são só do Dono (ver seção 2).
 
 ## 7. Onde ir a partir daqui
 
