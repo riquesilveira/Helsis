@@ -40,11 +40,24 @@ export function StatusTimeline({
   const rotulo = (status: StatusOS) =>
     (paraCliente ? etapas.find((e) => e.status === status)?.rotuloCliente : undefined) ??
     rotuloInterno(status);
-  const eventos = historico.slice().reverse();
+  // Uma entrada por etapa: designar/reatribuir o técnico grava um histórico com
+  // o MESMO status, que aparecia como um segundo "Recebido". Entradas iguais
+  // seguidas viram um evento só (data de quando a etapa começou), com todas as
+  // observações embaixo; as que vieram depois levam a própria hora.
+  const agrupados: { base: StatusHistoricoItem; notas: { texto: string; criadoEm?: string }[] }[] = [];
+  for (const h of historico) {
+    const atual = agrupados[agrupados.length - 1];
+    if (atual && atual.base.status === h.status) {
+      if (h.observacao) atual.notas.push({ texto: h.observacao, criadoEm: h.criadoEm });
+    } else {
+      agrupados.push({ base: h, notas: h.observacao ? [{ texto: h.observacao }] : [] });
+    }
+  }
+  const eventos = agrupados.reverse();
 
   return (
     <ol>
-      {eventos.map((evento, i) => {
+      {eventos.map(({ base: evento, notas }, i) => {
         const recente = i === 0;
         const ultimo = i === eventos.length - 1;
         return (
@@ -76,9 +89,14 @@ export function StatusTimeline({
                   {formatarData(evento.criadoEm)}
                 </span>
               </div>
-              {evento.observacao && (
-                <p className="mt-0.5 text-sm text-muted-foreground">{evento.observacao}</p>
-              )}
+              {notas.map((nota, j) => (
+                <p key={j} className="mt-0.5 text-sm text-muted-foreground">
+                  {nota.criadoEm && (
+                    <span className="codigo mr-1.5 text-xs">{formatarData(nota.criadoEm)} ·</span>
+                  )}
+                  {nota.texto}
+                </p>
+              ))}
             </div>
           </li>
         );
