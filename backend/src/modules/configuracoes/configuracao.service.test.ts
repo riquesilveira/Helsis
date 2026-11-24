@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
-const findUnique = vi.fn();
+// vi.mock é içado para o topo do arquivo; o mock precisa existir antes dele.
+const { findUnique } = vi.hoisted(() => ({ findUnique: vi.fn() }));
 vi.mock("../../lib/prisma", () => ({ prisma: { empresa: { findUnique } } }));
 
 import { obterEmpresa } from "./configuracao.service";
