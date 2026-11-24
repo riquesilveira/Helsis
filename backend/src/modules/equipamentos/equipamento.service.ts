@@ -91,13 +91,25 @@ export async function atualizarEquipamento(id: string, dados: Partial<Equipament
 // em ATRASADA, o que não é verdade.
 export type StatusManutencaoPreventiva = "ATRASADA" | "PROXIMA" | "EM_DIA" | "SEM_DATA";
 
-function calcularStatusPreventiva(proximaData: Date): StatusManutencaoPreventiva {
-  const hoje = new Date();
-  const emTrintaDias = new Date(hoje);
+// Dia do calendário no Brasil, como "AAAA-MM-DD" (compara como texto).
+function diaNoBrasil(d: Date): string {
+  return d.toLocaleDateString("en-CA", { timeZone: "America/Sao_Paulo" });
+}
+
+/**
+ * Compara por DIA do calendário no Brasil, não por instante. Antes, uma data
+ * gravada à meia-noite UTC virava "Atrasada" às 21h da véspera (horário de
+ * Brasília), e o resultado mudava conforme o fuso do servidor. Agora a
+ * preventiva do dia D fica atrasada a partir do dia D+1, seja o servidor
+ * UTC (Render) ou BRT.
+ */
+export function calcularStatusPreventiva(proximaData: Date, agora = new Date()): StatusManutencaoPreventiva {
+  const emTrintaDias = new Date(agora);
   emTrintaDias.setDate(emTrintaDias.getDate() + 30);
 
-  if (proximaData < hoje) return "ATRASADA";
-  if (proximaData <= emTrintaDias) return "PROXIMA";
+  const dia = diaNoBrasil(proximaData);
+  if (dia < diaNoBrasil(agora)) return "ATRASADA";
+  if (dia <= diaNoBrasil(emTrintaDias)) return "PROXIMA";
   return "EM_DIA";
 }
 

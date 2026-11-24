@@ -53,9 +53,14 @@ function paraInputDate(iso?: string | null) {
   return iso ? iso.slice(0, 10) : "";
 }
 
-// Mesmo critério do backend (calcularStatusPreventiva): data já passou = atrasada.
+// Mesmo critério do backend (calcularStatusPreventiva): atrasada quando o DIA
+// do calendário no Brasil já passou, não o instante (antes virava atrasada às
+// 21h da véspera).
+function diaNoBrasil(d: Date): string {
+  return d.toLocaleDateString("en-CA", { timeZone: "America/Sao_Paulo" });
+}
 function preventivaAtrasada(iso?: string | null) {
-  return Boolean(iso) && new Date(iso as string).getTime() < Date.now();
+  return Boolean(iso) && diaNoBrasil(new Date(iso as string)) < diaNoBrasil(new Date());
 }
 
 function formatarProximaData(iso?: string | null) {
