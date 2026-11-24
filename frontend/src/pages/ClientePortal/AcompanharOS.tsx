@@ -101,6 +101,8 @@ export function AcompanharOS() {
     );
   }
 
+  const temContato = Boolean(dados.empresa?.whatsapp || dados.empresa?.telefone || dados.empresa?.email);
+
   return (
     <div className="min-h-screen bg-muted px-4 py-10">
       <div className="max-w-lg mx-auto space-y-6">
@@ -120,14 +122,20 @@ export function AcompanharOS() {
 
         {PROXIMO_PASSO[dados.statusAtual] && (
           <p className="rounded-lg bg-card px-4 py-3 text-sm text-foreground ring-1 ring-foreground/10">
-            {PROXIMO_PASSO[dados.statusAtual]}
+            {/* Com o bloco de contato na tela, aponta para ele; sem contato, texto original. */}
+            {temContato
+              ? PROXIMO_PASSO[dados.statusAtual]!.replace(
+                  "fale com a assistência técnica.",
+                  "fale com a assistência pelos contatos abaixo."
+                )
+              : PROXIMO_PASSO[dados.statusAtual]}
           </p>
         )}
 
         <StatusTimeline historico={dados.statusHistoricos} statusAtual={dados.statusAtual} paraCliente />
 
         {/* PT3: contato da assistência, só os canais cadastrados. */}
-        {(dados.empresa?.whatsapp || dados.empresa?.telefone || dados.empresa?.email) && (
+        {temContato && dados.empresa && (
           <div className="rounded-lg bg-card px-4 py-3 text-center ring-1 ring-foreground/10">
             <p className="text-sm font-medium text-foreground">Falar com a assistência</p>
             <div className="mt-2 flex flex-wrap justify-center gap-2">
