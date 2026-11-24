@@ -4,6 +4,7 @@ import { usuarioLogado } from "../services/auth";
 import { User, Lock, Shield, Calendar } from "lucide-react";
 import { PageHeader } from "../components/PageHeader";
 import { ConfiguracaoEtapas } from "./ConfiguracaoEtapas";
+import { ConfiguracaoEmpresa } from "./ConfiguracaoEmpresa";
 import {
   Card,
   CardContent,
@@ -246,7 +247,8 @@ export function Configuracoes() {
         </CardContent>
       </Card>
 
-      {/* Configuração do fluxo de etapas — decisão de gestão, só Dono/Gestor. */}
+      {/* Dados da empresa (PT3) e fluxo de etapas: decisões de gestão, só Dono/Gestor. */}
+      {(perfil.papel === "DONO" || perfil.papel === "GESTOR") && <ConfiguracaoEmpresa />}
       {(perfil.papel === "DONO" || perfil.papel === "GESTOR") && <ConfiguracaoEtapas />}
     </div>
   );

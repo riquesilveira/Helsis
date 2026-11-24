@@ -2,6 +2,34 @@ import { StatusOS } from "@prisma/client";
 import { prisma } from "../../lib/prisma";
 import { AppError } from "../../utils/AppError";
 
+// ----------------------------------------------------------------------------
+// Dados da empresa (PT3): uma linha só, id fixo "empresa".
+// ----------------------------------------------------------------------------
+
+export interface DadosEmpresa {
+  nome: string | null;
+  telefone: string | null;
+  whatsapp: string | null;
+  email: string | null;
+}
+
+const EMPRESA_VAZIA: DadosEmpresa = { nome: null, telefone: null, whatsapp: null, email: null };
+
+export async function obterEmpresa(): Promise<DadosEmpresa> {
+  const e = await prisma.empresa.findUnique({ where: { id: "empresa" } });
+  if (!e) return EMPRESA_VAZIA;
+  return { nome: e.nome, telefone: e.telefone, whatsapp: e.whatsapp, email: e.email };
+}
+
+export async function salvarEmpresa(dados: DadosEmpresa): Promise<DadosEmpresa> {
+  const e = await prisma.empresa.upsert({
+    where: { id: "empresa" },
+    create: { id: "empresa", ...dados },
+    update: dados,
+  });
+  return { nome: e.nome, telefone: e.telefone, whatsapp: e.whatsapp, email: e.email };
+}
+
 // Etapas cujo `ativo` é sempre true e não pode ser desligado: a de entrada
 // (RECEBIDO) e os dois desfechos (CONCLUIDO/CANCELADO). Sem elas o fluxo não
 // fecha. As intermediárias podem ser desativadas por empresa que não as usa.

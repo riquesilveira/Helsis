@@ -6,6 +6,7 @@ import { notificarClienteSobreStatus } from "../notificacoes/notificacao.service
 import { registrarManutencaoPreventivaConcluida, somarMeses } from "../equipamentos/equipamento.service";
 import { anexarSlaEmLista, resolverSlaDaOS } from "../contratos/contrato.service";
 import { pausarTarefasEmAndamento } from "../tarefas/tarefaOS.service";
+import { obterEmpresa } from "../configuracoes/configuracao.service";
 
 export interface CriarOSInput {
   clienteId: string;
@@ -626,7 +627,10 @@ export async function buscarAcompanhamentoPublico(id: string) {
   // equipe ver quem passou para quem). Para o cliente isso repetia a etapa
   // ("Recebemos seu chamado" duas vezes). No portal, uma entrada por etapa:
   // mantém a primeira de cada sequência de status iguais.
-  return { ...os, statusHistoricos: semEtapasRepetidas(os.statusHistoricos) };
+  // PT3: nome e contato da empresa, para o cliente saber de quem é o link e
+  // como falar com a assistência. Campos vazios voltam como null.
+  const empresa = await obterEmpresa();
+  return { ...os, statusHistoricos: semEtapasRepetidas(os.statusHistoricos), empresa };
 }
 
 export function semEtapasRepetidas<T extends { status: StatusOS }>(historico: T[]): T[] {

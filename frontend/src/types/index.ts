@@ -52,6 +52,14 @@ export interface EquipamentoCatalogoItem {
 
 export type StatusManutencaoPreventiva = "ATRASADA" | "PROXIMA" | "EM_DIA" | "SEM_DATA";
 
+/** Dados da empresa (PT3), espelha GET /configuracoes/empresa e o portal público. */
+export interface DadosEmpresa {
+  nome: string | null;
+  telefone: string | null;
+  whatsapp: string | null;
+  email: string | null;
+}
+
 export interface EquipamentoComManutencao extends Equipamento {
   cliente: Cliente;
   statusPreventiva: StatusManutencaoPreventiva;

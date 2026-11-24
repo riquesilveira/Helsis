@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
 import { api } from "../../services/api";
-import { StatusHistoricoItem, StatusOS } from "../../types";
+import { DadosEmpresa, StatusHistoricoItem, StatusOS } from "../../types";
 import { StatusTimeline } from "../../components/StatusTimeline";
 import { Button } from "../../components/shadcn/button";
 import { formatarNumeroOS } from "../../utils/formatters";
@@ -11,6 +11,8 @@ interface AcompanhamentoPublico {
   statusAtual: StatusOS;
   equipamento: { tipo: string; marca?: string; modelo?: string };
   statusHistoricos: StatusHistoricoItem[];
+  /** PT3: nome e contato da empresa (campos vazios vêm null). */
+  empresa?: DadosEmpresa;
 }
 
 // J-3: o que acontece a seguir, em texto simples para o cliente. Sem texto
@@ -103,6 +105,10 @@ export function AcompanharOS() {
     <div className="min-h-screen bg-muted px-4 py-10">
       <div className="max-w-lg mx-auto space-y-6">
         <div className="text-center">
+          {/* PT3: de quem é o link. */}
+          {dados.empresa?.nome && (
+            <p className="mb-3 text-sm font-semibold text-foreground">{dados.empresa.nome}</p>
+          )}
           <p className="codigo text-xs text-muted-foreground">ATENDIMENTO Nº {formatarNumeroOS(dados.numero)}</p>
           <h1 className="text-lg font-semibold text-foreground mt-1">{dados.equipamento.tipo}</h1>
           {dados.equipamento.marca && (
@@ -119,6 +125,34 @@ export function AcompanharOS() {
         )}
 
         <StatusTimeline historico={dados.statusHistoricos} statusAtual={dados.statusAtual} paraCliente />
+
+        {/* PT3: contato da assistência, só os canais cadastrados. */}
+        {(dados.empresa?.whatsapp || dados.empresa?.telefone || dados.empresa?.email) && (
+          <div className="rounded-lg bg-card px-4 py-3 text-center ring-1 ring-foreground/10">
+            <p className="text-sm font-medium text-foreground">Falar com a assistência</p>
+            <div className="mt-2 flex flex-wrap justify-center gap-2">
+              {dados.empresa.whatsapp && (
+                <Button asChild size="sm">
+                  <a href={`https://wa.me/${dados.empresa.whatsapp}`} target="_blank" rel="noopener noreferrer">
+                    WhatsApp
+                  </a>
+                </Button>
+              )}
+              {dados.empresa.telefone && (
+                <Button asChild size="sm" variant="outline">
+                  <a href={`tel:${dados.empresa.telefone.replace(/[^\d+]/g, "")}`}>
+                    Ligar: {dados.empresa.telefone}
+                  </a>
+                </Button>
+              )}
+              {dados.empresa.email && (
+                <Button asChild size="sm" variant="outline">
+                  <a href={`mailto:${dados.empresa.email}`}>E-mail</a>
+                </Button>
+              )}
+            </div>
+          </div>
+        )}
 
         <div className="flex flex-col items-center gap-2 text-center" aria-live="polite">
           {atualizadoEm && (

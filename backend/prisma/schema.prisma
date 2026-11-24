@@ -226,6 +226,21 @@ model ConfiguracaoEtapa {
   @@map("configuracao_etapas")
 }
 
+// Dados da empresa desta instalação (uma linha só, id fixo "empresa").
+// Aparecem no portal público do cliente (nome e contato), para o cliente
+// saber de quem é o link e como falar com a assistência (auditoria PT3).
+// Todos opcionais: sem cadastro, o portal fica como antes.
+model Empresa {
+  id           String   @id @default("empresa")
+  nome         String?
+  telefone     String?
+  whatsapp     String?  // só dígitos com DDI/DDD, ex. 5511999998888 (link wa.me)
+  email        String?
+  atualizadoEm DateTime @updatedAt
+
+  @@map("empresa")
+}
+
 enum TipoOS {
   CORRETIVA   // aberta por causa de um problema relatado
   PREVENTIVA  // manutenção agendada, sem problema relatado
