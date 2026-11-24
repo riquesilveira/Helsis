@@ -511,7 +511,11 @@ export function OrdemServicoDetail() {
     // A ordem atual vem de todas as etapas: se a etapa da OS foi desativada
     // depois, a "próxima" continua sendo a seguinte, não a primeira do fluxo.
     const ordemAtual = etapas.find((e) => e.status === os.statusAtual)?.ordem ?? -1;
-    const proxima = permitidas.find((op) => op.ordem > ordemAtual && op.status !== "CANCELADO");
+    // J-8: "Aguardando peça" é um desvio (só quando falta peça), não o passo
+    // natural; o padrão pula essa etapa. Ela continua na lista, e é sugerida
+    // só se for a única etapa à frente.
+    const aFrente = permitidas.filter((op) => op.ordem > ordemAtual && op.status !== "CANCELADO");
+    const proxima = aFrente.find((op) => op.status !== "AGUARDANDO_PECA") ?? aFrente[0];
     const primeiro = preferido ?? proxima ?? permitidas.find((op) => op.status !== "CANCELADO");
     if (primeiro) setNovoStatus(primeiro.status);
     setObservacao("");
