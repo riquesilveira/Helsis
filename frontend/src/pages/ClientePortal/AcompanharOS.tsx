@@ -133,7 +133,15 @@ export function AcompanharOS() {
             <div className="mt-2 flex flex-wrap justify-center gap-2">
               {dados.empresa.whatsapp && (
                 <Button asChild size="sm">
-                  <a href={`https://wa.me/${dados.empresa.whatsapp}`} target="_blank" rel="noopener noreferrer">
+                  <a
+                    // Mensagem pré-preenchida com o nº do atendimento, para a
+                    // assistência saber de qual OS se trata.
+                    href={`https://wa.me/${dados.empresa.whatsapp}?text=${encodeURIComponent(
+                      `Olá! Sobre o atendimento nº ${formatarNumeroOS(dados.numero)}.`
+                    )}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
                     WhatsApp
                   </a>
                 </Button>
