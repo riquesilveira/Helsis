@@ -16,9 +16,20 @@ export interface DadosEmpresa {
 const EMPRESA_VAZIA: DadosEmpresa = { nome: null, telefone: null, whatsapp: null, email: null };
 
 export async function obterEmpresa(): Promise<DadosEmpresa> {
-  const e = await prisma.empresa.findUnique({ where: { id: "empresa" } });
-  if (!e) return EMPRESA_VAZIA;
-  return { nome: e.nome, telefone: e.telefone, whatsapp: e.whatsapp, email: e.email };
+  try {
+    const e = await prisma.empresa.findUnique({ where: { id: "empresa" } });
+    if (!e) return EMPRESA_VAZIA;
+    return { nome: e.nome, telefone: e.telefone, whatsapp: e.whatsapp, email: e.email };
+  } catch (err) {
+    // O build e o start não rodam "prisma migrate deploy". Se o código chegar
+    // a um banco sem a migração 20261124145658_empresa (tabela ausente, P2021),
+    // o portal público segue funcionando, só sem os dados da empresa.
+    if ((err as { code?: string })?.code === "P2021") {
+      console.error("Tabela 'empresa' ausente: aplique a migração com prisma migrate deploy.");
+      return EMPRESA_VAZIA;
+    }
+    throw err;
+  }
 }
 
 export async function salvarEmpresa(dados: DadosEmpresa): Promise<DadosEmpresa> {
