@@ -65,9 +65,10 @@ quanto sai, com o quê) pro dono da empresa.
   removidos dessa trilha.
 - Registrar peça trocada (com preço, snapshot no momento da troca) e se
   aquela troca resolveu o problema.
-- Registrar deslocamento (passagem, hospedagem, alimentação) por atendimento
-  — hoje só populável via seed/banco, **ainda sem formulário na interface**
-  (ver roadmap).
+- Registrar deslocamento (passagem ou combustível, hospedagem, alimentação,
+  origem, destino e dias) por atendimento, no detalhe da OS: "Registrar
+  deslocamento", com editar e excluir. Só Dono e Gestor, e bloqueado em OS
+  cancelada.
 - Fechamento financeiro por OS: mão de obra (editável só por dono/gestor) +
   peças (somado automaticamente) + comissão calculada (editável).
 - Filtro por status (em aba) e por período (dropdown, incluindo intervalo
