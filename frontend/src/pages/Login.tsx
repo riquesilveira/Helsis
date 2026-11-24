@@ -81,7 +81,7 @@ export function Login() {
   return (
     <div className="flex min-h-screen bg-background">
       {/* Painel de marca — só no desktop */}
-      <aside className="relative hidden w-1/2 flex-col justify-between overflow-hidden bg-grafite-900 p-12 text-white lg:flex">
+      <aside className="relative hidden w-1/2 flex-col items-center justify-between overflow-hidden bg-grafite-900 p-12 text-center text-white lg:flex">
         {/* Textura pontilhada sutil + brilho difuso, puro CSS (sem assets). */}
         <div
           aria-hidden
@@ -107,7 +107,7 @@ export function Login() {
           <span className="text-xl font-semibold tracking-tight">Helsis</span>
         </div>
 
-        <div className="relative space-y-7">
+        <div className="relative flex flex-col items-center space-y-7">
           <h1 className="max-w-md text-3xl font-semibold leading-tight tracking-tight">
             Gestão inteligente de assistência técnica
           </h1>
@@ -116,7 +116,7 @@ export function Login() {
           </p>
           <ul className="space-y-3.5">
             {DESTAQUES.map((item) => (
-              <li key={item} className="flex items-center gap-3 text-sm text-white/85">
+              <li key={item} className="flex items-center justify-center gap-3 text-sm text-white/85">
                 <span className="flex size-5 shrink-0 items-center justify-center rounded-full bg-white/10 ring-1 ring-white/15">
                   <Check className="size-3" />
                 </span>
