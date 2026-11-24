@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { OrdemServico } from "../types";
 import { useEtapasStatus } from "../hooks/useEtapasStatus";
+import { formatarNumeroOS } from "../utils/formatters";
 
 // Pill sólida (cor cheia + texto branco), via tokens de status — mesma
 // linguagem do StatusBadge.
@@ -33,6 +34,8 @@ export function CartaoVisitaRota({ os }: { os: OrdemServico }) {
     >
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
+          {/* J-6: o número distingue OS do mesmo cliente e equipamento. */}
+          <p className="codigo text-[11px] text-muted-foreground">OS #{formatarNumeroOS(os.numero)}</p>
           <p className="truncate text-sm font-medium text-foreground">
             {os.cliente.nome} <span className="text-muted-foreground">·</span> {os.equipamento.tipo}
           </p>
